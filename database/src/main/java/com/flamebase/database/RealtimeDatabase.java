@@ -61,7 +61,7 @@ public abstract class RealtimeDatabase<T> {
             String id = remoteMessage.getData().get(ID);
             String rData = hex2String(data);
 
-            if (!tag.equalsIgnoreCase("user_sync")) {
+            if (!tag.equalsIgnoreCase(getTag())) {
                 return;
             }
 
@@ -132,6 +132,8 @@ public abstract class RealtimeDatabase<T> {
     public abstract void onObjectChanges(T value);
 
     public abstract void progress(String id, int value);
+
+    public abstract String getTag();
 
     private void parseResult(String id, String data) {
         try {
@@ -226,19 +228,20 @@ public abstract class RealtimeDatabase<T> {
     }
 
     private void addElement(String id, String info) {
+        String enId = AndroidStringObfuscator.encryptString(id);
         // Gets the data repository in write mode
         SQLiteDatabase db = database.getWritableDatabase();
 
         // Create a new map of values, where column names are the keys
         ContentValues values = new ContentValues();
-        values.put(COLUMN_LOCATION_ID, id);
+        values.put(COLUMN_LOCATION_ID, enId);
         values.put(COLUMN_LOCATION_INFO, AndroidStringObfuscator.encryptString(info));
 
         try {
             if (getElement(id) != null) {
                 // Filter results WHERE "title" = hash
                 String selection = COLUMN_LOCATION_ID + " = ?";
-                String[] selectionArgs = { id };
+                String[] selectionArgs = { enId };
                 long newRowId = db.update(database.table, values, selection, selectionArgs);
             } else {
                 long newRowId = db.insert(database.table, null, values);
@@ -249,6 +252,7 @@ public abstract class RealtimeDatabase<T> {
     }
 
     private String getElement(String id) {
+        String enId = AndroidStringObfuscator.encryptString(id);
         try {
             SQLiteDatabase db = database.getReadableDatabase();
 
@@ -261,7 +265,7 @@ public abstract class RealtimeDatabase<T> {
 
             // Filter results WHERE "title" = hash
             String selection = COLUMN_LOCATION_ID + " = ?";
-            String[] selectionArgs = { id };
+            String[] selectionArgs = { enId };
 
             Cursor cursor = db.query(
                     database.table,                             // The table to query
