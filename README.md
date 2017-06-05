@@ -28,7 +28,7 @@ public class FMService extends FirebaseMessagingService {
     
     public static void refreshGroupChat(Context context, RemoteMessage remoteMessage) {
         
-        new RealtimeDatabase<GContact>(context, GChat.class, remoteMessage) {
+        new RealtimeDatabase<GChat>(context, GChat.class, remoteMessage) {
 
             @Override
             public void onObjectChanges(final GChat value) {
