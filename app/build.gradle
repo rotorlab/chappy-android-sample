@@ -34,6 +34,7 @@ dependencies {
     // compile 'com.flamebase:database:1.0.2'
     compile project(':database')
     compile 'com.github.marcodama7.posty:posty:0.1.1'
+    compile 'com.afollestad.material-dialogs:core:0.9.4.5'
 
 }
 

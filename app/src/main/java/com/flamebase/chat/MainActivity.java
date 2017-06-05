@@ -1,20 +1,28 @@
 package com.flamebase.chat;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.EditText;
 
+import com.afollestad.materialdialogs.DialogAction;
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.flamebase.chat.services.ChatManager;
-import com.google.firebase.FirebaseApp;
 import com.google.firebase.iid.FirebaseInstanceId;
 
 public class MainActivity extends AppCompatActivity {
+
+    private MaterialDialog materialDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,8 +33,7 @@ public class MainActivity extends AppCompatActivity {
 
         ChatManager.init(this);
 
-        String refreshedToken = FirebaseInstanceId.getInstance().getToken();
-        Log.e("TEST", refreshedToken);
+        askForEmail();
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -61,5 +68,67 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void askForEmail() {
+        if (isFirstRun() && materialDialog == null) {
+            materialDialog = new MaterialDialog.Builder(this)
+                    .title(R.string.askIdTitle)
+                    .customView(R.layout.input_identifier, true)
+                    .positiveText(R.string.agree)
+                    .negativeText(R.string.disagree)
+                    .onPositive(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            EditText name = (EditText) dialog.getCustomView().findViewById(R.id.etName);
+                            EditText email = (EditText) dialog.getCustomView().findViewById(R.id.etEmail);
+
+                            if (!TextUtils.isEmpty(name.getText()) && !TextUtils.isEmpty(email.getText())) {
+                                setData(name.getText().toString(), email.getText().toString());
+                                dialog.dismiss();
+                            }
+                        }
+                    })
+                    .onNegative(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .show();
+        } else {
+            syncUser();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (materialDialog != null) {
+            materialDialog.dismiss();
+            materialDialog = null;
+        }
+        super.onDestroy();
+    }
+
+    public boolean isFirstRun() {
+        SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+        return prefs.getString("name", null) == null || prefs.getString("email", null) == null;
+    }
+
+    public void syncUser() {
+        SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+        String name = prefs.getString("name", null);
+        String email = prefs.getString("email", null);
+
+        ChatManager.addContact(email, FirebaseInstanceId.getInstance().getToken(), "android", name);
+    }
+
+
+    public void setData(String name, String email) {
+        SharedPreferences.Editor editor = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE).edit();
+        editor.putString("name", name).apply();
+        editor.putString("email", email).apply();
+
+        ChatManager.addContact(email, FirebaseInstanceId.getInstance().getToken(), "android", name);
     }
 }

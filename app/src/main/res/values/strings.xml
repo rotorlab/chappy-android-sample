@@ -4,5 +4,8 @@
     <string name="action_email">Set email</string>
     <string name="action_create_group">Create group</string>
     <string name="action_add_contact_to_group">Add contact</string>
+    <string name="askIdTitle">Who are you?</string>
+    <string name="agree">Ok</string>
+    <string name="disagree">Cancel</string>
     <string name="server_url">http://192.168.0.155:3003/</string>
 </resources>

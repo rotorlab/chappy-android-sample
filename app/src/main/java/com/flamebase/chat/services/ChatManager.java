@@ -32,12 +32,12 @@ public class ChatManager {
         FirebaseApp.initializeApp(context);
     }
 
-    public static void addContact(String id, String token, String os, String name) {
+    public static void addContact(String email, String token, String os, String name) {
         try {
             JSONObject message = new JSONObject();
             JSONObject values = new JSONObject();
             values.put("method", "addContact");
-            values.put("id", id);
+            values.put("email", email);
             values.put("token", token);
             values.put("name", name);
             values.put("os", os);
