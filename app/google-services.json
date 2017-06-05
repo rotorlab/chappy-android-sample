@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "922503272251",
+    "firebase_url": "https://flamebase-samples.firebaseio.com",
+    "project_id": "flamebase-samples",
+    "storage_bucket": "flamebase-samples.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:922503272251:android:1e268c82eec0ac40",
+        "android_client_info": {
+          "package_name": "com.flamebase.chat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "922503272251-msi53k7k0bi6m1hpug9jngng72k676b9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAPHlFupDd4eoVTLkbqKs7TumKm09YLj4w"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

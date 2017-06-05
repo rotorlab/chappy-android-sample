@@ -1,43 +1,36 @@
-# :fire: flamebase-database-android
-Real time JSON database (android client).
+package com.flamebase.chat.services;
 
-### Usage
+import android.content.Context;
 
-- Import library:
+import com.flamebase.database.RealtimeDatabase;
+import com.flamebase.chat.model.GChat;
+import com.google.firebase.messaging.FirebaseMessagingService;
+import com.google.firebase.messaging.RemoteMessage;
 
-```groovy
-repositories {
-    jcenter()
-}
+/**
+ * Created by efraespada on 04/06/2017.
+ */
 
-dependencies {
-    compile 'com.flamebase:database:1.0.2'
-}
-```
-- Database synchronization works through Firebase Cloud Messaging 
-
-```java
 public class FMService extends FirebaseMessagingService {
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
-
         refreshGroupChat(getApplicationContext(), remoteMessage);
     }
-    
-    public static void refreshGroupChat(Context context, RemoteMessage remoteMessage) {
-        
+
+    public void refreshGroupChat(Context context, RemoteMessage remoteMessage) {
+
         new RealtimeDatabase<GChat>(context, GChat.class, remoteMessage) {
 
             @Override
             public void onObjectChanges(final GChat value) {
-                
+
             }
 
             @Override
             public void progress(String id, int value) {
-                
+
             }
 
             @Override
@@ -47,5 +40,3 @@ public class FMService extends FirebaseMessagingService {
         };
     }
 }
-```
-
