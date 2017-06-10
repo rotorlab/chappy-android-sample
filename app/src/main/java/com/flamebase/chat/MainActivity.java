@@ -18,6 +18,8 @@ import android.widget.EditText;
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.flamebase.chat.services.ChatManager;
+import com.flamebase.database.FlamebaseDatabase;
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.iid.FirebaseInstanceId;
 
 public class MainActivity extends AppCompatActivity {
@@ -31,6 +33,9 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        FirebaseApp.initializeApp(this);
+
+        FlamebaseDatabase.initialize(this, "http://localhost:1507/", FirebaseInstanceId.getInstance().getToken());
         ChatManager.init(this);
 
         askForEmail();
@@ -63,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id.action_settings) {
             return true;
         } else if (id == R.id.action_create_group) {
-
+            askForGroupName();
             return true;
         }
 
@@ -100,6 +105,41 @@ public class MainActivity extends AppCompatActivity {
             syncUser();
         }
     }
+
+    public void askForGroupName() {
+        if (materialDialog == null) {
+            materialDialog = new MaterialDialog.Builder(this)
+                    .title(R.string.askIdGroupName)
+                    .customView(R.layout.input_group_name, true)
+                    .positiveText(R.string.agree)
+                    .negativeText(R.string.disagree)
+                    .cancelable(false)
+                    .onPositive(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            EditText name = (EditText) dialog.getCustomView().findViewById(R.id.etName);
+                            if (!TextUtils.isEmpty(name.getText())) {
+                                SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+                                String email = prefs.getString("email", null);
+                                ChatManager.createGroup(name.getText().toString(), email);
+                                dialog.dismiss();
+                                materialDialog = null;
+                            }
+                        }
+                    })
+                    .onNegative(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            dialog.dismiss();
+                            materialDialog = null;
+                        }
+                    })
+                    .show();
+        } else {
+            syncUser();
+        }
+    }
+
 
     @Override
     protected void onDestroy() {

@@ -7,7 +7,7 @@ import com.google.gson.annotations.SerializedName;
  * Created by efraespada on 04/06/2017.
  */
 
-public class Person {
+public class Member {
 
     @SerializedName("name")
     @Expose
@@ -21,7 +21,7 @@ public class Person {
     @Expose
     String os;
 
-    public Person(String name, String token, String os) {
+    public Member(String name, String token, String os) {
         this.name = name;
         this.token = token;
         this.os = os;

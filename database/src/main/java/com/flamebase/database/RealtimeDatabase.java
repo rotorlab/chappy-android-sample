@@ -32,10 +32,12 @@ public abstract class RealtimeDatabase<T> {
     private Class<T> clazz;
     private Context context;
 
+    private T reference;
+
     private static final String TAG = RealtimeDatabase.class.getSimpleName();
 
     public static String STAG = "tag";
-    public static String ID = "id";
+    public static String PATH = "id";
     public static String REFERENCE = "reference";
     public static String SIZE = "size";
     public static String INDEX = "index";
@@ -44,21 +46,31 @@ public abstract class RealtimeDatabase<T> {
     public static final String ACTION_SIMPLE_UPDATE    = "simple_update";
     public static final String ACTION_SLICE_UPDATE     = "slice_update";
 
+    public RealtimeDatabase(Context context, Class<T> clazz) {
+        this.clazz = clazz;
+        this.context = context;
+        AndroidStringObfuscator.init(this.context);
+        String name = RealtimeDatabase.class.getSimpleName() + "_" + clazz.getSimpleName() + ".db";
+        this.database = new Database(this.context, name, clazz.getSimpleName(), VERSION);
+        reference = null;
+    }
+
     public RealtimeDatabase(Context context, Class<T> clazz, RemoteMessage remoteMessage) {
         this.clazz = clazz;
         this.context = context;
         AndroidStringObfuscator.init(this.context);
         String name = RealtimeDatabase.class.getSimpleName() + "_" + clazz.getSimpleName() + ".db";
         this.database = new Database(this.context, name, clazz.getSimpleName(), VERSION);
+        reference = null;
         onMessageReceived(remoteMessage);
     }
 
-    private void onMessageReceived(RemoteMessage remoteMessage) {
+    public void onMessageReceived(RemoteMessage remoteMessage) {
         try {
             String tag = remoteMessage.getData().get(STAG);
             String action = remoteMessage.getData().get(ACTION);
             String data = remoteMessage.getData().get(REFERENCE);
-            String id = remoteMessage.getData().get(ID);
+            String id = remoteMessage.getData().get(PATH);
             String rData = hex2String(data);
 
             if (!tag.equalsIgnoreCase(getTag())) {
@@ -130,6 +142,8 @@ public abstract class RealtimeDatabase<T> {
     }
 
     public abstract void onObjectChanges(T value);
+
+    public abstract T update();
 
     public abstract void progress(String id, int value);
 
@@ -221,7 +235,8 @@ public abstract class RealtimeDatabase<T> {
             }
 
             addElement(id, jsonObject.toString());
-            onObjectChanges(gson.fromJson(jsonObject.toString(), clazz));
+            reference = gson.fromJson(jsonObject.toString(), clazz);
+            onObjectChanges(reference);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -287,5 +302,9 @@ public abstract class RealtimeDatabase<T> {
         } catch (SQLiteException e) {
             return null;
         }
+    }
+
+    public static <T> void syncReference(String path, T reference) {
+        // TODO calculate here JSON differences
     }
 }
