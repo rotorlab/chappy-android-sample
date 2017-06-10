@@ -27,7 +27,7 @@ import static com.flamebase.database.Database.COLUMN_LOCATION_INFO;
 public abstract class RealtimeDatabase<T> {
 
     private int VERSION = 1;
-    private static Map<String, String[]> mapParts      = new HashMap<>();
+    private static Map<String, String[]> mapParts;
     private Database database;
     private Class<T> clazz;
     private Context context;
@@ -52,6 +52,7 @@ public abstract class RealtimeDatabase<T> {
         AndroidStringObfuscator.init(this.context);
         String name = RealtimeDatabase.class.getSimpleName() + "_" + clazz.getSimpleName() + ".db";
         this.database = new Database(this.context, name, clazz.getSimpleName(), VERSION);
+        this.mapParts      = new HashMap<>();
         reference = null;
     }
 
