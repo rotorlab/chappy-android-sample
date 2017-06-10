@@ -132,7 +132,7 @@ public class FlamebaseDatabase {
 
     public static <T> void syncReference(String path, T reference) {
         if (pathMap.containsKey(path)) {
-            pathMap.get(path).()
+            pathMap.get(path).syncReference(path, reference);
         }
     }
 }

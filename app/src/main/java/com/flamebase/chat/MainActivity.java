@@ -160,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
         String name = prefs.getString("name", null);
         String email = prefs.getString("email", null);
 
-        ChatManager.addContact(email, FirebaseInstanceId.getInstance().getToken(), "android", name);
+        //ChatManager.addContact(email, FirebaseInstanceId.getInstance().getToken(), "android", name);
     }
 
 
@@ -169,6 +169,6 @@ public class MainActivity extends AppCompatActivity {
         editor.putString("name", name).apply();
         editor.putString("email", email).apply();
 
-        ChatManager.addContact(email, FirebaseInstanceId.getInstance().getToken(), "android", name);
+        //ChatManager.addContact(email, FirebaseInstanceId.getInstance().getToken(), "android", name);
     }
 }

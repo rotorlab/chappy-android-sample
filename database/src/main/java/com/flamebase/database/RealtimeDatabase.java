@@ -70,7 +70,7 @@ public abstract class RealtimeDatabase<T> {
             String tag = remoteMessage.getData().get(STAG);
             String action = remoteMessage.getData().get(ACTION);
             String data = remoteMessage.getData().get(REFERENCE);
-            String id = remoteMessage.getData().get(PATH);
+            String path = remoteMessage.getData().get(PATH);
             String rData = hex2String(data);
 
             if (!tag.equalsIgnoreCase(getTag())) {
@@ -80,24 +80,24 @@ public abstract class RealtimeDatabase<T> {
             switch (action) {
 
                 case ACTION_SIMPLE_UPDATE:
-                    parseResult(id, rData);
+                    parseResult(path, rData);
                     break;
 
                 case ACTION_SLICE_UPDATE:
                     int size = Integer.parseInt(remoteMessage.getData().get(SIZE));
                     int index = Integer.parseInt(remoteMessage.getData().get(INDEX));
-                    if (mapParts.containsKey(id)) {
-                        mapParts.get(id)[index] = rData;
+                    if (mapParts.containsKey(path)) {
+                        mapParts.get(path)[index] = rData;
                     } else {
                         String[] parts = new String[size];
                         parts[index] = rData;
-                        mapParts.put(id, parts);
+                        mapParts.put(path, parts);
                     }
 
                     boolean ready = true;
                     int alocated = 0;
-                    for (int p = mapParts.get(id).length - 1; p >= 0; p--) {
-                        if (mapParts.get(id)[p] == null) {
+                    for (int p = mapParts.get(path).length - 1; p >= 0; p--) {
+                        if (mapParts.get(path)[p] == null) {
                             ready = false;
                         } else {
                             alocated++;
@@ -105,16 +105,16 @@ public abstract class RealtimeDatabase<T> {
                     }
 
                     float percent = (100F / (float) size) * alocated;
-                    progress(id, (int) percent);
+                    progress(path, (int) percent);
 
-                    if (ready && mapParts.get(id).length - 1 == index) {
+                    if (ready && mapParts.get(path).length - 1 == index) {
                         StringBuilder complete = new StringBuilder();
-                        for (int i = 0; i < mapParts.get(id).length; i++) {
-                            complete.append(mapParts.get(id)[i]);
+                        for (int i = 0; i < mapParts.get(path).length; i++) {
+                            complete.append(mapParts.get(path)[i]);
                         }
-                        mapParts.remove(id);
+                        mapParts.remove(path);
                         String result = complete.toString();
-                        parseResult(id, result);
+                        parseResult(path, result);
                     }
 
                     break;
@@ -149,12 +149,12 @@ public abstract class RealtimeDatabase<T> {
 
     public abstract String getTag();
 
-    private void parseResult(String id, String data) {
+    private void parseResult(String path, String data) {
         try {
             Gson gson = new Gson();
 
             JSONObject jsonObject;
-            String prev = getElement(id);
+            String prev = getElement(path);
             if (prev != null) {
                 prev = Normalizer.normalize(prev, Normalizer.Form.NFC);
                 jsonObject = new JSONObject(prev);
@@ -234,7 +234,7 @@ public abstract class RealtimeDatabase<T> {
                 }
             }
 
-            addElement(id, jsonObject.toString());
+            addElement(path, jsonObject.toString());
             reference = gson.fromJson(jsonObject.toString(), clazz);
             onObjectChanges(reference);
         } catch (JSONException e) {
@@ -242,8 +242,8 @@ public abstract class RealtimeDatabase<T> {
         }
     }
 
-    private void addElement(String id, String info) {
-        String enId = AndroidStringObfuscator.encryptString(id);
+    private void addElement(String path, String info) {
+        String enId = AndroidStringObfuscator.encryptString(path);
         // Gets the data repository in write mode
         SQLiteDatabase db = database.getWritableDatabase();
 
@@ -253,7 +253,7 @@ public abstract class RealtimeDatabase<T> {
         values.put(COLUMN_LOCATION_INFO, AndroidStringObfuscator.encryptString(info));
 
         try {
-            if (getElement(id) != null) {
+            if (getElement(path) != null) {
                 // Filter results WHERE "title" = hash
                 String selection = COLUMN_LOCATION_ID + " = ?";
                 String[] selectionArgs = { enId };
@@ -266,8 +266,8 @@ public abstract class RealtimeDatabase<T> {
         }
     }
 
-    private String getElement(String id) {
-        String enId = AndroidStringObfuscator.encryptString(id);
+    private String getElement(String path) {
+        String enPath = AndroidStringObfuscator.encryptString(path);
         try {
             SQLiteDatabase db = database.getReadableDatabase();
 
@@ -280,7 +280,7 @@ public abstract class RealtimeDatabase<T> {
 
             // Filter results WHERE "title" = hash
             String selection = COLUMN_LOCATION_ID + " = ?";
-            String[] selectionArgs = { enId };
+            String[] selectionArgs = { enPath };
 
             Cursor cursor = db.query(
                     database.table,                             // The table to query
