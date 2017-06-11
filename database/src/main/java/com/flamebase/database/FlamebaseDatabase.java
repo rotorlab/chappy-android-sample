@@ -63,7 +63,7 @@ public class FlamebaseDatabase {
             Log.e(TAG, "Use FlamebaseDatabase.initialize(Context context, String urlServer) before create real time references");
             return;
         }
-        if (!path.contains(path)) {
+        if (!pathMap.containsKey(path)) {
             RealtimeDatabase realtimeDatabase = new RealtimeDatabase<T>(FlamebaseDatabase.context, clazz) {
                 @Override
                 public void onObjectChanges(T value) {

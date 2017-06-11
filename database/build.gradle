@@ -39,6 +39,7 @@ dependencies {
     testCompile group: 'org.skyscreamer', name: 'jsonassert', version: '1.5.0'
     compile 'com.github.marcodama7.posty:posty:0.1.1'
 
+    compile 'org.skyscreamer:jsonassert:1.5.0'
 }
 
 def siteUrl = 'https://github.com/flamebase/flamebase-database-android'

@@ -22,6 +22,8 @@ import com.flamebase.database.FlamebaseDatabase;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.iid.FirebaseInstanceId;
 
+import java.util.Date;
+
 public class MainActivity extends AppCompatActivity {
 
     private MaterialDialog materialDialog;
@@ -35,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
 
         FirebaseApp.initializeApp(this);
 
-        FlamebaseDatabase.initialize(this, "http://localhost:1507/", FirebaseInstanceId.getInstance().getToken());
+        FlamebaseDatabase.initialize(this, getString(R.string.database_url), FirebaseInstanceId.getInstance().getToken());
         ChatManager.init(this);
 
         askForEmail();
@@ -90,6 +92,11 @@ public class MainActivity extends AppCompatActivity {
 
                             if (!TextUtils.isEmpty(name.getText()) && !TextUtils.isEmpty(email.getText())) {
                                 setData(name.getText().toString(), email.getText().toString());
+
+                                String contactPath = "/contacts/" + email.getText().toString();
+
+                                ChatManager.addContact(contactPath, email.getText().toString(), FirebaseInstanceId.getInstance().getToken(), "android", name.getText().toString());
+
                                 dialog.dismiss();
                             }
                         }
@@ -121,7 +128,8 @@ public class MainActivity extends AppCompatActivity {
                             if (!TextUtils.isEmpty(name.getText())) {
                                 SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
                                 String email = prefs.getString("email", null);
-                                ChatManager.createGroup(name.getText().toString(), email);
+                                String groupPath = "/chats/" + new Date().getTime();
+                                ChatManager.syncGChat(groupPath, email, name.getText().toString());
                                 dialog.dismiss();
                                 materialDialog = null;
                             }
@@ -159,6 +167,8 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
         String name = prefs.getString("name", null);
         String email = prefs.getString("email", null);
+        String contactPath = "/contacts/" + email;
+        ChatManager.addContact(contactPath, email, FirebaseInstanceId.getInstance().getToken(), "android", name);
 
         //ChatManager.addContact(email, FirebaseInstanceId.getInstance().getToken(), "android", name);
     }
@@ -168,7 +178,8 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences.Editor editor = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE).edit();
         editor.putString("name", name).apply();
         editor.putString("email", email).apply();
-
+        String contactPath = "/contacts/" + email;
+        ChatManager.addContact(contactPath, email, FirebaseInstanceId.getInstance().getToken(), "android", name);
         //ChatManager.addContact(email, FirebaseInstanceId.getInstance().getToken(), "android", name);
     }
 }

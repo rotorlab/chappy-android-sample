@@ -9,4 +9,5 @@
     <string name="agree">Ok</string>
     <string name="disagree">Cancel</string>
     <string name="server_url">http://192.168.0.155:3003/</string>
+    <string name="database_url">http://192.168.0.155:1507/</string>
 </resources>

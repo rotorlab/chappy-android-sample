@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
+import android.util.Log;
 
 import com.efraespada.androidstringobfuscator.AndroidStringObfuscator;
 import com.google.firebase.messaging.RemoteMessage;
@@ -12,6 +13,10 @@ import com.google.gson.Gson;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.skyscreamer.jsonassert.JSONCompare;
+import org.skyscreamer.jsonassert.JSONCompareMode;
+import org.skyscreamer.jsonassert.JSONCompareResult;
+
 import java.text.Normalizer;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -19,6 +24,7 @@ import java.util.Map;
 
 import static com.flamebase.database.Database.COLUMN_LOCATION_ID;
 import static com.flamebase.database.Database.COLUMN_LOCATION_INFO;
+import static org.skyscreamer.jsonassert.JSONCompareMode.STRICT;
 
 /**
  * Created by efraespada on 21/05/2017.
@@ -305,7 +311,27 @@ public abstract class RealtimeDatabase<T> {
         }
     }
 
-    public static <T> void syncReference(String path, T reference) {
-        // TODO calculate here JSON differences
+    public <T> void syncReference(String path, T reference) {
+        Gson gson = new Gson();
+        if (this.reference == null) {
+            try {
+                String expected = new JSONObject("{}").toString();
+                String actual = gson.toJson(reference, clazz);
+                JSONCompareResult result = JSONCompare.compareJSON(expected, actual, JSONCompareMode.STRICT);
+                Log.e(TAG, "differences: " + result.toString());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        } else {
+            // TODO calculate here JSON differences
+            try {
+                String expected = gson.toJson(this.reference, clazz);
+                String actual = gson.toJson(reference, clazz);
+                JSONCompareResult result = JSONCompare.compareJSON(expected, actual, JSONCompareMode.STRICT);
+                Log.e(TAG, "differences: " + result.toString());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
