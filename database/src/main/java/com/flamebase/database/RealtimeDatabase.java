@@ -11,6 +11,7 @@ import com.efraespada.androidstringobfuscator.AndroidStringObfuscator;
 import com.google.firebase.messaging.RemoteMessage;
 import com.google.gson.Gson;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.skyscreamer.jsonassert.JSONCompare;
@@ -311,14 +312,28 @@ public abstract class RealtimeDatabase<T> {
         }
     }
 
-    public <T> void syncReference(String path, T reference) {
+    public <T> String syncReference(String path, T reference) {
+        String diffReference =  "";
         Gson gson = new Gson();
         if (this.reference == null) {
             try {
                 String expected = new JSONObject("{}").toString();
                 String actual = gson.toJson(reference, clazz);
                 JSONCompareResult result = JSONCompare.compareJSON(expected, actual, JSONCompareMode.STRICT);
-                Log.e(TAG, "differences: " + result.toString());
+                if (result.toString().contains("Unexpected")) {
+                    String res = result.toString().trim().replace("Unexpected: ", "");
+                    JSONObject jsonObject = new JSONObject(actual);
+
+                    JSONObject toCheck = (JSONObject) getUnexpected(res, jsonObject);
+                    JSONObject diff = new JSONObject();
+                    JSONObject unexpected = new JSONObject();
+                    unexpected.put(res, toCheck);
+                    diff.put("$set", unexpected);
+                    Log.e(TAG, "differences: " + diff.toString());
+                    diffReference = diff.toString();
+                } else {
+                    Log.e(TAG, "CHECK THISSSS");
+                }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -328,10 +343,87 @@ public abstract class RealtimeDatabase<T> {
                 String expected = gson.toJson(this.reference, clazz);
                 String actual = gson.toJson(reference, clazz);
                 JSONCompareResult result = JSONCompare.compareJSON(expected, actual, JSONCompareMode.STRICT);
-                Log.e(TAG, "differences: " + result.toString());
+                if (result.toString().contains("Unexpected")) {
+                    String res = result.toString().trim().replace("Unexpected: ", "");
+                    JSONObject jsonObject = new JSONObject(actual);
+
+                    JSONObject toCheck = (JSONObject) getUnexpected(res, jsonObject);
+                    JSONObject diff = new JSONObject();
+                    JSONObject unexpected = new JSONObject();
+                    unexpected.put(res, toCheck);
+                    diff.put("$set", unexpected);
+                    Log.e(TAG, "differences: " + diff.toString());
+                    diffReference = diff.toString();
+                } else {
+                    Log.e(TAG, "CHECK THISSSS");
+                }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
+        return diffReference;
     }
+
+    private Object getUnexpected(String toFind, Object check) {
+        Object object = null;
+
+        try {
+            Iterator<String> iter = ((JSONObject)check).keys();
+            while (iter.hasNext()) {
+
+                String key = iter.next();
+                if (key.equalsIgnoreCase(toFind)) {
+                    try {
+                        object = ((JSONObject)check).get(key);
+                        break;
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        object = null;
+                    }
+                } else {
+                    try {
+                        object = getUnexpected(toFind, ((JSONObject)check).get(key));
+                    } catch (JSONException e) {
+                        try {
+                            JSONArray array = (JSONArray) getUnexpected(toFind, (JSONObject) ((JSONObject)check).get(key));
+                            for (int i = 0; i < array.length(); i++) {
+                                JSONObject obj = array.getJSONObject(i);
+                                Object resu = getUnexpected(toFind, obj);
+                                if (resu != null) {
+                                    object = resu;
+                                    break;
+                                }
+                            }
+                        } catch (JSONException e1) {
+                            e1.printStackTrace();
+                            object = null;
+                        }
+                        //e.printStackTrace();
+                    }
+                }
+            }
+        } catch (ClassCastException e) {
+
+
+
+            try {
+                JSONArray jsonArray = (JSONArray) check;
+
+                for (int si = jsonArray.length() - 1; si >= 0; si--) {
+                    JSONObject js = jsonArray.getJSONObject(si);
+                    Object resu = getUnexpected(toFind, js);
+                    if (resu != null) {
+                        object = resu;
+                        break;
+                    }
+                }
+
+            } catch (JSONException | ClassCastException l) {
+            }
+        }
+
+
+        return object;
+    }
+
 }

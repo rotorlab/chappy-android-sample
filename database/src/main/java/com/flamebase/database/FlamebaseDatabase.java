@@ -48,7 +48,9 @@ public class FlamebaseDatabase {
         FlamebaseDatabase.context = context;
         FlamebaseDatabase.urlServer = urlServer;
         FlamebaseDatabase.token = token;
-        FlamebaseDatabase.pathMap = new HashMap<>();
+        if (FlamebaseDatabase.pathMap == null) {
+            FlamebaseDatabase.pathMap = new HashMap<>();
+        }
     }
 
     /**
@@ -59,11 +61,11 @@ public class FlamebaseDatabase {
      * @param clazz                 - Class type to serialize
      */
     public static <T> void createListener(String database, String path, final FlamebaseReference flamebaseReference, Class<T> clazz) {
-        if (pathMap == null) {
+        if (FlamebaseDatabase.pathMap == null) {
             Log.e(TAG, "Use FlamebaseDatabase.initialize(Context context, String urlServer) before create real time references");
             return;
         }
-        if (!pathMap.containsKey(path)) {
+        if (!FlamebaseDatabase.pathMap.containsKey(path)) {
             RealtimeDatabase realtimeDatabase = new RealtimeDatabase<T>(FlamebaseDatabase.context, clazz) {
                 @Override
                 public void onObjectChanges(T value) {
@@ -85,7 +87,7 @@ public class FlamebaseDatabase {
                     return flamebaseReference.getTag();
                 }
             };
-            pathMap.put(path, realtimeDatabase);
+            FlamebaseDatabase.pathMap.put(path, realtimeDatabase);
 
             FlamebaseDatabase.initSync(database, path, FlamebaseDatabase.token);
         } else {
@@ -118,6 +120,29 @@ public class FlamebaseDatabase {
         }
     }
 
+    private static void sendUpdate(String database, String path, String differences) {
+        try {
+            JSONObject map = new JSONObject();
+            map.put("method", "update_data");
+            map.put("path", path);
+            map.put("database", database);
+            map.put("differences", differences);
+            Sender.postRequest(FlamebaseDatabase.urlServer, map.toString(), new Sender.FlamebaseResponse() {
+                @Override
+                public void onSuccess(JSONObject jsonObject) {
+                    Log.e(TAG, "action success");
+                }
+
+                @Override
+                public void onFailure(String error) {
+                    Log.e(TAG, "action with error: " + error);
+                }
+            });
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void onMessageReceived(RemoteMessage remoteMessage) {
         try {
             String path = remoteMessage.getData().get(RealtimeDatabase.PATH);
@@ -130,9 +155,10 @@ public class FlamebaseDatabase {
 
     }
 
-    public static <T> void syncReference(String path, T reference) {
+    public static <T> void syncReference(String database, String path, T reference) {
         if (pathMap.containsKey(path)) {
-            pathMap.get(path).syncReference(path, reference);
+            String result = pathMap.get(path).syncReference(path, reference);
+            sendUpdate(database, path, result);
         }
     }
 }

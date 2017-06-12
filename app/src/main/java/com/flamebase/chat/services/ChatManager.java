@@ -87,7 +87,7 @@ public class ChatManager {
         Map<String, Message> messageMap = new HashMap<>();
         GChat gChat = new GChat(name, members, messageMap);
 
-        FlamebaseDatabase.syncReference(path, gChat);
+        FlamebaseDatabase.syncReference("draco", path, gChat);
     }
 
     public static void addContact(final String path, String email, String token, String os, String name) {
@@ -119,13 +119,12 @@ public class ChatManager {
 
         }, GContacts.class);
 
-
         Map<String, Member> memberMap = new HashMap<>();
         Member member = new Member(name, token, os);
         memberMap.put(email, member);
         GContacts contacts = new GContacts(memberMap);
 
-        FlamebaseDatabase.syncReference(path, contacts);
+        FlamebaseDatabase.syncReference("draco", path, contacts);
     }
 
     /*
