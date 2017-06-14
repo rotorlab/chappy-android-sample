@@ -88,12 +88,11 @@ public class FlamebaseDatabase {
                 }
             };
             FlamebaseDatabase.pathMap.put(path, realtimeDatabase);
-
-            FlamebaseDatabase.initSync(database, path, FlamebaseDatabase.token);
         } else {
             // TODO check if should be necessary another post request message to refresh reference
         }
 
+        FlamebaseDatabase.initSync(database, path, FlamebaseDatabase.token);
     }
 
     private static void initSync(String database, String path, String token) {

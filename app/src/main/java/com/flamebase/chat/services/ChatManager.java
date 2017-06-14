@@ -9,7 +9,6 @@ import com.flamebase.chat.model.GContacts;
 import com.flamebase.chat.model.Member;
 import com.flamebase.chat.model.Message;
 import com.flamebase.database.FlamebaseDatabase;
-import com.google.firebase.FirebaseApp;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -80,7 +79,6 @@ public class ChatManager {
             }
 
         }, GChat.class);
-
 
         List<String> members = new ArrayList<>();
         members.add(email);

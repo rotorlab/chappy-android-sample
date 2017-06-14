@@ -324,10 +324,15 @@ public abstract class RealtimeDatabase<T> {
                     String res = result.toString().trim().replace("Unexpected: ", "");
                     JSONObject jsonObject = new JSONObject(actual);
 
-                    JSONObject toCheck = (JSONObject) getUnexpected(res, jsonObject);
                     JSONObject diff = new JSONObject();
                     JSONObject unexpected = new JSONObject();
-                    unexpected.put(res, toCheck);
+                    String[] unexpectedParts = res.split(" ; ");
+
+                    for (int i = 0; i < unexpectedParts.length; i++) {
+                        JSONObject toCheck = (JSONObject) getUnexpected(unexpectedParts[i], jsonObject);
+                        unexpected.put(res, toCheck);
+                    }
+
                     diff.put("$set", unexpected);
                     Log.e(TAG, "differences: " + diff.toString());
                     diffReference = diff.toString();
@@ -403,9 +408,6 @@ public abstract class RealtimeDatabase<T> {
                 }
             }
         } catch (ClassCastException e) {
-
-
-
             try {
                 JSONArray jsonArray = (JSONArray) check;
 
@@ -419,6 +421,7 @@ public abstract class RealtimeDatabase<T> {
                 }
 
             } catch (JSONException | ClassCastException l) {
+                object = check;
             }
         }
 

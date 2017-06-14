@@ -39,4 +39,18 @@ dependencies {
 
 }
 
+android.applicationVariants.all{ variant ->
+    variant.mergeResources.doLast{
+        println  ":" + project.name + ":initStringObfuscator"
+        javaexec {
+            main = "-jar";
+            args = [
+                    "../AndroidStringObfuscator.jar",
+                    project.name,
+                    variant.dirName
+            ]
+        }
+    }
+}
+
 apply plugin: 'com.google.gms.google-services'
