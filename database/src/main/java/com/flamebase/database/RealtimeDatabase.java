@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteException;
 import android.util.Log;
 
 import com.efraespada.androidstringobfuscator.AndroidStringObfuscator;
+import com.flamebase.jsondiff.JSONDiff;
 import com.google.firebase.messaging.RemoteMessage;
 import com.google.gson.Gson;
 
@@ -319,6 +320,7 @@ public abstract class RealtimeDatabase<T> {
             try {
                 String expected = new JSONObject("{}").toString();
                 String actual = gson.toJson(reference, clazz);
+                JSONObject test = JSONDiff.diff(new JSONObject("{}"), new JSONObject(actual));
                 JSONCompareResult result = JSONCompare.compareJSON(expected, actual, JSONCompareMode.STRICT);
                 if (result.toString().contains("Unexpected")) {
                     String res = result.toString().trim().replace("Unexpected: ", "");
