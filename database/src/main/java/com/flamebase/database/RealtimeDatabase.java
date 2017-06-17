@@ -22,6 +22,7 @@ import org.skyscreamer.jsonassert.JSONCompareResult;
 import java.text.Normalizer;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import static com.flamebase.database.Database.COLUMN_LOCATION_ID;
@@ -318,29 +319,20 @@ public abstract class RealtimeDatabase<T> {
         Gson gson = new Gson();
         if (this.reference == null) {
             try {
-                String expected = new JSONObject("{}").toString();
+                //String expected = new JSONObject("{}").toString();
+                String expected = new JSONObject("{\"contacts\": {\"gggghyyhhytttt\": {\"name\":\"gtrrfggtgbhyhh\",\"os\":\"ios\"}}}").toString();
+                //String expected = new JSONObject("{\"contacts\": {\"gggghyyhhytttt\": {\"name\":\"gtrrfggtgbhyhh\",\"os\":\"android\"}}}").toString();
                 String actual = gson.toJson(reference, clazz);
-                Map<String, JSONObject> test = JSONDiff.diff(new JSONObject("{}"), new JSONObject(actual));
-                JSONCompareResult result = JSONCompare.compareJSON(expected, actual, JSONCompareMode.STRICT);
-                if (result.toString().contains("Unexpected")) {
-                    String res = result.toString().trim().replace("Unexpected: ", "");
-                    JSONObject jsonObject = new JSONObject(actual);
+                Map<String, JSONObject> test = JSONDiff.diff(new JSONObject(expected), new JSONObject(actual));
 
-                    JSONObject diff = new JSONObject();
-                    JSONObject unexpected = new JSONObject();
-                    String[] unexpectedParts = res.split(" ; ");
+                JSONObject jsonObject = new JSONObject();
 
-                    for (int i = 0; i < unexpectedParts.length; i++) {
-                        JSONObject toCheck = (JSONObject) getUnexpected(unexpectedParts[i], jsonObject);
-                        unexpected.put(res, toCheck);
-                    }
-
-                    diff.put("$set", unexpected);
-                    Log.e(TAG, "differences: " + diff.toString());
-                    diffReference = diff.toString();
-                } else {
-                    Log.e(TAG, "CHECK THISSSS");
+                // max 3
+                for (Map.Entry<String, JSONObject> entry : test.entrySet()) {
+                    jsonObject.put(entry.getKey(), entry.getValue());
                 }
+
+                return jsonObject.toString();
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -349,21 +341,17 @@ public abstract class RealtimeDatabase<T> {
             try {
                 String expected = gson.toJson(this.reference, clazz);
                 String actual = gson.toJson(reference, clazz);
-                JSONCompareResult result = JSONCompare.compareJSON(expected, actual, JSONCompareMode.STRICT);
-                if (result.toString().contains("Unexpected")) {
-                    String res = result.toString().trim().replace("Unexpected: ", "");
-                    JSONObject jsonObject = new JSONObject(actual);
+                Map<String, JSONObject> test = JSONDiff.diff(new JSONObject(expected), new JSONObject(actual));
 
-                    JSONObject toCheck = (JSONObject) getUnexpected(res, jsonObject);
-                    JSONObject diff = new JSONObject();
-                    JSONObject unexpected = new JSONObject();
-                    unexpected.put(res, toCheck);
-                    diff.put("$set", unexpected);
-                    Log.e(TAG, "differences: " + diff.toString());
-                    diffReference = diff.toString();
-                } else {
-                    Log.e(TAG, "CHECK THISSSS");
+                JSONObject jsonObject = new JSONObject();
+
+                // max 3
+                for (Map.Entry<String, JSONObject> entry : test.entrySet()) {
+                    jsonObject.put(entry.getKey(), entry.getValue());
                 }
+
+                return jsonObject.toString();
+
             } catch (JSONException e) {
                 e.printStackTrace();
             }

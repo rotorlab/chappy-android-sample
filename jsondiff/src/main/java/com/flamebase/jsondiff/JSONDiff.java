@@ -36,7 +36,11 @@ public class JSONDiff {
         Log.e(TAG, "mapA size " + mapA.size());
         Log.e(TAG, "mapB size " + mapB.size());
 
+
         final Map<String, JSONObject> holder = new HashMap<>();
+        holder.put("$set", new JSONObject());
+        holder.put("$unset", new JSONObject());
+        holder.put("$rename", new JSONObject());
         try {
             String path = "";
             hashMapper(holder, path, mapA, mapB);
@@ -90,12 +94,7 @@ public class JSONDiff {
                 if (valueA instanceof String && valueB instanceof String) {
                     if (!valueA.equals(valueB)) {
                         try {
-                            JSONObject object = new JSONObject();
-                            JSONObject diff = new JSONObject();
-                            diff.put((String) keyA, valueB);
-                            object.put("$set", diff);
-                            Log.e(TAG, object.toString());
-                            holder.put(path, object);
+                            holder.get("$set").put(path + "." + keyA, valueB);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -103,12 +102,7 @@ public class JSONDiff {
                 } else if ((valueA instanceof Long && valueB instanceof Long) || (valueA instanceof Integer && valueB instanceof Integer)) {
                     if (valueA != valueB) {
                         try {
-                            JSONObject object = new JSONObject();
-                            JSONObject diff = new JSONObject();
-                            diff.put((String) keyA, valueB);
-                            object.put("$set", diff);
-                            Log.e(TAG, object.toString());
-                            holder.put(path, object);
+                            holder.get("$set").put(path + "." + keyA, valueB);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -120,10 +114,7 @@ public class JSONDiff {
                 }
             } else {
                 try {
-                    JSONObject object = new JSONObject();
-                    object.put("$unset", path + "." + keysA);
-                    Log.e(TAG, "$unset " + path + "." + keysA);
-                    holder.put(path, object);
+                    holder.get("$unset").put(path + "." + keyA, valueA);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -136,45 +127,26 @@ public class JSONDiff {
             K valueB = mapB.get(keysB.get(b));
 
             if (!mapA.containsKey(keyB)) {
-                if (valueB instanceof String && valueB instanceof String) {
+                if (valueB instanceof String) {
                     try {
-                        JSONObject object = new JSONObject();
-                        JSONObject diff = new JSONObject();
-                        diff.put((String) keyB, valueB);
-                        object.put("$set", diff);
-                        Log.e(TAG, object.toString());
-                        holder.put(path, object);
+                        holder.get("$set").put(path + "." + keyB, valueB);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
                 } else if (valueB instanceof Long || valueB instanceof Integer) {
                     try {
-                        JSONObject object = new JSONObject();
-                        JSONObject diff = new JSONObject();
-                        diff.put((String) keyB, valueB);
-                        object.put("$set", diff);
-                        Log.e(TAG, object.toString());
-                        holder.put(path, object);
+                        holder.get("$set").put(path + "." + keyB, valueB);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
                 } else if (valueB instanceof Map) {
                     try {
-                        JSONObject object = new JSONObject();
-                        JSONObject diff = new JSONObject();
-
                         ObjectMapper objectMapper = new ObjectMapper();
                         String result = objectMapper.writeValueAsString(valueB);
 
-                        diff.put((String) keyB,  new JSONObject(result));
+                        holder.get("$set").put(path + "." + keyB, new JSONObject(result));
 
-                        object.put("$set", diff);
-                        Log.e(TAG, object.toString());
-                        holder.put(path, object);
-
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    } catch (JsonProcessingException e) {
+                    } catch (JsonProcessingException | JSONException e) {
                         e.printStackTrace();
                     }
                 } else {
