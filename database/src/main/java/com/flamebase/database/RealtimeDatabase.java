@@ -319,16 +319,14 @@ public abstract class RealtimeDatabase<T> {
         Gson gson = new Gson();
         if (this.reference == null) {
             try {
-                //String expected = new JSONObject("{}").toString();
-                String expected = new JSONObject("{\"contacts\": {\"gggghyyhhytttt\": {\"name\":\"gtrrfggtgbhyhh\",\"os\":\"ios\"}}}").toString();
-                //String expected = new JSONObject("{\"contacts\": {\"gggghyyhhytttt\": {\"name\":\"gtrrfggtgbhyhh\",\"os\":\"android\"}}}").toString();
+                String expected = "{}";
                 String actual = gson.toJson(reference, clazz);
-                Map<String, JSONObject> test = JSONDiff.diff(new JSONObject(expected), new JSONObject(actual));
+                Map<String, JSONObject> diff = JSONDiff.diff(new JSONObject(expected), new JSONObject(actual));
 
                 JSONObject jsonObject = new JSONObject();
 
                 // max 3
-                for (Map.Entry<String, JSONObject> entry : test.entrySet()) {
+                for (Map.Entry<String, JSONObject> entry : diff.entrySet()) {
                     jsonObject.put(entry.getKey(), entry.getValue());
                 }
 
@@ -337,16 +335,15 @@ public abstract class RealtimeDatabase<T> {
                 e.printStackTrace();
             }
         } else {
-            // TODO calculate here JSON differences
             try {
                 String expected = gson.toJson(this.reference, clazz);
                 String actual = gson.toJson(reference, clazz);
-                Map<String, JSONObject> test = JSONDiff.diff(new JSONObject(expected), new JSONObject(actual));
+                Map<String, JSONObject> diff = JSONDiff.diff(new JSONObject(expected), new JSONObject(actual));
 
                 JSONObject jsonObject = new JSONObject();
 
                 // max 3
-                for (Map.Entry<String, JSONObject> entry : test.entrySet()) {
+                for (Map.Entry<String, JSONObject> entry : diff.entrySet()) {
                     jsonObject.put(entry.getKey(), entry.getValue());
                 }
 
@@ -358,65 +355,4 @@ public abstract class RealtimeDatabase<T> {
         }
         return diffReference;
     }
-
-    private Object getUnexpected(String toFind, Object check) {
-        Object object = null;
-
-        try {
-            Iterator<String> iter = ((JSONObject)check).keys();
-            while (iter.hasNext()) {
-
-                String key = iter.next();
-                if (key.equalsIgnoreCase(toFind)) {
-                    try {
-                        object = ((JSONObject)check).get(key);
-                        break;
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                        object = null;
-                    }
-                } else {
-                    try {
-                        object = getUnexpected(toFind, ((JSONObject)check).get(key));
-                    } catch (JSONException e) {
-                        try {
-                            JSONArray array = (JSONArray) getUnexpected(toFind, (JSONObject) ((JSONObject)check).get(key));
-                            for (int i = 0; i < array.length(); i++) {
-                                JSONObject obj = array.getJSONObject(i);
-                                Object resu = getUnexpected(toFind, obj);
-                                if (resu != null) {
-                                    object = resu;
-                                    break;
-                                }
-                            }
-                        } catch (JSONException e1) {
-                            e1.printStackTrace();
-                            object = null;
-                        }
-                        //e.printStackTrace();
-                    }
-                }
-            }
-        } catch (ClassCastException e) {
-            try {
-                JSONArray jsonArray = (JSONArray) check;
-
-                for (int si = jsonArray.length() - 1; si >= 0; si--) {
-                    JSONObject js = jsonArray.getJSONObject(si);
-                    Object resu = getUnexpected(toFind, js);
-                    if (resu != null) {
-                        object = resu;
-                        break;
-                    }
-                }
-
-            } catch (JSONException | ClassCastException l) {
-                object = check;
-            }
-        }
-
-
-        return object;
-    }
-
 }
