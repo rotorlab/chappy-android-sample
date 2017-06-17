@@ -320,7 +320,7 @@ public abstract class RealtimeDatabase<T> {
             try {
                 String expected = new JSONObject("{}").toString();
                 String actual = gson.toJson(reference, clazz);
-                JSONObject test = JSONDiff.diff(new JSONObject("{}"), new JSONObject(actual));
+                Map<String, JSONObject> test = JSONDiff.diff(new JSONObject("{}"), new JSONObject(actual));
                 JSONCompareResult result = JSONCompare.compareJSON(expected, actual, JSONCompareMode.STRICT);
                 if (result.toString().contains("Unexpected")) {
                     String res = result.toString().trim().replace("Unexpected: ", "");
