@@ -73,7 +73,7 @@ public class FlamebaseDatabase {
                 }
 
                 @Override
-                public T update() {
+                public T updateObject() {
                     return (T) flamebaseReference.update();
                 }
 
@@ -154,9 +154,9 @@ public class FlamebaseDatabase {
 
     }
 
-    public static <T> void syncReference(String database, String path, T reference) {
+    public static <T> void syncReference(String database, String path) {
         if (pathMap.containsKey(path)) {
-            String result = pathMap.get(path).syncReference(path, reference);
+            String result = pathMap.get(path).syncReference();
             sendUpdate(database, path, result);
         }
     }

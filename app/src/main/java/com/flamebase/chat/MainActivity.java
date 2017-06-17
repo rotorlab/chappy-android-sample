@@ -7,9 +7,10 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -17,6 +18,7 @@ import android.widget.EditText;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.flamebase.chat.adapters.ChatAdapter;
 import com.flamebase.chat.services.ChatManager;
 import com.flamebase.database.FlamebaseDatabase;
 import com.google.firebase.FirebaseApp;
@@ -27,6 +29,7 @@ import java.util.Date;
 public class MainActivity extends AppCompatActivity {
 
     private MaterialDialog materialDialog;
+    private RecyclerView chatsList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +42,11 @@ public class MainActivity extends AppCompatActivity {
 
         FlamebaseDatabase.initialize(this, getString(R.string.database_url), FirebaseInstanceId.getInstance().getToken());
         ChatManager.init(this);
+
+        chatsList = (RecyclerView) findViewById(R.id.chats_list);
+        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
+        chatsList.setLayoutManager(mLayoutManager);
+        chatsList.setAdapter(new ChatAdapter());
 
         askForEmail();
 
@@ -93,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
                             if (!TextUtils.isEmpty(name.getText()) && !TextUtils.isEmpty(email.getText())) {
                                 setData(name.getText().toString(), email.getText().toString());
 
-                                String contactPath = "/contacts/" + email.getText().toString();
+                                String contactPath = "/contacts";
 
                                 ChatManager.addContact(contactPath, email.getText().toString(), FirebaseInstanceId.getInstance().getToken(), "android", name.getText().toString());
 
@@ -167,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
         String name = prefs.getString("name", null);
         String email = prefs.getString("email", null);
-        String contactPath = "/contacts/" + email;
+        String contactPath = "/contacts";
         ChatManager.addContact(contactPath, email, FirebaseInstanceId.getInstance().getToken(), "android", name);
 
         //ChatManager.addContact(email, FirebaseInstanceId.getInstance().getToken(), "android", name);
@@ -178,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences.Editor editor = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE).edit();
         editor.putString("name", name).apply();
         editor.putString("email", email).apply();
-        String contactPath = "/contacts/" + email;
+        String contactPath = "/contacts";
         ChatManager.addContact(contactPath, email, FirebaseInstanceId.getInstance().getToken(), "android", name);
         //ChatManager.addContact(email, FirebaseInstanceId.getInstance().getToken(), "android", name);
     }

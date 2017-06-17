@@ -29,7 +29,7 @@ public class JSONDiff {
         // nothing to do here
     }
 
-    public static Map<String, JSONObject> diff(JSONObject a, JSONObject b) {
+    public static Map<String, JSONObject> diff(String path, JSONObject a, JSONObject b) {
         Map<String, Object> mapA = getMap(a);
         Map<String, Object> mapB = getMap(b);
 
@@ -38,7 +38,7 @@ public class JSONDiff {
         holder.put("$unset", new JSONObject());
         holder.put("$rename", new JSONObject());
 
-        hashMapper(holder, "", mapA, mapB);
+        hashMapper(holder, path, mapA, mapB);
 
         return holder;
     }
@@ -132,12 +132,10 @@ public class JSONDiff {
                     }
                 } else if (valueB instanceof Map) {
                     try {
-                        ObjectMapper objectMapper = new ObjectMapper();
-                        String result = objectMapper.writeValueAsString(valueB);
 
-                        holder.get("$set").put(path + (path.length() == 0 ? "" : ".") + keyB, new JSONObject(result));
-
-                    } catch (JsonProcessingException | JSONException e) {
+                        holder.get("$set").put(path + (path.length() == 0 ? "" : ".") + keyB, new JSONObject("{}"));
+                        hashMapper(holder, path + (path.length() == 0 ? "" : ".") + keyB, new HashMap<>(), (Map<Object, Object>) valueB);
+                    } catch (JSONException e) {
                         e.printStackTrace();
                     }
                 } else {

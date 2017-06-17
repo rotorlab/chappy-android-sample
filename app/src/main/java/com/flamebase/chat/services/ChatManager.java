@@ -3,14 +3,11 @@ package com.flamebase.chat.services;
 import android.content.Context;
 import android.util.Log;
 
-import com.flamebase.chat.R;
 import com.flamebase.chat.model.GChat;
-import com.flamebase.chat.model.GContacts;
 import com.flamebase.chat.model.Member;
 import com.flamebase.chat.model.Message;
 import com.flamebase.database.FlamebaseDatabase;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -26,8 +23,8 @@ public class ChatManager {
 
     private static final String TAG = ChatManager.class.getSimpleName();
     private static Context context;
-    private static HashMap<String, GChat> map;
-    private static GContacts contacts;
+    private static Map<String, GChat> map;
+    private static Map<String, Member> contacts;
 
     public interface Callback {
         void onSuccess(JSONObject jsonObject);
@@ -40,9 +37,12 @@ public class ChatManager {
 
     public static void init(Context context) {
         ChatManager.context = context;
-        map = new HashMap<>();
-        contacts = null;
-
+        if (map == null) {
+            map = new HashMap<>();
+        }
+        if (contacts == null) {
+            contacts = new HashMap<>();
+        }
     }
 
     public static void syncGChat(final String path, String email, String name) {
@@ -85,23 +85,32 @@ public class ChatManager {
         Map<String, Message> messageMap = new HashMap<>();
         GChat gChat = new GChat(name, members, messageMap);
 
-        FlamebaseDatabase.syncReference("draco", path, gChat);
+        map.put(path, gChat);
+
+        FlamebaseDatabase.syncReference("draco", path);
     }
 
     public static void addContact(final String path, String email, String token, String os, String name) {
-        FlamebaseDatabase.createListener("chats", path, new FlamebaseDatabase.FlamebaseReference<GContacts>() {
+        FlamebaseDatabase.createListener("chats", path, new FlamebaseDatabase.FlamebaseReference<Map<String, Member>>() {
             @Override
-            public void onObjectChanges(GContacts value) {
+            public void onObjectChanges(Map<String, Member> value) {
                 if (contacts != null) {
-                    contacts.setMembers(value.getMembers());
+                    for (Map.Entry<String, Member> entry : value.entrySet()) {
+                        if (!contacts.containsKey(entry.getKey())) {
+                            contacts.put(entry.getKey(), entry.getValue());
+                        } else {
+                            contacts.get(entry.getKey()).setName(entry.getValue().getName());
+                            contacts.get(entry.getKey()).setOs(entry.getValue().getOs());
+                            contacts.get(entry.getKey()).setToken(entry.getValue().getToken());
+                        }
+                    }
                 } else {
                     contacts = value;
                 }
             }
 
-            // TODO make it work ------*
             @Override
-            public GContacts update() {
+            public Map<String, Member> update() {
                 return contacts;
             }
 
@@ -115,69 +124,19 @@ public class ChatManager {
                 return path + "_sync";
             }
 
-        }, GContacts.class);
+        }, Map.class);
 
-        Map<String, Member> memberMap = new HashMap<>();
         Member member = new Member(name, token, os);
-        memberMap.put(email, member);
-        GContacts contacts = new GContacts(memberMap);
+        contacts.put(email, member);
 
-        FlamebaseDatabase.syncReference("draco", path, contacts);
+        FlamebaseDatabase.syncReference("draco", path);
     }
 
-    /*
-
-    public static void addContact(String email, String token, String os, String name) {
-        try {
-            JSONObject message = new JSONObject();
-            JSONObject values = new JSONObject();
-            values.put("method", "addContact");
-            values.put("email", email);
-            values.put("token", token);
-            values.put("name", name);
-            values.put("os", os);
-            message.put("message", values);
-            Sender.postRequest(ChatManager.context.getString(R.string.server_url), message.toString(), new Sender.Callback() {
-                @Override
-                public void onSuccess(JSONObject jsonObject) {
-                    Log.e(TAG, "action success");
-                }
-
-                @Override
-                public void onFailure(String error) {
-                    Log.e(TAG, "action with error: " + error);
-                }
-            });
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+    public static Map<String, Member> getContacts() {
+        return contacts;
     }
 
-
- */
-    public static void createGroup(String name, String email) {
-        try {
-            JSONObject message = new JSONObject();
-            JSONObject values = new JSONObject();
-            values.put("method", "createGroup");
-            values.put("email", email);
-            values.put("name", name);
-            message.put("message", values);
-            Sender.postRequest(ChatManager.context.getString(R.string.server_url), message.toString(), new Sender.Callback() {
-                @Override
-                public void onSuccess(JSONObject jsonObject) {
-                    Log.e(TAG, "action success");
-                }
-
-                @Override
-                public void onFailure(String error) {
-                    Log.e(TAG, "action with error: " + error);
-                }
-            });
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+    public static Map<String, GChat> getChats() {
+        return map;
     }
-
-
 }

@@ -5,29 +5,22 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
-import android.util.Log;
 
 import com.efraespada.androidstringobfuscator.AndroidStringObfuscator;
 import com.flamebase.jsondiff.JSONDiff;
 import com.google.firebase.messaging.RemoteMessage;
 import com.google.gson.Gson;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.skyscreamer.jsonassert.JSONCompare;
-import org.skyscreamer.jsonassert.JSONCompareMode;
-import org.skyscreamer.jsonassert.JSONCompareResult;
 
 import java.text.Normalizer;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import static com.flamebase.database.Database.COLUMN_LOCATION_ID;
 import static com.flamebase.database.Database.COLUMN_LOCATION_INFO;
-import static org.skyscreamer.jsonassert.JSONCompareMode.STRICT;
 
 /**
  * Created by efraespada on 21/05/2017.
@@ -153,7 +146,7 @@ public abstract class RealtimeDatabase<T> {
 
     public abstract void onObjectChanges(T value);
 
-    public abstract T update();
+    public abstract T updateObject();
 
     public abstract void progress(String id, int value);
 
@@ -314,14 +307,14 @@ public abstract class RealtimeDatabase<T> {
         }
     }
 
-    public <T> String syncReference(String path, T reference) {
+    public <T> String syncReference() {
         String diffReference =  "";
         Gson gson = new Gson();
         if (this.reference == null) {
             try {
                 String expected = "{}";
-                String actual = gson.toJson(reference, clazz);
-                Map<String, JSONObject> diff = JSONDiff.diff(new JSONObject(expected), new JSONObject(actual));
+                String actual = gson.toJson(updateObject(), clazz);
+                Map<String, JSONObject> diff = JSONDiff.diff("", new JSONObject(expected), new JSONObject(actual));
 
                 JSONObject jsonObject = new JSONObject();
 
@@ -337,8 +330,8 @@ public abstract class RealtimeDatabase<T> {
         } else {
             try {
                 String expected = gson.toJson(this.reference, clazz);
-                String actual = gson.toJson(reference, clazz);
-                Map<String, JSONObject> diff = JSONDiff.diff(new JSONObject(expected), new JSONObject(actual));
+                String actual = gson.toJson(updateObject(), clazz);
+                Map<String, JSONObject> diff = JSONDiff.diff("", new JSONObject(expected), new JSONObject(actual));
 
                 JSONObject jsonObject = new JSONObject();
 
