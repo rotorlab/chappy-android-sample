@@ -14,13 +14,14 @@ import com.google.gson.Gson;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Type;
 import java.text.Normalizer;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import static com.flamebase.database.Database.COLUMN_LOCATION_ID;
-import static com.flamebase.database.Database.COLUMN_LOCATION_INFO;
+import static com.flamebase.database.Database.COLUMN_ID;
+import static com.flamebase.database.Database.COLUMN_DATA;
 
 /**
  * Created by efraespada on 21/05/2017.
@@ -28,10 +29,9 @@ import static com.flamebase.database.Database.COLUMN_LOCATION_INFO;
 
 public abstract class RealtimeDatabase<T> {
 
-    private int VERSION = 1;
+    private int VERSION = 3;
     private static Map<String, String[]> mapParts;
     private Database database;
-    private Class<T> clazz;
     private Context context;
 
     private T reference;
@@ -48,22 +48,20 @@ public abstract class RealtimeDatabase<T> {
     public static final String ACTION_SIMPLE_UPDATE    = "simple_update";
     public static final String ACTION_SLICE_UPDATE     = "slice_update";
 
-    public RealtimeDatabase(Context context, Class<T> clazz) {
-        this.clazz = clazz;
+    public RealtimeDatabase(Context context) {
         this.context = context;
         AndroidStringObfuscator.init(this.context);
-        String name = RealtimeDatabase.class.getSimpleName() + "_" + clazz.getSimpleName() + ".db";
-        this.database = new Database(this.context, name, clazz.getSimpleName(), VERSION);
+        String name = RealtimeDatabase.class.getSimpleName() + ".db";
+        this.database = new Database(this.context, name, "references", VERSION);
         this.mapParts      = new HashMap<>();
         reference = null;
     }
 
-    public RealtimeDatabase(Context context, Class<T> clazz, RemoteMessage remoteMessage) {
-        this.clazz = clazz;
+    public RealtimeDatabase(Context context, RemoteMessage remoteMessage) {
         this.context = context;
         AndroidStringObfuscator.init(this.context);
-        String name = RealtimeDatabase.class.getSimpleName() + "_" + clazz.getSimpleName() + ".db";
-        this.database = new Database(this.context, name, clazz.getSimpleName(), VERSION);
+        String name = RealtimeDatabase.class.getSimpleName() + ".db";
+        this.database = new Database(this.context, name, "references", VERSION);
         reference = null;
         onMessageReceived(remoteMessage);
     }
@@ -152,6 +150,8 @@ public abstract class RealtimeDatabase<T> {
 
     public abstract String getTag();
 
+    public abstract Type getType();
+
     private void parseResult(String path, String data) {
         try {
             Gson gson = new Gson();
@@ -238,7 +238,7 @@ public abstract class RealtimeDatabase<T> {
             }
 
             addElement(path, jsonObject.toString());
-            reference = gson.fromJson(jsonObject.toString(), clazz);
+            reference = gson.fromJson(jsonObject.toString(), getType());
             onObjectChanges(reference);
         } catch (JSONException e) {
             e.printStackTrace();
@@ -252,13 +252,13 @@ public abstract class RealtimeDatabase<T> {
 
         // Create a new map of values, where column names are the keys
         ContentValues values = new ContentValues();
-        values.put(COLUMN_LOCATION_ID, enId);
-        values.put(COLUMN_LOCATION_INFO, AndroidStringObfuscator.encryptString(info));
+        values.put(COLUMN_ID, enId);
+        values.put(COLUMN_DATA, AndroidStringObfuscator.encryptString(info));
 
         try {
             if (getElement(path) != null) {
                 // Filter results WHERE "title" = hash
-                String selection = COLUMN_LOCATION_ID + " = ?";
+                String selection = COLUMN_ID + " = ?";
                 String[] selectionArgs = { enId };
                 long newRowId = db.update(database.table, values, selection, selectionArgs);
             } else {
@@ -277,12 +277,12 @@ public abstract class RealtimeDatabase<T> {
             // Define a projection that specifies which columns from the database
             // you will actually use after this query.
             String[] projection = {
-                    COLUMN_LOCATION_ID,
-                    COLUMN_LOCATION_INFO
+                    COLUMN_ID,
+                    COLUMN_DATA
             };
 
             // Filter results WHERE "title" = hash
-            String selection = COLUMN_LOCATION_ID + " = ?";
+            String selection = COLUMN_ID + " = ?";
             String[] selectionArgs = { enPath };
 
             Cursor cursor = db.query(
@@ -297,7 +297,7 @@ public abstract class RealtimeDatabase<T> {
 
             String info = null;
             while (cursor.moveToNext()) {
-                info = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_LOCATION_INFO));
+                info = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DATA));
             }
             cursor.close();
 
@@ -307,14 +307,14 @@ public abstract class RealtimeDatabase<T> {
         }
     }
 
-    public <T> String syncReference() {
+    public String syncReference() {
         String diffReference =  "";
         Gson gson = new Gson();
         if (this.reference == null) {
             try {
                 String expected = "{}";
-                String actual = gson.toJson(updateObject(), clazz);
-                Map<String, JSONObject> diff = JSONDiff.diff("", new JSONObject(expected), new JSONObject(actual));
+                String actual = gson.toJson(updateObject(), getType());
+                Map<String, JSONObject> diff = JSONDiff.diff(new JSONObject(expected), new JSONObject(actual));
 
                 JSONObject jsonObject = new JSONObject();
 
@@ -329,9 +329,9 @@ public abstract class RealtimeDatabase<T> {
             }
         } else {
             try {
-                String expected = gson.toJson(this.reference, clazz);
-                String actual = gson.toJson(updateObject(), clazz);
-                Map<String, JSONObject> diff = JSONDiff.diff("", new JSONObject(expected), new JSONObject(actual));
+                String expected = gson.toJson(this.reference, getType());
+                String actual = gson.toJson(updateObject(), getType());
+                Map<String, JSONObject> diff = JSONDiff.diff(new JSONObject(expected), new JSONObject(actual));
 
                 JSONObject jsonObject = new JSONObject();
 

@@ -2,18 +2,16 @@ package com.flamebase.jsondiff;
 
 import android.util.Log;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -25,11 +23,13 @@ public class JSONDiff {
 
     private static String TAG = JSONDiff.class.getSimpleName();
 
+    private static boolean DEBUG = false;
+
     private JSONDiff() {
         // nothing to do here
     }
 
-    public static Map<String, JSONObject> diff(String path, JSONObject a, JSONObject b) {
+    public static Map<String, JSONObject> diff(JSONObject a, JSONObject b) {
         Map<String, Object> mapA = getMap(a);
         Map<String, Object> mapB = getMap(b);
 
@@ -38,7 +38,7 @@ public class JSONDiff {
         holder.put("$unset", new JSONObject());
         holder.put("$rename", new JSONObject());
 
-        hashMapper(holder, path, mapA, mapB);
+        hashMapper(holder, "", mapA, mapB);
 
         return holder;
     }
@@ -60,7 +60,11 @@ public class JSONDiff {
         }
     }
 
-    public static <T, K> void hashMapper(final Map<String, JSONObject> holder, String path, Map<T, K> mapA, Map<T, K> mapB) {
+    public static void setDebug(boolean DEBUG) {
+        JSONDiff.DEBUG = DEBUG;
+    }
+
+    public static <T, K, G> void hashMapper(final Map<String, JSONObject> holder, String path, Map<T, K> mapA, Map<T, K> mapB) {
 
         List<T> keysA = new ArrayList<>();
         for (Map.Entry<T, K> entryA : mapA.entrySet()) {
@@ -100,8 +104,35 @@ public class JSONDiff {
                     }
                 } else if (valueA instanceof Map && valueB instanceof Map) {
                     hashMapper(holder, path + (path.length() == 0 ? "" : ".") + keyA, (Map<Object, Object>) valueA, (Map<Object, Object>) valueB);
+                } else if (valueA instanceof List && valueB instanceof List) {
+                    try {
+                        if (DEBUG) {
+                            Log.e(TAG, String.valueOf(valueB));
+                        }
+                        JSONArray arraySet = new JSONArray();
+                        for (G elemB : (List<G>) valueB) {
+                            if (!((List) valueA).contains(elemB)) {
+                                arraySet.put(elemB);
+                            }
+                        }
+                        holder.get("$set").put(path + (path.length() == 0 ? "" : ".") + keyB, arraySet);
+
+                        JSONArray arrayUnset = new JSONArray();
+                        for (G elemA : (List<G>) valueA) {
+                            if (!((List) valueB).contains(elemA)) {
+                                arrayUnset.put(elemA);
+                            }
+                        }
+
+                        holder.get("$unset").put(path + (path.length() == 0 ? "" : ".") + keyB, arrayUnset);
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                 } else {
-                    Log.e(TAG, "not mapped value: " + String.valueOf(valueA));
+                    if (DEBUG) {
+                        Log.e(TAG, "not mapped value: " + String.valueOf(valueA));
+                    }
                 }
             } else {
                 try {
@@ -138,8 +169,23 @@ public class JSONDiff {
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
+                } else if (valueB instanceof List) {
+                    try {
+                        if (DEBUG) {
+                            Log.e(TAG, String.valueOf(valueB));
+                        }
+                        JSONArray array = new JSONArray();
+                        for (G elem : (List<G>) valueB) {
+                            array.put(elem);
+                        }
+                        holder.get("$set").put(path + (path.length() == 0 ? "" : ".") + keyB, array);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                 } else {
-                    Log.e(TAG, "not mapped value: " + String.valueOf(valueB));
+                    if (DEBUG) {
+                        Log.e(TAG, "not mapped value: " + String.valueOf(valueB));
+                    }
                 }
             }
         }

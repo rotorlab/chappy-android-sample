@@ -4,11 +4,15 @@ import android.content.Context;
 import android.util.Log;
 
 import com.google.firebase.messaging.RemoteMessage;
+import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Member;
+import java.lang.reflect.Type;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by efraespada on 10/06/2017.
@@ -33,6 +37,8 @@ public class FlamebaseDatabase {
         void progress(String id, int value);
 
         String getTag();
+
+        Type getType();
     }
 
     private FlamebaseDatabase() {
@@ -58,15 +64,14 @@ public class FlamebaseDatabase {
      * @param database              - Database name on remote or local flamebase server cluster
      * @param path                  - Database reference path
      * @param flamebaseReference    - Callback methods
-     * @param clazz                 - Class type to serialize
      */
-    public static <T> void createListener(String database, String path, final FlamebaseReference flamebaseReference, Class<T> clazz) {
+    public static <T> void createListener(String path, final FlamebaseReference flamebaseReference) {
         if (FlamebaseDatabase.pathMap == null) {
             Log.e(TAG, "Use FlamebaseDatabase.initialize(Context context, String urlServer) before create real time references");
             return;
         }
         if (!FlamebaseDatabase.pathMap.containsKey(path)) {
-            RealtimeDatabase realtimeDatabase = new RealtimeDatabase<T>(FlamebaseDatabase.context, clazz) {
+            RealtimeDatabase realtimeDatabase = new RealtimeDatabase<T>(FlamebaseDatabase.context) {
                 @Override
                 public void onObjectChanges(T value) {
                     flamebaseReference.onObjectChanges(value);
@@ -86,21 +91,25 @@ public class FlamebaseDatabase {
                 public String getTag() {
                     return flamebaseReference.getTag();
                 }
+
+                @Override
+                public Type getType() {
+                    return flamebaseReference.getType();
+                }
             };
             FlamebaseDatabase.pathMap.put(path, realtimeDatabase);
         } else {
             // TODO check if should be necessary another post request message to refresh reference
         }
 
-        FlamebaseDatabase.initSync(database, path, FlamebaseDatabase.token);
+        FlamebaseDatabase.initSync(path, FlamebaseDatabase.token);
     }
 
-    private static void initSync(String database, String path, String token) {
+    private static void initSync(String path, String token) {
         try {
             JSONObject map = new JSONObject();
             map.put("method", "great_listener");
             map.put("path", path);
-            map.put("database", database);
             map.put("token", token);
             map.put("os", "android");
             Sender.postRequest(FlamebaseDatabase.urlServer, map.toString(), new Sender.FlamebaseResponse() {
@@ -147,6 +156,8 @@ public class FlamebaseDatabase {
             String path = remoteMessage.getData().get(RealtimeDatabase.PATH);
             if (pathMap.containsKey(path)) {
                 pathMap.get(path).onMessageReceived(remoteMessage);
+            } else {
+
             }
         } catch (Exception e) {
             e.printStackTrace();

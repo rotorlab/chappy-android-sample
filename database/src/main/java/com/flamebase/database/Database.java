@@ -10,8 +10,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class Database extends SQLiteOpenHelper {
 
-    public static final String COLUMN_LOCATION_ID = "location_hash";
-    public static final String COLUMN_LOCATION_INFO = "location_info";
+    public static final String COLUMN_ID = "id_hash";
+    public static final String COLUMN_DATA = "data";
 
     public String databaseName;
     public String table;
@@ -26,8 +26,8 @@ public class Database extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         String SQL_CREATE_ENTRIES =
                 "CREATE TABLE " + table + " (" +
-                        COLUMN_LOCATION_ID + " TEXT PRIMARY KEY, " +
-                        COLUMN_LOCATION_INFO + " TEXT);";
+                        COLUMN_ID + " TEXT PRIMARY KEY, " +
+                        COLUMN_DATA + " TEXT);";
         db.execSQL(SQL_CREATE_ENTRIES);
     }
 
