@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
         chatsList = (RecyclerView) findViewById(R.id.chats_list);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
         chatsList.setLayoutManager(mLayoutManager);
-        chatsList.setAdapter(new ChatAdapter());
+        chatsList.setAdapter(new ChatAdapter(this));
 
         ChatManager.init(chatsList.getAdapter());
 
@@ -172,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
                                 GChat gChat = new GChat(name.getText().toString(), members, messageMap);
                                 ChatManager.map.put(groupPath, gChat);
 
-                                FlamebaseDatabase.syncReference("draco", groupPath, false);
+                                FlamebaseDatabase.syncReference(groupPath, false);
 
                                 dialog.dismiss();
                                 materialDialog = null;
@@ -217,7 +217,7 @@ public class MainActivity extends AppCompatActivity {
         Member member = new Member(name, FirebaseInstanceId.getInstance().getToken(), "android", email);
         ChatManager.contacts.put(name, member);
 
-        FlamebaseDatabase.syncReference("draco", contactPath, false);
+        FlamebaseDatabase.syncReference(contactPath, false);
     }
 
 
@@ -232,6 +232,6 @@ public class MainActivity extends AppCompatActivity {
         Member member = new Member(name, FirebaseInstanceId.getInstance().getToken(), "android", email);
         ChatManager.contacts.put(name, member);
 
-        FlamebaseDatabase.syncReference("draco", contactPath, false);
+        FlamebaseDatabase.syncReference(contactPath, false);
     }
 }

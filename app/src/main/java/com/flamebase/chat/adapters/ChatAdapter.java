@@ -1,11 +1,15 @@
 package com.flamebase.chat.adapters;
 
+import android.content.Context;
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.flamebase.chat.ChatActivity;
 import com.flamebase.chat.R;
 import com.flamebase.chat.model.GChat;
 import com.flamebase.chat.services.ChatManager;
@@ -17,6 +21,12 @@ import java.util.Map;
  */
 
 public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
+
+    public Context context;
+
+    public ChatAdapter(Context context) {
+        this.context = context;
+    }
 
     @Override
     public ChatAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -36,6 +46,13 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
             i++;
         }
 
+        holder.content.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(context, ChatActivity.class);
+                context.startActivity(intent);
+            }
+        });
         holder.name.setText(gChat.getName());
     }
 
@@ -47,10 +64,12 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
 
     static class ViewHolder extends RecyclerView.ViewHolder {
 
+        LinearLayout content;
         TextView name;
 
         public ViewHolder(View itemView) {
             super(itemView);
+            content = (LinearLayout) itemView.findViewById(R.id.chat_content);
             name = (TextView) itemView.findViewById(R.id.group_name);
         }
     }

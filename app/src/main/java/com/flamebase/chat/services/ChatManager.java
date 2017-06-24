@@ -7,8 +7,6 @@ import com.flamebase.chat.model.Member;
 import com.flamebase.database.FlamebaseDatabase;
 import com.google.gson.reflect.TypeToken;
 
-import org.json.JSONArray;
-
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;

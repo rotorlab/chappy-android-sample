@@ -6,6 +6,7 @@ import android.util.Log;
 import com.google.firebase.messaging.RemoteMessage;
 import com.google.gson.reflect.TypeToken;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -64,11 +65,12 @@ public class FlamebaseDatabase {
      * @param path                  - Database reference path
      * @param flamebaseReference    - Callback methods
      */
-    public static <T> void createListener(String path, final FlamebaseReference flamebaseReference) {
+    public static <T> void createListener(final String path, final FlamebaseReference flamebaseReference) {
         if (FlamebaseDatabase.pathMap == null) {
             Log.e(TAG, "Use FlamebaseDatabase.initialize(Context context, String urlServer) before create real time references");
             return;
         }
+
         if (!FlamebaseDatabase.pathMap.containsKey(path)) {
             RealtimeDatabase realtimeDatabase = new RealtimeDatabase<T>(FlamebaseDatabase.context) {
                 @Override
@@ -98,15 +100,32 @@ public class FlamebaseDatabase {
             };
             realtimeDatabase.loadChachedReference(path);
             FlamebaseDatabase.pathMap.put(path, realtimeDatabase);
-
-        } else {
-            // TODO check if should be necessary another post request message to refresh reference
         }
 
+        final RealtimeDatabase r = FlamebaseDatabase.pathMap.get(path);
         FlamebaseDatabase.initSync(path, FlamebaseDatabase.token, new Sender.FlamebaseResponse() {
             @Override
             public void onSuccess(JSONObject jsonObject) {
+                try {
+                    if (jsonObject.has("data") && jsonObject.get("data") != null) {
+                        Object object = jsonObject.get("data");
+                        if (object instanceof JSONObject) {
+                            JSONObject obj = (JSONObject) object;
+                            int len = obj.getInt("len");
 
+                            if (r.len > len) {
+                                Log.e(TAG, "not up to date : " + path);
+                                syncReference(path, true);
+                            }
+
+                        } else {
+                            Log.e(TAG, "action success: " + object);
+                        }
+                    }
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
 
             @Override
@@ -127,7 +146,6 @@ public class FlamebaseDatabase {
                 @Override
                 public void onSuccess(JSONObject jsonObject) {
                     callback.onSuccess(jsonObject);
-                    Log.e(TAG, "action success");
                 }
 
                 @Override
@@ -141,12 +159,11 @@ public class FlamebaseDatabase {
         }
     }
 
-    private static void sendUpdate(final String database, final String path, String differences, int len) {
+    private static void sendUpdate(final String path, String differences, int len) {
         try {
             JSONObject map = new JSONObject();
             map.put("method", "update_data");
             map.put("path", path);
-            map.put("database", database);
             map.put("differences", differences);
             map.put("len", len);
             Sender.postRequest(FlamebaseDatabase.urlServer, map.toString(), new Sender.FlamebaseResponse() {
@@ -161,7 +178,24 @@ public class FlamebaseDatabase {
                                     initSync(path, FlamebaseDatabase.token, new Sender.FlamebaseResponse() {
                                         @Override
                                         public void onSuccess(JSONObject jsonObject) {
-                                            Log.e(TAG, jsonObject.toString());
+                                            try {
+                                                if (jsonObject.has("data") && jsonObject.get("data") != null) {
+                                                    Object object = jsonObject.get("data");
+                                                    if (object instanceof JSONObject) {
+                                                        JSONObject obj = (JSONObject) object;
+                                                        String info = obj.getString("info");
+                                                        int len = obj.getInt("len");
+
+                                                        syncReference(path, true);
+                                                    } else {
+                                                        Log.e(TAG, "action success: " + object);
+                                                    }
+                                                }
+                                                Log.e(TAG, "action success: " + jsonObject.toString());
+
+                                            } catch (JSONException e) {
+                                                e.printStackTrace();
+                                            }
                                         }
 
                                         @Override
@@ -172,7 +206,7 @@ public class FlamebaseDatabase {
                                     break;
 
                                 case "inconsistency_length":
-                                    syncReference(database, path, true);
+                                    syncReference(path, true);
                                     break;
                             }
                         }
@@ -206,12 +240,12 @@ public class FlamebaseDatabase {
 
     }
 
-    public static <T> void syncReference(String database, String path, boolean clean) {
+    public static <T> void syncReference(String path, boolean clean) {
         if (pathMap.containsKey(path)) {
             Object[] result = pathMap.get(path).syncReference(clean);
             String diff = (String) result[1];
             int len = (int) result[0];
-            sendUpdate(database, path, diff, len);
+            sendUpdate(path, diff, len);
         }
     }
 }

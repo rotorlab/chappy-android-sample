@@ -34,7 +34,8 @@ public abstract class RealtimeDatabase<T> {
     private Database database;
     private Context context;
 
-    private T reference;
+    public T reference;
+    public int len;
 
     private static final String TAG = RealtimeDatabase.class.getSimpleName();
 
@@ -55,6 +56,7 @@ public abstract class RealtimeDatabase<T> {
         String name = RealtimeDatabase.class.getSimpleName() + ".db";
         this.database = new Database(this.context, name, TABLE_NAME, VERSION);
         this.mapParts = new HashMap<>();
+        this.len = 0;
         reference = null;
     }
 
@@ -64,6 +66,7 @@ public abstract class RealtimeDatabase<T> {
         String name = RealtimeDatabase.class.getSimpleName() + ".db";
         this.database = new Database(this.context, name, TABLE_NAME, VERSION);
         reference = null;
+        this.len = 0;
         onMessageReceived(remoteMessage);
     }
 
@@ -247,6 +250,7 @@ public abstract class RealtimeDatabase<T> {
     }
 
     private void addElement(String path, String info) {
+        this.len = info.length();
         try {
             String enId = AndroidStringObfuscator.encryptString(path);
             // Gets the data repository in write mode
@@ -302,8 +306,15 @@ public abstract class RealtimeDatabase<T> {
             }
             cursor.close();
 
-            return AndroidStringObfuscator.decryptString(info);
+            String res = AndroidStringObfuscator.decryptString(info);
+            if (res == null) {
+                this.len = 0;
+            } else {
+                this.len = res.length();
+            }
+            return res;
         } catch (SQLiteException e) {
+            this.len = 0;
             return null;
         }
     }
