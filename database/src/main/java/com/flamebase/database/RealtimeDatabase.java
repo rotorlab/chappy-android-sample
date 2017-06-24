@@ -47,11 +47,14 @@ public abstract class RealtimeDatabase<T> {
     public static String INDEX = "index";
     public static String ACTION = "action";
 
+    public String path;
+
     public static final String ACTION_SIMPLE_UPDATE    = "simple_update";
     public static final String ACTION_SLICE_UPDATE     = "slice_update";
 
-    public RealtimeDatabase(Context context) {
+    public RealtimeDatabase(Context context, String path) {
         this.context = context;
+        this.path = path;
         AndroidStringObfuscator.init(this.context);
         String name = RealtimeDatabase.class.getSimpleName() + ".db";
         this.database = new Database(this.context, name, TABLE_NAME, VERSION);
@@ -60,8 +63,9 @@ public abstract class RealtimeDatabase<T> {
         reference = null;
     }
 
-    public RealtimeDatabase(Context context, RemoteMessage remoteMessage) {
+    public RealtimeDatabase(Context context, String path, RemoteMessage remoteMessage) {
         this.context = context;
+        this.path = path;
         AndroidStringObfuscator.init(this.context);
         String name = RealtimeDatabase.class.getSimpleName() + ".db";
         this.database = new Database(this.context, name, TABLE_NAME, VERSION);
@@ -377,12 +381,12 @@ public abstract class RealtimeDatabase<T> {
         return objects;
     }
 
-    public void loadChachedReference(String path) {
+    public void loadChachedReference() {
         Gson gson = new Gson();
-        String cached = getElement(path);
+        String cached = getElement(this.path);
         if (cached != null) {
-            reference = gson.fromJson(cached, getType());
-            onObjectChanges(reference);
+            this.reference = gson.fromJson(cached, getType());
+            onObjectChanges(this.reference);
         }
     }
 }

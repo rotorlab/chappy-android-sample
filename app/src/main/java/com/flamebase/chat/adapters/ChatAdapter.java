@@ -37,19 +37,24 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
     @Override
     public void onBindViewHolder(ChatAdapter.ViewHolder holder, int position) {
         int i = 0;
+        String key = "";
+
         GChat gChat = null;
         for (Map.Entry<String, GChat> entry : ChatManager.getChats().entrySet()) {
             if (i == position) {
+                key = entry.getKey();
                 gChat = entry.getValue();
                 break;
             }
             i++;
         }
 
+        final String k = key;
         holder.content.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(context, ChatActivity.class);
+                intent.putExtra("path", k);
                 context.startActivity(intent);
             }
         });

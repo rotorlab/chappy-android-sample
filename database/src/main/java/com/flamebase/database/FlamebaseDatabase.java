@@ -4,16 +4,12 @@ import android.content.Context;
 import android.util.Log;
 
 import com.google.firebase.messaging.RemoteMessage;
-import com.google.gson.reflect.TypeToken;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.reflect.Member;
 import java.lang.reflect.Type;
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by efraespada on 10/06/2017.
@@ -71,38 +67,37 @@ public class FlamebaseDatabase {
             return;
         }
 
-        if (!FlamebaseDatabase.pathMap.containsKey(path)) {
-            RealtimeDatabase realtimeDatabase = new RealtimeDatabase<T>(FlamebaseDatabase.context) {
-                @Override
-                public void onObjectChanges(T value) {
-                    flamebaseReference.onObjectChanges(value);
-                }
+        final RealtimeDatabase realtimeDatabase = new RealtimeDatabase<T>(FlamebaseDatabase.context, path) {
+            @Override
+            public void onObjectChanges(T value) {
+                flamebaseReference.onObjectChanges(value);
+            }
 
-                @Override
-                public T updateObject() {
-                    return (T) flamebaseReference.update();
-                }
+            @Override
+            public T updateObject() {
+                return (T) flamebaseReference.update();
+            }
 
-                @Override
-                public void progress(String id, int value) {
-                    flamebaseReference.progress(id, value);
-                }
+            @Override
+            public void progress(String id, int value) {
+                flamebaseReference.progress(id, value);
+            }
 
-                @Override
-                public String getTag() {
-                    return flamebaseReference.getTag();
-                }
+            @Override
+            public String getTag() {
+                return flamebaseReference.getTag();
+            }
 
-                @Override
-                public Type getType() {
-                    return flamebaseReference.getType();
-                }
-            };
-            realtimeDatabase.loadChachedReference(path);
-            FlamebaseDatabase.pathMap.put(path, realtimeDatabase);
-        }
+            @Override
+            public Type getType() {
+                return flamebaseReference.getType();
+            }
+        };
 
-        final RealtimeDatabase r = FlamebaseDatabase.pathMap.get(path);
+        FlamebaseDatabase.pathMap.put(path, realtimeDatabase);
+
+        realtimeDatabase.loadChachedReference();
+
         FlamebaseDatabase.initSync(path, FlamebaseDatabase.token, new Sender.FlamebaseResponse() {
             @Override
             public void onSuccess(JSONObject jsonObject) {
@@ -113,7 +108,7 @@ public class FlamebaseDatabase {
                             JSONObject obj = (JSONObject) object;
                             int len = obj.getInt("len");
 
-                            if (r.len > len) {
+                            if (realtimeDatabase.len > len) {
                                 Log.e(TAG, "not up to date : " + path);
                                 syncReference(path, true);
                             }

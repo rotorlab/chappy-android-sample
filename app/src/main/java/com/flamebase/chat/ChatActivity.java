@@ -1,6 +1,7 @@
 package com.flamebase.chat;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -10,15 +11,16 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
-import com.afollestad.materialdialogs.DialogAction;
-import com.afollestad.materialdialogs.MaterialDialog;
-import com.flamebase.chat.adapters.ChatAdapter;
 import com.flamebase.chat.model.GChat;
 import com.flamebase.chat.model.Member;
 import com.flamebase.chat.model.Message;
@@ -27,19 +29,22 @@ import com.flamebase.chat.services.LocalData;
 import com.flamebase.database.FlamebaseDatabase;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.gson.reflect.TypeToken;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-
+import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class ChatActivity extends AppCompatActivity {
 
     private RecyclerView messageList;
+    private GChat chat;
+    private Button sendButton;
+    private EditText messageText;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,15 +53,35 @@ public class ChatActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        Intent intent = getIntent();
+
+        final String path = intent.getStringExtra("path");
+
         FirebaseApp.initializeApp(this);
         LocalData.init(this);
 
         messageList = (RecyclerView) findViewById(R.id.messages_list);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
         messageList.setLayoutManager(mLayoutManager);
-        messageList.setAdapter(new ChatAdapter(this));
+        messageList.setAdapter(new MessageAdapter(this));
 
-        ChatManager.init(messageList.getAdapter());
+        messageText = (EditText) findViewById(R.id.message_text);
+        sendButton = (Button) findViewById(R.id.send_button);
+        sendButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+                String name = prefs.getString("name", null);
+                if (name != null) {
+                    Message message = new Message(name, messageText.getText().toString());
+                    chat.getMessages().put(String.valueOf(new Date().getTime()), message);
+
+                    FlamebaseDatabase.syncReference(path, false);
+                    messageText.setText("");
+                    messageList.getAdapter().notifyDataSetChanged();
+                }
+            }
+        });
 
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -65,6 +90,40 @@ public class ChatActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
+            }
+        });
+
+        FlamebaseDatabase.createListener(path, new FlamebaseDatabase.FlamebaseReference<GChat>() {
+            @Override
+            public void onObjectChanges(GChat value) {
+                if (chat == null) {
+                    chat = value;
+                } else {
+                    chat.setName(value.getName());
+                    chat.setMessages(value.getMessages());
+                    chat.setMember(value.getMember());
+                }
+                messageList.getAdapter().notifyDataSetChanged();
+            }
+
+            @Override
+            public GChat update() {
+                return chat;
+            }
+
+            @Override
+            public void progress(String id, int value) {
+
+            }
+
+            @Override
+            public String getTag() {
+                return path + "_sync";
+            }
+
+            @Override
+            public Type getType() {
+                return new TypeToken<GChat>(){}.getType();
             }
         });
     }
@@ -94,36 +153,57 @@ public class ChatActivity extends AppCompatActivity {
     }
 
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    public class MessageAdapter extends RecyclerView.Adapter<ViewHolder> {
+
+        public Context context;
+
+        public MessageAdapter(Context context) {
+            this.context = context;
+        }
+
+        @Override
+        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message, parent, false);
+            return new ViewHolder(itemView);
+        }
+
+        @Override
+        public void onBindViewHolder(ViewHolder holder, int position) {
+            List<String> messages = new ArrayList<>();
+            for (Map.Entry<String, Message> entry : chat.getMessages().entrySet()) {
+                messages.add(entry.getKey());
+            }
+
+            Collections.sort(messages);
+
+            String key = messages.get(position);
+
+            Message message = chat.getMessages().get(key);
+
+            holder.text.setText(message.getText());
+        }
+
+        @Override
+        public int getItemCount() {
+            if (chat == null || chat.getMessages() == null) {
+                return 0;
+            } else {
+                return chat.getMessages().size();
+            }
+        }
     }
 
-    public void syncUser() {
-        SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
-        String name = prefs.getString("name", null);
-        String email = prefs.getString("email", null);
-        String contactPath = "/contacts";
-        ChatManager.syncContacts(contactPath);
 
-        Member member = new Member(name, FirebaseInstanceId.getInstance().getToken(), "android", email);
-        ChatManager.contacts.put(name, member);
+    static class ViewHolder extends RecyclerView.ViewHolder {
 
-        FlamebaseDatabase.syncReference(contactPath, false);
+        LinearLayout content;
+        TextView text;
+
+        public ViewHolder(View itemView) {
+            super(itemView);
+            content = (LinearLayout) itemView.findViewById(R.id.message_content);
+            text = (TextView) itemView.findViewById(R.id.message);
+        }
     }
 
-
-    public void setData(String name, String email) {
-        SharedPreferences.Editor editor = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE).edit();
-        editor.putString("name", name).apply();
-        editor.putString("email", email).apply();
-        String contactPath = "/contacts";
-
-        ChatManager.syncContacts(contactPath);
-
-        Member member = new Member(name, FirebaseInstanceId.getInstance().getToken(), "android", email);
-        ChatManager.contacts.put(name, member);
-
-        FlamebaseDatabase.syncReference(contactPath, false);
-    }
 }
