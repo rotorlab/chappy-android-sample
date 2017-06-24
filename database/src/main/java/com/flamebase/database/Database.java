@@ -2,6 +2,7 @@ package com.flamebase.database;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 
 /**
@@ -33,9 +34,14 @@ public class Database extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        String SQL_DELETE_ENTRIES = "DROP TABLE IF EXISTS " + table;
-        db.execSQL(SQL_DELETE_ENTRIES);
-        onCreate(db);
+        try {
+            String SQL_DELETE_ENTRIES = "DROP TABLE IF EXISTS " + table;
+            db.execSQL(SQL_DELETE_ENTRIES);
+        } catch (SQLiteException e) {
+            e.printStackTrace();
+        } finally {
+            onCreate(db);
+        }
     }
 
     @Override

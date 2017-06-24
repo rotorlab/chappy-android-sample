@@ -1,10 +1,14 @@
 package com.flamebase.chat.services;
 
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import com.flamebase.chat.model.GChat;
 import com.flamebase.chat.model.Member;
 import com.flamebase.database.FlamebaseDatabase;
 import com.google.gson.reflect.TypeToken;
+
+import org.json.JSONArray;
+
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,12 +22,14 @@ public class ChatManager {
     private static final String TAG = ChatManager.class.getSimpleName();
     public static Map<String, GChat> map;
     public static Map<String, Member> contacts;
+    public static RecyclerView.Adapter adapter;
 
     private ChatManager() {
         // nothing to do here ..
     }
 
-    public static void init() {
+    public static void init(RecyclerView.Adapter adapter) {
+        ChatManager.adapter = adapter;
         if (map == null) {
             map = new HashMap<>();
         }
@@ -43,6 +49,7 @@ public class ChatManager {
                 } else {
                     map.put(path, value);
                 }
+                ChatManager.adapter.notifyDataSetChanged();
             }
 
             @Override
@@ -70,6 +77,8 @@ public class ChatManager {
             }
 
         });
+
+        LocalData.addPath(path);
     }
 
     public static void syncContacts(final String path) {
@@ -84,11 +93,13 @@ public class ChatManager {
                             contacts.get(entry.getKey()).setName(entry.getValue().getName());
                             contacts.get(entry.getKey()).setOs(entry.getValue().getOs());
                             contacts.get(entry.getKey()).setToken(entry.getValue().getToken());
+                            contacts.get(entry.getKey()).setEmail(entry.getValue().getEmail());
                         }
                     }
                 } else {
                     contacts = value;
                 }
+                ChatManager.adapter.notifyDataSetChanged();
             }
 
             @Override

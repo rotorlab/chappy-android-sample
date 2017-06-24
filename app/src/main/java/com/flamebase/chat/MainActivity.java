@@ -23,9 +23,13 @@ import com.flamebase.chat.model.GChat;
 import com.flamebase.chat.model.Member;
 import com.flamebase.chat.model.Message;
 import com.flamebase.chat.services.ChatManager;
+import com.flamebase.chat.services.LocalData;
 import com.flamebase.database.FlamebaseDatabase;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.iid.FirebaseInstanceId;
+
+import org.json.JSONArray;
+import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -46,14 +50,27 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         FirebaseApp.initializeApp(this);
+        LocalData.init(this);
 
         FlamebaseDatabase.initialize(this, getString(R.string.database_url), FirebaseInstanceId.getInstance().getToken());
-        ChatManager.init(this);
 
         chatsList = (RecyclerView) findViewById(R.id.chats_list);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
         chatsList.setLayoutManager(mLayoutManager);
         chatsList.setAdapter(new ChatAdapter());
+
+        ChatManager.init(chatsList.getAdapter());
+
+
+        JSONArray array = LocalData.getLocalPaths();
+        for (int i = 0; i < array.length(); i++) {
+            try {
+                String path = array.getString(i);
+                ChatManager.syncGChat(path);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
 
         askForEmail();
 
@@ -112,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
 
                                 ChatManager.syncContacts(contactPath);
 
-                                Member member = new Member(name.getText().toString(), FirebaseInstanceId.getInstance().getToken(), "android");
+                                Member member = new Member(name.getText().toString(), FirebaseInstanceId.getInstance().getToken(), "android", email.getText().toString());
                                 ChatManager.contacts.put(email.getText().toString(), member);
 
                                 dialog.dismiss();
@@ -155,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
                                 GChat gChat = new GChat(name.getText().toString(), members, messageMap);
                                 ChatManager.map.put(groupPath, gChat);
 
-                                FlamebaseDatabase.syncReference("draco", groupPath);
+                                FlamebaseDatabase.syncReference("draco", groupPath, false);
 
                                 dialog.dismiss();
                                 materialDialog = null;
@@ -197,10 +214,10 @@ public class MainActivity extends AppCompatActivity {
         String contactPath = "/contacts";
         ChatManager.syncContacts(contactPath);
 
-        Member member = new Member(name, FirebaseInstanceId.getInstance().getToken(), "android");
-        ChatManager.contacts.put(email, member);
+        Member member = new Member(name, FirebaseInstanceId.getInstance().getToken(), "android", email);
+        ChatManager.contacts.put(name, member);
 
-        FlamebaseDatabase.syncReference("draco", contactPath);
+        FlamebaseDatabase.syncReference("draco", contactPath, false);
     }
 
 
@@ -212,9 +229,9 @@ public class MainActivity extends AppCompatActivity {
 
         ChatManager.syncContacts(contactPath);
 
-        Member member = new Member(name, FirebaseInstanceId.getInstance().getToken(), "android");
-        ChatManager.contacts.put(email, member);
+        Member member = new Member(name, FirebaseInstanceId.getInstance().getToken(), "android", email);
+        ChatManager.contacts.put(name, member);
 
-        FlamebaseDatabase.syncReference("draco", contactPath);
+        FlamebaseDatabase.syncReference("draco", contactPath, false);
     }
 }

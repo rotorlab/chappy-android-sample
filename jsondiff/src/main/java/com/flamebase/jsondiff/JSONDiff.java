@@ -23,6 +23,11 @@ public class JSONDiff {
 
     private static String TAG = JSONDiff.class.getSimpleName();
 
+    private static final String SEPARATOR = ".";
+    private static final String TAG_SET = "$set";
+    private static final String TAG_UNSET = "$unset";
+    private static final String TAG_RENAME = "$rename";
+
     private static boolean DEBUG = false;
 
     private JSONDiff() {
@@ -40,7 +45,23 @@ public class JSONDiff {
 
         hashMapper(holder, "", mapA, mapB);
 
+        if (emptySet(holder.get(TAG_SET))) {
+            holder.remove(TAG_SET);
+        }
+
+        if (emptySet(holder.get(TAG_UNSET))) {
+            holder.remove(TAG_UNSET);
+        }
+
+        if (emptySet(holder.get(TAG_RENAME))) {
+            holder.remove(TAG_RENAME);
+        }
+
         return holder;
+    }
+
+    private static boolean emptySet(JSONObject object) {
+        return object.toString().length() <= 2;
     }
 
     /**
@@ -89,7 +110,7 @@ public class JSONDiff {
                 if (valueA instanceof String && valueB instanceof String) {
                     if (!valueA.equals(valueB)) {
                         try {
-                            holder.get("$set").put(path + (path.length() == 0 ? "" : ".") + keyA, valueB);
+                            holder.get("$set").put(path + (path.length() == 0 ? "" : SEPARATOR) + keyA, valueB);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -97,13 +118,13 @@ public class JSONDiff {
                 } else if ((valueA instanceof Long && valueB instanceof Long) || (valueA instanceof Integer && valueB instanceof Integer)) {
                     if (valueA != valueB) {
                         try {
-                            holder.get("$set").put(path + (path.length() == 0 ? "" : ".") + keyA, valueB);
+                            holder.get("$set").put(path + (path.length() == 0 ? "" : SEPARATOR) + keyA, valueB);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
                     }
                 } else if (valueA instanceof Map && valueB instanceof Map) {
-                    hashMapper(holder, path + (path.length() == 0 ? "" : ".") + keyA, (Map<Object, Object>) valueA, (Map<Object, Object>) valueB);
+                    hashMapper(holder, path + (path.length() == 0 ? "" : SEPARATOR) + keyA, (Map<Object, Object>) valueA, (Map<Object, Object>) valueB);
                 } else if (valueA instanceof List && valueB instanceof List) {
                     try {
                         if (DEBUG) {
@@ -115,7 +136,7 @@ public class JSONDiff {
                                 arraySet.put(elemB);
                             }
                         }
-                        holder.get("$set").put(path + (path.length() == 0 ? "" : ".") + keyB, arraySet);
+                        holder.get("$set").put(path + (path.length() == 0 ? "" : SEPARATOR) + keyB, arraySet);
 
                         JSONArray arrayUnset = new JSONArray();
                         for (G elemA : (List<G>) valueA) {
@@ -124,7 +145,7 @@ public class JSONDiff {
                             }
                         }
 
-                        holder.get("$unset").put(path + (path.length() == 0 ? "" : ".") + keyB, arrayUnset);
+                        holder.get("$unset").put(path + (path.length() == 0 ? "" : SEPARATOR) + keyB, arrayUnset);
 
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -136,7 +157,7 @@ public class JSONDiff {
                 }
             } else {
                 try {
-                    holder.get("$unset").put(path + (path.length() == 0 ? "" : ".") + keyA, valueA);
+                    holder.get("$unset").put(path + (path.length() == 0 ? "" : SEPARATOR) + keyA, valueA);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -151,21 +172,21 @@ public class JSONDiff {
             if (!mapA.containsKey(keyB)) {
                 if (valueB instanceof String) {
                     try {
-                        holder.get("$set").put(path + (path.length() == 0 ? "" : ".") + keyB, valueB);
+                        holder.get("$set").put(path + (path.length() == 0 ? "" : SEPARATOR) + keyB, valueB);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
                 } else if (valueB instanceof Long || valueB instanceof Integer) {
                     try {
-                        holder.get("$set").put(path + (path.length() == 0 ? "" : ".") + keyB, valueB);
+                        holder.get("$set").put(path + (path.length() == 0 ? "" : SEPARATOR) + keyB, valueB);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
                 } else if (valueB instanceof Map) {
                     try {
 
-                        holder.get("$set").put(path + (path.length() == 0 ? "" : ".") + keyB, new JSONObject("{}"));
-                        hashMapper(holder, path + (path.length() == 0 ? "" : ".") + keyB, new HashMap<>(), (Map<Object, Object>) valueB);
+                        holder.get("$set").put(path + (path.length() == 0 ? "" : SEPARATOR) + keyB, new JSONObject("{}"));
+                        hashMapper(holder, path + (path.length() == 0 ? "" : SEPARATOR) + keyB, new HashMap<>(), (Map<Object, Object>) valueB);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -178,7 +199,7 @@ public class JSONDiff {
                         for (G elem : (List<G>) valueB) {
                             array.put(elem);
                         }
-                        holder.get("$set").put(path + (path.length() == 0 ? "" : ".") + keyB, array);
+                        holder.get("$set").put(path + (path.length() == 0 ? "" : SEPARATOR) + keyB, array);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }

@@ -29,7 +29,7 @@ import static com.flamebase.database.Database.COLUMN_DATA;
 
 public abstract class RealtimeDatabase<T> {
 
-    private int VERSION = 3;
+    private int VERSION = 1;
     private static Map<String, String[]> mapParts;
     private Database database;
     private Context context;
@@ -41,6 +41,7 @@ public abstract class RealtimeDatabase<T> {
     public static String STAG = "tag";
     public static String PATH = "id";
     public static String REFERENCE = "reference";
+    public static String TABLE_NAME = "ref";
     public static String SIZE = "size";
     public static String INDEX = "index";
     public static String ACTION = "action";
@@ -52,8 +53,8 @@ public abstract class RealtimeDatabase<T> {
         this.context = context;
         AndroidStringObfuscator.init(this.context);
         String name = RealtimeDatabase.class.getSimpleName() + ".db";
-        this.database = new Database(this.context, name, "references", VERSION);
-        this.mapParts      = new HashMap<>();
+        this.database = new Database(this.context, name, TABLE_NAME, VERSION);
+        this.mapParts = new HashMap<>();
         reference = null;
     }
 
@@ -61,7 +62,7 @@ public abstract class RealtimeDatabase<T> {
         this.context = context;
         AndroidStringObfuscator.init(this.context);
         String name = RealtimeDatabase.class.getSimpleName() + ".db";
-        this.database = new Database(this.context, name, "references", VERSION);
+        this.database = new Database(this.context, name, TABLE_NAME, VERSION);
         reference = null;
         onMessageReceived(remoteMessage);
     }
@@ -246,16 +247,16 @@ public abstract class RealtimeDatabase<T> {
     }
 
     private void addElement(String path, String info) {
-        String enId = AndroidStringObfuscator.encryptString(path);
-        // Gets the data repository in write mode
-        SQLiteDatabase db = database.getWritableDatabase();
-
-        // Create a new map of values, where column names are the keys
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_ID, enId);
-        values.put(COLUMN_DATA, AndroidStringObfuscator.encryptString(info));
-
         try {
+            String enId = AndroidStringObfuscator.encryptString(path);
+            // Gets the data repository in write mode
+            SQLiteDatabase db = database.getWritableDatabase();
+
+            // Create a new map of values, where column names are the keys
+            ContentValues values = new ContentValues();
+            values.put(COLUMN_ID, enId);
+            values.put(COLUMN_DATA, AndroidStringObfuscator.encryptString(info));
+
             if (getElement(path) != null) {
                 // Filter results WHERE "title" = hash
                 String selection = COLUMN_ID + " = ?";
@@ -264,8 +265,8 @@ public abstract class RealtimeDatabase<T> {
             } else {
                 long newRowId = db.insert(database.table, null, values);
             }
-        } catch (Exception e) {
-
+        } catch (SQLiteException e) {
+            e.printStackTrace();
         }
     }
 
@@ -307,9 +308,15 @@ public abstract class RealtimeDatabase<T> {
         }
     }
 
-    public String syncReference() {
-        String diffReference =  "";
+    public Object[] syncReference(boolean clean) {
+        int len;
         Gson gson = new Gson();
+        Object[] objects = new Object[2];
+
+        if (clean) {
+            this.reference = null;
+        }
+
         if (this.reference == null) {
             try {
                 String expected = "{}";
@@ -323,7 +330,12 @@ public abstract class RealtimeDatabase<T> {
                     jsonObject.put(entry.getKey(), entry.getValue());
                 }
 
-                return jsonObject.toString();
+                len = actual.length();
+
+                objects[0] = len;
+                objects[1] = jsonObject.toString();
+
+                return objects;
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -340,12 +352,26 @@ public abstract class RealtimeDatabase<T> {
                     jsonObject.put(entry.getKey(), entry.getValue());
                 }
 
-                return jsonObject.toString();
+                len = actual.length();
 
+                objects[0] = len;
+                objects[1] = jsonObject.toString();
+
+                return objects;
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
-        return diffReference;
+
+        return objects;
+    }
+
+    public void loadChachedReference(String path) {
+        Gson gson = new Gson();
+        String cached = getElement(path);
+        if (cached != null) {
+            reference = gson.fromJson(cached, getType());
+            onObjectChanges(reference);
+        }
     }
 }

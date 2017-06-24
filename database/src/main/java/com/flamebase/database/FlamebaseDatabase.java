@@ -61,7 +61,6 @@ public class FlamebaseDatabase {
 
     /**
      * Creates a new RealtimeDatabase reference
-     * @param database              - Database name on remote or local flamebase server cluster
      * @param path                  - Database reference path
      * @param flamebaseReference    - Callback methods
      */
@@ -97,15 +96,27 @@ public class FlamebaseDatabase {
                     return flamebaseReference.getType();
                 }
             };
+            realtimeDatabase.loadChachedReference(path);
             FlamebaseDatabase.pathMap.put(path, realtimeDatabase);
+
         } else {
             // TODO check if should be necessary another post request message to refresh reference
         }
 
-        FlamebaseDatabase.initSync(path, FlamebaseDatabase.token);
+        FlamebaseDatabase.initSync(path, FlamebaseDatabase.token, new Sender.FlamebaseResponse() {
+            @Override
+            public void onSuccess(JSONObject jsonObject) {
+
+            }
+
+            @Override
+            public void onFailure(String error) {
+
+            }
+        });
     }
 
-    private static void initSync(String path, String token) {
+    private static void initSync(String path, String token, final Sender.FlamebaseResponse callback) {
         try {
             JSONObject map = new JSONObject();
             map.put("method", "great_listener");
@@ -115,11 +126,13 @@ public class FlamebaseDatabase {
             Sender.postRequest(FlamebaseDatabase.urlServer, map.toString(), new Sender.FlamebaseResponse() {
                 @Override
                 public void onSuccess(JSONObject jsonObject) {
+                    callback.onSuccess(jsonObject);
                     Log.e(TAG, "action success");
                 }
 
                 @Override
                 public void onFailure(String error) {
+                    callback.onFailure(error);
                     Log.e(TAG, "action with error: " + error);
                 }
             });
@@ -128,17 +141,45 @@ public class FlamebaseDatabase {
         }
     }
 
-    private static void sendUpdate(String database, String path, String differences) {
+    private static void sendUpdate(final String database, final String path, String differences, int len) {
         try {
             JSONObject map = new JSONObject();
             map.put("method", "update_data");
             map.put("path", path);
             map.put("database", database);
             map.put("differences", differences);
+            map.put("len", len);
             Sender.postRequest(FlamebaseDatabase.urlServer, map.toString(), new Sender.FlamebaseResponse() {
                 @Override
                 public void onSuccess(JSONObject jsonObject) {
-                    Log.e(TAG, "action success");
+                    try {
+                        if (jsonObject.has("error") && jsonObject.getString("error") != null){
+                            String error = jsonObject.getString("error");
+                            switch (error) {
+
+                                case "holder_not_found":
+                                    initSync(path, FlamebaseDatabase.token, new Sender.FlamebaseResponse() {
+                                        @Override
+                                        public void onSuccess(JSONObject jsonObject) {
+                                            Log.e(TAG, jsonObject.toString());
+                                        }
+
+                                        @Override
+                                        public void onFailure(String error) {
+                                            Log.e(TAG, error);
+                                        }
+                                    });
+                                    break;
+
+                                case "inconsistency_length":
+                                    syncReference(database, path, true);
+                                    break;
+                            }
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    Log.e(TAG, "action success: " + jsonObject.toString());
                 }
 
                 @Override
@@ -165,10 +206,12 @@ public class FlamebaseDatabase {
 
     }
 
-    public static <T> void syncReference(String database, String path) {
+    public static <T> void syncReference(String database, String path, boolean clean) {
         if (pathMap.containsKey(path)) {
-            String result = pathMap.get(path).syncReference();
-            sendUpdate(database, path, result);
+            Object[] result = pathMap.get(path).syncReference(clean);
+            String diff = (String) result[1];
+            int len = (int) result[0];
+            sendUpdate(database, path, diff, len);
         }
     }
 }
