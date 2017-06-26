@@ -1,5 +1,15 @@
 # :fire: flamebase-database-android
-Real time JSON database (android client).
+
+Real time JSON database (android client). Work with synchronized java objects stored as JSON objects
+
+Before start using this lib, you have to initialize a flamebase database server cluster
+
+### What is this?
+Flamebase is an open source project that tries to emulate Firebase Database features as much as possible. I like Firebase but it's expensive for what it currently offers.
+If you are doing an altruist project with Firebase, pray not to became successful, because the monthly amount will increase considerably.
+
+In this repo you can find the proper lib for android client.
+For now it still developing, so please be patient with errors and creation issues.
 
 ### Usage
 
@@ -16,11 +26,11 @@ dependencies {
 ```
 - Init lib:
 ```java
+FlamebaseDatabase.initialize(Context context, String cluster_ip, String token);
+```
+
+```java
 private GChat chat;
-
-// onCreate..
-
-FlamebaseDatabase.initialize(this, server_cluster_ip, FirebaseInstanceId.getInstance().getToken());
 
 FlamebaseDatabase.createListener(path, new FlamebaseDatabase.FlamebaseReference<GChat>() {
     @Override

@@ -22,7 +22,8 @@
         <activity
             android:name=".ChatActivity"
             android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustResize">
         </activity>
         <service android:name=".services.FMService">
             <intent-filter>

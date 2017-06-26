@@ -18,6 +18,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.flamebase.chat.model.GChat;
@@ -57,8 +58,9 @@ public class ChatActivity extends AppCompatActivity {
         LocalData.init(this);
 
         messageList = (RecyclerView) findViewById(R.id.messages_list);
-        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
-        messageList.setLayoutManager(mLayoutManager);
+        final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
+        linearLayoutManager.setReverseLayout(true);
+        messageList.setLayoutManager(linearLayoutManager);
         messageList.setAdapter(new MessageAdapter(this));
 
         messageText = (EditText) findViewById(R.id.message_text);
@@ -172,7 +174,7 @@ public class ChatActivity extends AppCompatActivity {
 
             Collections.sort(messages);
 
-            String key = messages.get(position);
+            String key = messages.get((messages.size() - 1) - position);
 
             Message message = chat.getMessages().get(key);
 
@@ -192,12 +194,12 @@ public class ChatActivity extends AppCompatActivity {
 
     static class ViewHolder extends RecyclerView.ViewHolder {
 
-        LinearLayout content;
+        RelativeLayout content;
         TextView text;
 
         public ViewHolder(View itemView) {
             super(itemView);
-            content = (LinearLayout) itemView.findViewById(R.id.message_content);
+            content = (RelativeLayout) itemView.findViewById(R.id.message_content);
             text = (TextView) itemView.findViewById(R.id.message);
         }
     }

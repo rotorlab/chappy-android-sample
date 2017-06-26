@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.flamebase.chat.ChatActivity;
@@ -69,12 +70,12 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
 
     static class ViewHolder extends RecyclerView.ViewHolder {
 
-        LinearLayout content;
+        RelativeLayout content;
         TextView name;
 
         public ViewHolder(View itemView) {
             super(itemView);
-            content = (LinearLayout) itemView.findViewById(R.id.chat_content);
+            content = (RelativeLayout) itemView.findViewById(R.id.chat_content);
             name = (TextView) itemView.findViewById(R.id.group_name);
         }
     }
