@@ -3,13 +3,24 @@ package com.flamebase.database;
 import android.content.Context;
 import android.util.Log;
 
+import com.flamebase.database.interfaces.Blower;
+import com.flamebase.database.interfaces.ListBlower;
+import com.flamebase.database.interfaces.MapBlower;
+import com.flamebase.database.interfaces.ObjectBlower;
+import com.flamebase.database.model.MapReference;
+import com.flamebase.database.model.ObjectReference;
+import com.flamebase.database.model.Reference;
 import com.google.firebase.messaging.RemoteMessage;
+import com.google.gson.Gson;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.reflect.Type;
 import java.util.HashMap;
+import java.util.Map;
+
+import static com.flamebase.database.model.Reference.PATH;
 
 /**
  * Created by efraespada on 10/06/2017.
@@ -22,8 +33,15 @@ public class FlamebaseDatabase {
     private static Context context;
     private static String urlServer;
     private static String token;
+    private static Gson gson;
 
-    private static HashMap<String, RealtimeDatabase> pathMap;
+    private static HashMap<String, ? extends Reference> pathMap;
+
+    public enum Type {
+        OBJECT,
+        LIST,
+        MAP
+    }
 
     public interface FlamebaseReference<T> {
 
@@ -34,8 +52,6 @@ public class FlamebaseDatabase {
         void progress(String id, int value);
 
         String getTag();
-
-        Type getType();
     }
 
     private FlamebaseDatabase() {
@@ -51,32 +67,24 @@ public class FlamebaseDatabase {
         FlamebaseDatabase.context = context;
         FlamebaseDatabase.urlServer = urlServer;
         FlamebaseDatabase.token = token;
+        FlamebaseDatabase.gson = new Gson();
         if (FlamebaseDatabase.pathMap == null) {
             FlamebaseDatabase.pathMap = new HashMap<>();
         }
     }
 
-    /**
-     * Creates a new RealtimeDatabase reference
-     * @param path                  - Database reference path
+    /*
+     * Creates a new RealtimeDatabase stringReference
+     * @param path                  - Database stringReference path
      * @param flamebaseReference    - Callback methods
-     */
-    public static <T> void createListener(final String path, final FlamebaseReference flamebaseReference) {
+     *
+    public static <T> void createListener(final String path, final FlamebaseReference flamebaseReference, RealtimeDatabase.Blower blower) {
         if (FlamebaseDatabase.pathMap == null) {
             Log.e(TAG, "Use FlamebaseDatabase.initialize(Context context, String urlServer) before create real time references");
             return;
         }
 
-        final RealtimeDatabase realtimeDatabase = new RealtimeDatabase<T>(FlamebaseDatabase.context, path) {
-            @Override
-            public void onObjectChanges(T value) {
-                flamebaseReference.onObjectChanges(value);
-            }
-
-            @Override
-            public T updateObject() {
-                return (T) flamebaseReference.update();
-            }
+        final RealtimeDatabase realtimeDatabase = new RealtimeDatabase(FlamebaseDatabase.context, path, blower) {
 
             @Override
             public void progress(String id, int value) {
@@ -86,11 +94,6 @@ public class FlamebaseDatabase {
             @Override
             public String getTag() {
                 return flamebaseReference.getTag();
-            }
-
-            @Override
-            public Type getType() {
-                return flamebaseReference.getType();
             }
         };
 
@@ -128,6 +131,176 @@ public class FlamebaseDatabase {
 
             }
         });
+    }
+     */
+
+    public static <T> void createListener(final String path, Blower<T> blower, java.lang.reflect.Type tGeneric) {
+        if (FlamebaseDatabase.pathMap == null) {
+            Log.e(TAG, "Use FlamebaseDatabase.initialize(Context context, String urlServer) before create real time references");
+            return;
+        }
+
+        // type of element
+
+        Type type;
+        if (blower instanceof MapBlower) {
+            type = Type.MAP;
+        } else if (blower instanceof ListBlower) {
+            type = Type.LIST;
+        } else {
+            type = Type.OBJECT;
+        }
+
+
+        switch (type) {
+
+            case MAP:
+
+                final MapBlower<T> mapBlower = (MapBlower<T>) blower;
+
+                final MapReference mapReference = new MapReference<T>(context, path, mapBlower) {
+
+                    @Override
+                    public void progress(String id, int value) {
+                        mapBlower.progress(id, value);
+                    }
+
+                    @Override
+                    public String getTag() {
+                        return mapBlower.getTag();
+                    }
+
+                    @Override
+                    public String getStringReference() {
+                        return gson.toJson(reference);
+                    }
+
+                    @Override
+                    public void blowerResult(String value) {
+
+                    }
+
+                    @Override
+                    public Map<String, T> updateMap() {
+                        return mapBlower.updateMap();
+                    }
+
+                    @Override
+                    public void onMapChanged(Map<String, T> ref) {
+                        mapBlower.onMapChanged(ref);
+                    }
+
+                };
+
+                mapReference.loadCachedReference();
+
+                FlamebaseDatabase.initSync(path, FlamebaseDatabase.token, new Sender.FlamebaseResponse() {
+                    @Override
+                    public void onSuccess(JSONObject jsonObject) {
+                        try {
+                            if (jsonObject.has("data") && jsonObject.get("data") != null) {
+                                Object object = jsonObject.get("data");
+                                if (object instanceof JSONObject) {
+                                    JSONObject obj = (JSONObject) object;
+                                    int len = obj.getInt("len");
+
+                                    if (mapReference.stringReference.length() > len) {
+                                        Log.e(TAG, "not up to date : " + path);
+                                        syncReference(path, true);
+                                    }
+
+                                } else {
+                                    Log.e(TAG, "action success: " + object);
+                                }
+                            }
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+
+                    }
+                });
+
+                break;
+
+            case OBJECT:
+
+                final ObjectBlower<T> objectBlower = (ObjectBlower<T>) blower;
+
+                final ObjectReference objectReference = new ObjectReference<T>(context, path, objectBlower, tGeneric) {
+
+
+                    @Override
+                    public T updateObject() {
+                        return objectBlower.updateObject();
+                    }
+
+                    @Override
+                    public void onObjectChanged(T ref) {
+                        objectBlower.updateObject();
+                    }
+
+                    @Override
+                    public void progress(String id, int value) {
+                        objectBlower.progress(id, value);
+                    }
+
+                    @Override
+                    public String getTag() {
+                        return objectBlower.getTag();
+                    }
+
+                    @Override
+                    public String getStringReference() {
+                        return gson.toJson(reference);
+                    }
+
+                    @Override
+                    public void blowerResult(String value) {
+
+                    }
+
+                };
+
+                objectReference.loadCachedReference();
+
+                FlamebaseDatabase.initSync(path, FlamebaseDatabase.token, new Sender.FlamebaseResponse() {
+                    @Override
+                    public void onSuccess(JSONObject jsonObject) {
+                        try {
+                            if (jsonObject.has("data") && jsonObject.get("data") != null) {
+                                Object object = jsonObject.get("data");
+                                if (object instanceof JSONObject) {
+                                    JSONObject obj = (JSONObject) object;
+                                    int len = obj.getInt("len");
+
+                                    if (objectReference.stringReference.length() > len) {
+                                        Log.e(TAG, "not up to date : " + path);
+                                        syncReference(path, true);
+                                    }
+
+                                } else {
+                                    Log.e(TAG, "action success: " + object);
+                                }
+                            }
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+
+                    }
+                });
+
+                break;
+        }
     }
 
     private static void initSync(String path, String token, final Sender.FlamebaseResponse callback) {
@@ -223,9 +396,9 @@ public class FlamebaseDatabase {
 
     public static void onMessageReceived(RemoteMessage remoteMessage) {
         try {
-            String path = remoteMessage.getData().get(RealtimeDatabase.PATH);
+            String path = remoteMessage.getData().get(PATH);
             if (pathMap.containsKey(path)) {
-                pathMap.get(path).onMessageReceived(remoteMessage);
+                ((Reference) pathMap.get(path)).onMessageReceived(remoteMessage);
             } else {
 
             }

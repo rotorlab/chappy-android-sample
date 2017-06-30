@@ -1,4 +1,4 @@
-package com.flamebase.database;
+package com.flamebase.database.model;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -7,6 +7,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 
 import com.efraespada.androidstringobfuscator.AndroidStringObfuscator;
+import com.flamebase.database.Database;
+import com.flamebase.database.ReferenceUtils;
 import com.flamebase.jsondiff.JSONDiff;
 import com.google.firebase.messaging.RemoteMessage;
 import com.google.gson.Gson;
@@ -14,7 +16,6 @@ import com.google.gson.Gson;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.reflect.Type;
 import java.text.Normalizer;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -27,60 +28,65 @@ import static com.flamebase.database.Database.COLUMN_DATA;
  * Created by efraespada on 21/05/2017.
  */
 
-public abstract class RealtimeDatabase<T> {
+public abstract class Reference {
 
     private int VERSION = 1;
     private static Map<String, String[]> mapParts;
     private Database database;
     private Context context;
 
-    public T reference;
     public int len;
 
-    private static final String TAG = RealtimeDatabase.class.getSimpleName();
+    private static final String TAG = Reference.class.getSimpleName();
 
     public static String STAG = "tag";
     public static String PATH = "id";
-    public static String REFERENCE = "reference";
+    public static String REFERENCE = "stringReference";
     public static String TABLE_NAME = "ref";
     public static String SIZE = "size";
     public static String INDEX = "index";
     public static String ACTION = "action";
 
     public String path;
+    public String stringReference;
 
     public static final String ACTION_SIMPLE_UPDATE    = "simple_update";
     public static final String ACTION_SLICE_UPDATE     = "slice_update";
 
-    public RealtimeDatabase(Context context, String path) {
+    public Reference(Context context, String path) {
         this.context = context;
         this.path = path;
         AndroidStringObfuscator.init(this.context);
-        String name = RealtimeDatabase.class.getSimpleName() + ".db";
+        // String name = Reference.class.getSimpleName() + ".db";
+        String name = "RealtimeDatabase.db";
         this.database = new Database(this.context, name, TABLE_NAME, VERSION);
         this.mapParts = new HashMap<>();
         this.len = 0;
-        reference = null;
+        this.stringReference = "{}";
     }
 
-    public RealtimeDatabase(Context context, String path, RemoteMessage remoteMessage) {
+    public Reference(Context context, String path, RemoteMessage remoteMessage) {
         this.context = context;
         this.path = path;
         AndroidStringObfuscator.init(this.context);
-        String name = RealtimeDatabase.class.getSimpleName() + ".db";
+        String name = "RealtimeDatabase.db";
         this.database = new Database(this.context, name, TABLE_NAME, VERSION);
-        reference = null;
         this.len = 0;
+        this.stringReference = "{}";
         onMessageReceived(remoteMessage);
     }
 
+    /**
+     * checks if push message comes from server cluster
+     * @param remoteMessage
+     */
     public void onMessageReceived(RemoteMessage remoteMessage) {
         try {
             String tag = remoteMessage.getData().get(STAG);
             String action = remoteMessage.getData().get(ACTION);
             String data = remoteMessage.getData().get(REFERENCE);
             String path = remoteMessage.getData().get(PATH);
-            String rData = hex2String(data);
+            String rData = ReferenceUtils.hex2String(data);
 
             if (!tag.equalsIgnoreCase(getTag())) {
                 return;
@@ -140,30 +146,46 @@ public abstract class RealtimeDatabase<T> {
         }
     }
 
-    private String hex2String(String arg) {
-        String str = "";
-        for (int i = 0; i < arg.length(); i += 2) {
-            String s = arg.substring(i, (i + 2));
-            int decimal = Integer.parseInt(s, 16);
-            str = str + (char) decimal;
-        }
-        return str;
-    }
-
-    public abstract void onObjectChanges(T value);
-
-    public abstract T updateObject();
-
+    /**
+     * notify update percent
+     * @param id
+     * @param value
+     */
     public abstract void progress(String id, int value);
 
+    /**
+     * tag or identifier used to identify incoming object updates
+     * from server cluster
+     *
+     * @return
+     */
     public abstract String getTag();
 
-    public abstract Type getType();
+    /**
+     * returns actual reference in string format
+     * @return String
+     */
+    public abstract String getStringReference();
 
+    /**
+     * loads stored JSON object on reference element
+     */
+    public abstract void loadCachedReference();
+
+    /**
+     * returns the result of applying differences to current JSON object
+     * after being stored on local DB
+     * @param value
+     */
+    public abstract void blowerResult(String value);
+
+    /**
+     * updates current string object with incoming data
+     * @param path
+     * @param data
+     */
     private void parseResult(String path, String data) {
         try {
-            Gson gson = new Gson();
-
             JSONObject jsonObject;
             String prev = getElement(path);
             if (prev != null) {
@@ -246,14 +268,19 @@ public abstract class RealtimeDatabase<T> {
             }
 
             addElement(path, jsonObject.toString());
-            reference = gson.fromJson(jsonObject.toString(), getType());
-            onObjectChanges(reference);
+            stringReference = jsonObject.toString();
+            blowerResult(stringReference);
         } catch (JSONException e) {
             e.printStackTrace();
         }
     }
 
-    private void addElement(String path, String info) {
+    /**
+     * updates stored path
+     * @param path
+     * @param info
+     */
+    public void addElement(String path, String info) {
         this.len = info.length();
         try {
             String enId = AndroidStringObfuscator.encryptString(path);
@@ -278,7 +305,12 @@ public abstract class RealtimeDatabase<T> {
         }
     }
 
-    private String getElement(String path) {
+    /**
+     * returns stored object
+     * @param path
+     * @return String
+     */
+    public String getElement(String path) {
         String enPath = AndroidStringObfuscator.encryptString(path);
         try {
             SQLiteDatabase db = database.getReadableDatabase();
@@ -329,64 +361,33 @@ public abstract class RealtimeDatabase<T> {
         Object[] objects = new Object[2];
 
         if (clean) {
-            this.reference = null;
+            this.stringReference = "{}";
+        } else if (stringReference == null) {
+            this.stringReference = "{}";
         }
 
-        if (this.reference == null) {
-            try {
-                String expected = "{}";
-                String actual = gson.toJson(updateObject(), getType());
-                Map<String, JSONObject> diff = JSONDiff.diff(new JSONObject(expected), new JSONObject(actual));
+        try {
+            String actual = getStringReference();
 
-                JSONObject jsonObject = new JSONObject();
+            Map<String, JSONObject> diff = JSONDiff.diff(new JSONObject(stringReference), new JSONObject(actual));
 
-                // max 3
-                for (Map.Entry<String, JSONObject> entry : diff.entrySet()) {
-                    jsonObject.put(entry.getKey(), entry.getValue());
-                }
+            JSONObject jsonObject = new JSONObject();
 
-                len = actual.length();
-
-                objects[0] = len;
-                objects[1] = jsonObject.toString();
-
-                return objects;
-            } catch (JSONException e) {
-                e.printStackTrace();
+            // max 3
+            for (Map.Entry<String, JSONObject> entry : diff.entrySet()) {
+                jsonObject.put(entry.getKey(), entry.getValue());
             }
-        } else {
-            try {
-                String expected = gson.toJson(this.reference, getType());
-                String actual = gson.toJson(updateObject(), getType());
-                Map<String, JSONObject> diff = JSONDiff.diff(new JSONObject(expected), new JSONObject(actual));
 
-                JSONObject jsonObject = new JSONObject();
+            len = actual.length();
 
-                // max 3
-                for (Map.Entry<String, JSONObject> entry : diff.entrySet()) {
-                    jsonObject.put(entry.getKey(), entry.getValue());
-                }
+            objects[0] = len;
+            objects[1] = jsonObject.toString();
 
-                len = actual.length();
-
-                objects[0] = len;
-                objects[1] = jsonObject.toString();
-
-                return objects;
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+            return objects;
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
 
         return objects;
-    }
-
-    public void loadChachedReference() {
-        Gson gson = new Gson();
-        String cached = getElement(this.path);
-        if (cached != null) {
-            this.reference = gson.fromJson(cached, getType());
-            onObjectChanges(this.reference);
-        }
     }
 }

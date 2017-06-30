@@ -25,6 +25,7 @@ import com.flamebase.chat.model.GChat;
 import com.flamebase.chat.model.Message;
 import com.flamebase.chat.services.LocalData;
 import com.flamebase.database.FlamebaseDatabase;
+import com.flamebase.database.interfaces.ObjectBlower;
 import com.google.firebase.FirebaseApp;
 import com.google.gson.reflect.TypeToken;
 
@@ -91,22 +92,23 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
 
-        FlamebaseDatabase.createListener(path, new FlamebaseDatabase.FlamebaseReference<GChat>() {
+        FlamebaseDatabase.createListener(path, new ObjectBlower<GChat>() {
+
             @Override
-            public void onObjectChanges(GChat value) {
-                if (chat == null) {
-                    chat = value;
-                } else {
-                    chat.setName(value.getName());
-                    chat.setMessages(value.getMessages());
-                    chat.setMember(value.getMember());
-                }
-                messageList.getAdapter().notifyDataSetChanged();
+            public GChat updateObject() {
+                return chat;
             }
 
             @Override
-            public GChat update() {
-                return chat;
+            public void onObjectChanged(GChat ref) {
+                if (chat == null) {
+                    chat = ref;
+                } else {
+                    chat.setName(ref.getName());
+                    chat.setMessages(ref.getMessages());
+                    chat.setMember(ref.getMember());
+                }
+                messageList.getAdapter().notifyDataSetChanged();
             }
 
             @Override
@@ -119,11 +121,8 @@ public class ChatActivity extends AppCompatActivity {
                 return path + "_sync";
             }
 
-            @Override
-            public Type getType() {
-                return new TypeToken<GChat>(){}.getType();
-            }
-        });
+        }, GChat.class);
+
     }
 
     @Override

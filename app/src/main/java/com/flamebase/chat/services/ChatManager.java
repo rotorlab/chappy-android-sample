@@ -5,9 +5,9 @@ import android.util.Log;
 import com.flamebase.chat.model.GChat;
 import com.flamebase.chat.model.Member;
 import com.flamebase.database.FlamebaseDatabase;
-import com.google.gson.reflect.TypeToken;
+import com.flamebase.database.interfaces.MapBlower;
+import com.flamebase.database.interfaces.ObjectBlower;
 
-import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,26 +37,27 @@ public class ChatManager {
     }
 
     public static void syncGChat(final String path) {
-        FlamebaseDatabase.createListener(path, new FlamebaseDatabase.FlamebaseReference<GChat>() {
-            @Override
-            public void onObjectChanges(GChat value) {
-                if (map.containsKey(path)) {
-                    map.get(path).setMember(value.getMember());
-                    map.get(path).setMessages(value.getMessages());
-                    map.get(path).setName(value.getName());
-                } else {
-                    map.put(path, value);
-                }
-                ChatManager.adapter.notifyDataSetChanged();
-            }
+        FlamebaseDatabase.createListener(path, new ObjectBlower<GChat>() {
 
             @Override
-            public GChat update() {
+            public GChat updateObject() {
                 if (map.containsKey(path)) {
                     return map.get(path);
                 } else {
                     return null;
                 }
+            }
+
+            @Override
+            public void onObjectChanged(GChat ref) {
+                if (map.containsKey(path)) {
+                    map.get(path).setMember(ref.getMember());
+                    map.get(path).setMessages(ref.getMessages());
+                    map.get(path).setName(ref.getName());
+                } else {
+                    map.put(path, ref);
+                }
+                ChatManager.adapter.notifyDataSetChanged();
             }
 
             @Override
@@ -69,22 +70,23 @@ public class ChatManager {
                 return path + "_sync";
             }
 
-            @Override
-            public Type getType() {
-                return new TypeToken<GChat>(){}.getType();
-            }
-
-        });
+        }, GChat.class);
 
         LocalData.addPath(path);
     }
 
     public static void syncContacts(final String path) {
-        FlamebaseDatabase.createListener(path, new FlamebaseDatabase.FlamebaseReference<Map<String, Member>>() {
+        FlamebaseDatabase.createListener(path, new MapBlower<Member>() {
+
             @Override
-            public void onObjectChanges(Map<String, Member> value) {
+            public Map<String, Member> updateMap() {
+                return contacts;
+            }
+
+            @Override
+            public void onMapChanged(Map<String, Member> ref) {
                 if (contacts != null) {
-                    for (Map.Entry<String, Member> entry : value.entrySet()) {
+                    for (Map.Entry<String, Member> entry : ref.entrySet()) {
                         if (!contacts.containsKey(entry.getKey())) {
                             contacts.put(entry.getKey(), entry.getValue());
                         } else {
@@ -95,14 +97,9 @@ public class ChatManager {
                         }
                     }
                 } else {
-                    contacts = value;
+                    contacts = ref;
                 }
                 ChatManager.adapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public Map<String, Member> update() {
-                return contacts;
             }
 
             @Override
@@ -115,12 +112,7 @@ public class ChatManager {
                 return path + "_sync";
             }
 
-            @Override
-            public Type getType() {
-                return new TypeToken<Map<String, Member>>(){}.getType();
-            }
-
-        });
+        }, Member.class);
     }
 
     public static Map<String, Member> getContacts() {
