@@ -35,7 +35,7 @@ public class FlamebaseDatabase {
     private static String token;
     private static Gson gson;
 
-    private static HashMap<String, ? extends Reference> pathMap;
+    private static HashMap<String, Reference> pathMap;
 
     public enum Type {
         OBJECT,
@@ -134,13 +134,13 @@ public class FlamebaseDatabase {
     }
      */
 
-    public static <T> void createListener(final String path, Blower<T> blower, java.lang.reflect.Type tGeneric) {
+    public static <T> void createListener(final String path, Blower<T> blower, Class<T> clazz) {
         if (FlamebaseDatabase.pathMap == null) {
             Log.e(TAG, "Use FlamebaseDatabase.initialize(Context context, String urlServer) before create real time references");
             return;
         }
 
-        // type of element
+        // clazz of element
 
         Type type;
         if (blower instanceof MapBlower) {
@@ -158,7 +158,7 @@ public class FlamebaseDatabase {
 
                 final MapBlower<T> mapBlower = (MapBlower<T>) blower;
 
-                final MapReference mapReference = new MapReference<T>(context, path, mapBlower) {
+                final MapReference mapReference = new MapReference<T>(context, path, mapBlower, clazz) {
 
                     @Override
                     public void progress(String id, int value) {
@@ -168,11 +168,6 @@ public class FlamebaseDatabase {
                     @Override
                     public String getTag() {
                         return mapBlower.getTag();
-                    }
-
-                    @Override
-                    public String getStringReference() {
-                        return gson.toJson(reference);
                     }
 
                     @Override
@@ -191,6 +186,8 @@ public class FlamebaseDatabase {
                     }
 
                 };
+
+                pathMap.put(path, mapReference);
 
                 mapReference.loadCachedReference();
 
@@ -231,7 +228,7 @@ public class FlamebaseDatabase {
 
                 final ObjectBlower<T> objectBlower = (ObjectBlower<T>) blower;
 
-                final ObjectReference objectReference = new ObjectReference<T>(context, path, objectBlower, tGeneric) {
+                final ObjectReference objectReference = new ObjectReference<T>(context, path, objectBlower, clazz) {
 
 
                     @Override
@@ -255,16 +252,13 @@ public class FlamebaseDatabase {
                     }
 
                     @Override
-                    public String getStringReference() {
-                        return gson.toJson(reference);
-                    }
-
-                    @Override
                     public void blowerResult(String value) {
 
                     }
 
                 };
+
+                pathMap.put(path, objectReference);
 
                 objectReference.loadCachedReference();
 

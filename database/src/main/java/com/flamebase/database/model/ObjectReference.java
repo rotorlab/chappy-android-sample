@@ -2,18 +2,16 @@ package com.flamebase.database.model;
 
 import android.content.Context;
 
-import com.flamebase.database.ListParameterizedType;
 import com.flamebase.database.interfaces.Blower;
-import com.flamebase.database.interfaces.MapBlower;
 import com.flamebase.database.interfaces.ObjectBlower;
+import com.google.common.reflect.TypeParameter;
+import com.google.common.reflect.TypeToken;
 import com.google.firebase.messaging.RemoteMessage;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,22 +22,23 @@ import java.util.Map;
 public abstract class ObjectReference<T> extends Reference {
 
     public T reference = null;
-    public Blower blower;
+    public ObjectBlower blower;
     public Gson gson;
-    public Type type;
+    public Class<T> clazz;
+    private final TypeToken<T> mapType = new TypeToken<T>(getClass()){};
 
 
-    public ObjectReference(Context context, String path, ObjectBlower<T> blower, Type type) {
+    public ObjectReference(Context context, String path, ObjectBlower<T> blower, Class<T> clazz) {
         super(context, path);
         this.blower = blower;
-        this.type = type;
+        this.clazz = clazz;
         this.gson = new Gson();
     }
 
-    public ObjectReference(Context context, String path, ObjectBlower<T> blower, Type type, RemoteMessage remoteMessage) {
+    public ObjectReference(Context context, String path, ObjectBlower<T> blower, Class<T> clazz, RemoteMessage remoteMessage) {
         super(context, path, remoteMessage);
         this.blower = blower;
-        this.type = type;
+        this.clazz = clazz;
         this.gson = new Gson();
     }
 
@@ -48,21 +47,30 @@ public abstract class ObjectReference<T> extends Reference {
     public abstract void onObjectChanged(T ref);
 
     @Override
+    public String getStringReference() {
+        if (reference == null) {
+            return "{}";
+        } else {
+            return gson.toJson(reference);
+        }
+    }
+
+    @Override
     public void loadCachedReference() {
         stringReference = getElement(path);
         if (stringReference != null) {
-            reference = gson.fromJson(stringReference, type);
-            //blower.onMapChanged(map);
+            reference = gson.fromJson(stringReference, TypeToken.of(clazz).getType());
+            blower.onObjectChanged(reference);
         }
     }
 
 /*
-    public <V> void loadChachedReference(MapBlower<String,V> blower, Type type) {
+    public <V> void loadChachedReference(MapBlower<String,V> blower, Type clazz) {
         Gson gson = new Gson();
         stringReference = getElement(path);
 
         if (stringReference != null) {
-            Map<String, V> map = gson.fromJson(stringReference, type);
+            Map<String, V> map = gson.fromJson(stringReference, clazz);
             blower.onMapChanged(map);
         }
     }

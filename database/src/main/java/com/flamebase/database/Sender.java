@@ -30,7 +30,7 @@ public class Sender {
     public static void getRequest(String url, final FlamebaseResponse callback) {
         Posty.newRequest(url)
             .method(PostyMethod.GET)
-            .header("Content-type", "application/json")
+            .header("Content-clazz", "application/json")
             .call(new PostyResponseListener() {
                 @Override
                 public void onResponse(PostyResponse respon) {
@@ -51,7 +51,7 @@ public class Sender {
     public static void postRequest(String url, String data, final FlamebaseResponse callback) {
         Posty.newRequest(url)
             .method(PostyMethod.POST)
-            .header("Content-type", "application/json")
+            .header("Content-clazz", "application/json")
             .body(data)
             .call(new PostyResponseListener() {
                 @Override

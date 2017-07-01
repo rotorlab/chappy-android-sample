@@ -40,6 +40,8 @@ dependencies {
     compile 'com.github.marcodama7.posty:posty:0.1.1'
     compile project(':jsondiff')
     compile 'org.skyscreamer:jsonassert:1.5.0'
+    compile 'com.google.code.findbugs:jsr305:2.0.1'
+    compile 'com.google.guava:guava:22.0-android'
 }
 
 def siteUrl = 'https://github.com/flamebase/flamebase-database-android'
