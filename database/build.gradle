@@ -38,7 +38,8 @@ dependencies {
     compile 'com.google.code.gson:gson:2.8.0'
     testCompile group: 'org.skyscreamer', name: 'jsonassert', version: '1.5.0'
     compile 'com.github.marcodama7.posty:posty:0.1.2'
-    compile project(':jsondiff')
+    //compile project(':jsondiff')
+    compile 'com.efraespada:jsondiff:1.0.0'
     compile 'org.skyscreamer:jsonassert:1.5.0'
     compile 'com.google.code.findbugs:jsr305:2.0.1'
     compile 'com.google.guava:guava:22.0-android'

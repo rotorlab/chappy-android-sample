@@ -7,9 +7,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 
 import com.efraespada.androidstringobfuscator.AndroidStringObfuscator;
+import com.efraespada.jsondiff.JSONDiff;
 import com.flamebase.database.Database;
 import com.flamebase.database.ReferenceUtils;
-import com.flamebase.jsondiff.JSONDiff;
 import com.google.firebase.messaging.RemoteMessage;
 import com.google.gson.Gson;
 
