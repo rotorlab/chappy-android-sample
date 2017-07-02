@@ -11,6 +11,10 @@ If you are doing an altruist project with Firebase, pray not to became successfu
 In this repo you can find the proper lib for android client.
 For now it still developing, so please be patient with errors and creation issues.
 
+### Requirements
+Before use this lib you must initialize a **flamebase-database-server-cluster** which will be our server cluster for storing json objects.
+The server cluster is run with **node** framework. Check out the [repository](https://github.com/flamebase/flamebase-database-server-cluster) for more information.
+
 ### Usage
 
 - Import library:
