@@ -52,6 +52,8 @@ FlamebaseDatabase.createListener(path, new ObjectBlower<ObjectA>() {
 
 }, ObjectA.class);
 
+objectA.setColor("red");
+FlamebaseDatabase.syncReference(path);
 ```
 Listener for maps:
 ```java
@@ -82,6 +84,12 @@ FlamebaseDatabase.createListener(path, new MapBlower<Member>() {
     }
 
 }, Member.class);
+
+Member member = new Member();
+member.setName("pit");
+member.setEmail("pit@hhh.com");
+contacts.put(member.getName(), member);
+FlamebaseDatabase.syncReference(path);
 ```
 
 - Database synchronization works through Firebase Cloud Messaging 

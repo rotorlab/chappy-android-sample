@@ -72,7 +72,7 @@ public class ChatActivity extends AppCompatActivity {
                     Message message = new Message(name, messageText.getText().toString());
                     chat.getMessages().put(String.valueOf(new Date().getTime()), message);
 
-                    FlamebaseDatabase.syncReference(path, false);
+                    FlamebaseDatabase.syncReference(path);
                     messageText.setText("");
                     messageList.getAdapter().notifyDataSetChanged();
                 }

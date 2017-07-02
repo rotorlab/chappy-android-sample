@@ -360,7 +360,11 @@ public class FlamebaseDatabase {
 
     }
 
-    public static <T> void syncReference(String path, boolean clean) {
+    public static void syncReference(String path) {
+        syncReference(path, false);
+    }
+
+    public static void syncReference(String path, boolean clean) {
         if (pathMap.containsKey(path)) {
             Object[] result = pathMap.get(path).syncReference(clean);
             String diff = (String) result[1];
