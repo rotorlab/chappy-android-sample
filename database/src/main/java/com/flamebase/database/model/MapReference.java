@@ -2,24 +2,15 @@ package com.flamebase.database.model;
 
 import android.content.Context;
 
-import com.flamebase.database.interfaces.Blower;
 import com.flamebase.database.interfaces.MapBlower;
-import com.flamebase.database.types.MapTypeAdapter;
 import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
 import com.google.firebase.messaging.RemoteMessage;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.InstanceCreator;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 import com.google.gson.internal.ConstructorConstructor;
+import com.google.gson.internal.LinkedTreeMap;
 import com.google.gson.internal.bind.MapTypeAdapterFactory;
 
 import java.lang.reflect.ParameterizedType;
@@ -34,7 +25,6 @@ import java.util.Map;
 
 public abstract class MapReference<T> extends Reference {
 
-    public Map<String, T> reference = null;
     public MapBlower<T> blower;
     public Gson gson;
     public Class<T> clazz;
@@ -53,23 +43,36 @@ public abstract class MapReference<T> extends Reference {
         this.gson = new Gson();
     }
 
+    /**
+     * called when map is synchronized with cluster or path
+     * not exists in local db and is stored (cached references)
+     * @return Map - String, T
+     */
     public abstract Map<String, T> updateMap();
-
-    public abstract void onMapChanged(Map<String, T> ref);
 
     @Override
     public String getStringReference() {
-        return gson.toJson(reference);
+        if (updateMap() == null) {
+            return "{}";
+        } else {
+            return gson.toJson(updateMap(), getType(clazz));
+        }
     }
 
     @Override
     public void loadCachedReference() {
         stringReference = getElement(path);
-        if (stringReference != null) {
-            Map<String, T> map = new HashMap<>();
-            Map<String, T> mapTemp = (Map<String, T>) gson.fromJson(stringReference, getType(clazz));
-            blower.onMapChanged(mapTemp);
+        if (stringReference == null) {
+            stringReference = getStringReference();
+            addElement(path, stringReference);
         }
+
+        Map<String, T> map = new HashMap<>();
+        LinkedTreeMap<String, T> mapTemp = gson.fromJson(stringReference, getType(clazz));
+        for (LinkedTreeMap.Entry<String, T> entry : mapTemp.entrySet()) {
+            map.put(entry.getKey(), entry.getValue());
+        }
+        blower.onMapChanged(map);
     }
 
 /*

@@ -164,7 +164,6 @@ public class MainActivity extends AppCompatActivity {
                                 SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
                                 String email = prefs.getString("email", null);
                                 String groupPath = "/chats/" + new Date().getTime();
-                                ChatManager.syncGChat(groupPath);
 
                                 List<String> members = new ArrayList<>();
                                 members.add(email);
@@ -172,7 +171,9 @@ public class MainActivity extends AppCompatActivity {
                                 GChat gChat = new GChat(name.getText().toString(), members, messageMap);
                                 ChatManager.map.put(groupPath, gChat);
 
-                                FlamebaseDatabase.syncReference(groupPath, false);
+                                ChatManager.syncGChat(groupPath);
+
+                                //FlamebaseDatabase.syncReference(groupPath, false);
 
                                 dialog.dismiss();
                                 materialDialog = null;
@@ -212,10 +213,11 @@ public class MainActivity extends AppCompatActivity {
         String name = prefs.getString("name", null);
         String email = prefs.getString("email", null);
         String contactPath = "/contacts";
-        ChatManager.syncContacts(contactPath);
 
         Member member = new Member(name, FirebaseInstanceId.getInstance().getToken(), "android", email);
         ChatManager.contacts.put(name, member);
+
+        ChatManager.syncContacts(contactPath);
 
         FlamebaseDatabase.syncReference(contactPath, false);
     }

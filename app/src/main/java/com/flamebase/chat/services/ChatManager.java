@@ -75,6 +75,10 @@ public class ChatManager {
         LocalData.addPath(path);
     }
 
+    /**
+     * creates a listener for given path
+     * @param path
+     */
     public static void syncContacts(final String path) {
         FlamebaseDatabase.createListener(path, new MapBlower<Member>() {
 
@@ -99,7 +103,6 @@ public class ChatManager {
                 } else {
                     contacts = ref;
                 }
-                ChatManager.adapter.notifyDataSetChanged();
             }
 
             @Override

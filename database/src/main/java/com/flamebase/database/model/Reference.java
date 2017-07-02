@@ -41,7 +41,7 @@ public abstract class Reference {
 
     public static String STAG = "tag";
     public static String PATH = "id";
-    public static String REFERENCE = "stringReference";
+    public static String REFERENCE = "reference";
     public static String TABLE_NAME = "ref";
     public static String SIZE = "size";
     public static String INDEX = "index";
@@ -62,7 +62,7 @@ public abstract class Reference {
         this.database = new Database(this.context, name, TABLE_NAME, VERSION);
         this.mapParts = new HashMap<>();
         this.len = 0;
-        this.stringReference = "{}";
+        this.stringReference = getElement(path);
     }
 
     public Reference(Context context, String path, RemoteMessage remoteMessage) {
@@ -168,7 +168,9 @@ public abstract class Reference {
     public abstract String getStringReference();
 
     /**
-     * loads stored JSON object on reference element
+     * loads stored JSON object on db. if not exists,
+     * gets current reference and stores
+     *
      */
     public abstract void loadCachedReference();
 
@@ -187,7 +189,7 @@ public abstract class Reference {
     private void parseResult(String path, String data) {
         try {
             JSONObject jsonObject;
-            String prev = getElement(path);
+            String prev = getStringReference();
             if (prev != null) {
                 prev = Normalizer.normalize(prev, Normalizer.Form.NFC);
                 jsonObject = new JSONObject(prev);

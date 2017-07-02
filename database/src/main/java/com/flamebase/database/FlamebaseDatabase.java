@@ -180,11 +180,6 @@ public class FlamebaseDatabase {
                         return mapBlower.updateMap();
                     }
 
-                    @Override
-                    public void onMapChanged(Map<String, T> ref) {
-                        mapBlower.onMapChanged(ref);
-                    }
-
                 };
 
                 pathMap.put(path, mapReference);
@@ -201,7 +196,7 @@ public class FlamebaseDatabase {
                                     JSONObject obj = (JSONObject) object;
                                     int len = obj.getInt("len");
 
-                                    if (mapReference.stringReference.length() > len) {
+                                    if (mapReference.getStringReference().length() > len) {
                                         Log.e(TAG, "not up to date : " + path);
                                         syncReference(path, true);
                                     }
@@ -218,7 +213,7 @@ public class FlamebaseDatabase {
 
                     @Override
                     public void onFailure(String error) {
-
+                        Log.e(TAG, "error: " + error);
                     }
                 });
 
@@ -237,11 +232,6 @@ public class FlamebaseDatabase {
                     }
 
                     @Override
-                    public void onObjectChanged(T ref) {
-                        objectBlower.updateObject();
-                    }
-
-                    @Override
                     public void progress(String id, int value) {
                         objectBlower.progress(id, value);
                     }
@@ -249,11 +239,6 @@ public class FlamebaseDatabase {
                     @Override
                     public String getTag() {
                         return objectBlower.getTag();
-                    }
-
-                    @Override
-                    public void blowerResult(String value) {
-
                     }
 
                 };
@@ -272,7 +257,7 @@ public class FlamebaseDatabase {
                                     JSONObject obj = (JSONObject) object;
                                     int len = obj.getInt("len");
 
-                                    if (objectReference.stringReference.length() > len) {
+                                    if (objectReference.getStringReference().length() > len) {
                                         Log.e(TAG, "not up to date : " + path);
                                         syncReference(path, true);
                                     }

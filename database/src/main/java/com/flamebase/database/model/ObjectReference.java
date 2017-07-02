@@ -21,12 +21,9 @@ import java.util.Map;
 
 public abstract class ObjectReference<T> extends Reference {
 
-    public T reference = null;
-    public ObjectBlower blower;
+    public ObjectBlower<T> blower;
     public Gson gson;
     public Class<T> clazz;
-    private final TypeToken<T> mapType = new TypeToken<T>(getClass()){};
-
 
     public ObjectReference(Context context, String path, ObjectBlower<T> blower, Class<T> clazz) {
         super(context, path);
@@ -42,26 +39,35 @@ public abstract class ObjectReference<T> extends Reference {
         this.gson = new Gson();
     }
 
+    /**
+     * called when object is synchronized with cluster or path
+     * not exists in local db and is stored (cached references)
+     * @return T object
+     */
     public abstract T updateObject();
-
-    public abstract void onObjectChanged(T ref);
 
     @Override
     public String getStringReference() {
-        if (reference == null) {
+        if (updateObject() == null) {
             return "{}";
         } else {
-            return gson.toJson(reference);
+            return gson.toJson(updateObject(), TypeToken.of(clazz).getType());
         }
+    }
+
+    @Override
+    public void blowerResult(String value) {
+        blower.onObjectChanged((T) gson.fromJson(value, TypeToken.of(clazz).getType()));
     }
 
     @Override
     public void loadCachedReference() {
         stringReference = getElement(path);
-        if (stringReference != null) {
-            reference = gson.fromJson(stringReference, TypeToken.of(clazz).getType());
-            blower.onObjectChanged(reference);
+        if (stringReference == null) {
+            stringReference = getStringReference();
+            addElement(path, stringReference);
         }
+        blower.onObjectChanged((T) gson.fromJson(stringReference, TypeToken.of(clazz).getType()));
     }
 
 /*
@@ -108,7 +114,4 @@ public abstract class ObjectReference<T> extends Reference {
 
     }
 
-    private Gson getGsonBuilder() {
-        return new GsonBuilder().enableComplexMapKeySerialization().create();
-    }
 }
