@@ -42,17 +42,6 @@ public class FlamebaseDatabase {
         MAP
     }
 
-    public interface FlamebaseReference<T> {
-
-        void onObjectChanges(T value);
-
-        T update();
-
-        void progress(String id, int value);
-
-        String getTag();
-    }
-
     private FlamebaseDatabase() {
         // nothing to do here
     }
@@ -160,8 +149,8 @@ public class FlamebaseDatabase {
                 final MapReference mapReference = new MapReference<T>(context, path, mapBlower, clazz) {
 
                     @Override
-                    public void progress(String id, int value) {
-                        mapBlower.progress(id, value);
+                    public void progress(int value) {
+                        mapBlower.progress(value);
                     }
 
                     @Override
@@ -226,8 +215,8 @@ public class FlamebaseDatabase {
                     }
 
                     @Override
-                    public void progress(String id, int value) {
-                        objectBlower.progress(id, value);
+                    public void progress(int value) {
+                        objectBlower.progress(value);
                     }
 
                     @Override

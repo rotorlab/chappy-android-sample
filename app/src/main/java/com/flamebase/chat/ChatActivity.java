@@ -109,7 +109,7 @@ public class ChatActivity extends AppCompatActivity {
             }
 
             @Override
-            public void progress(String id, int value) {
+            public void progress(int value) {
 
             }
 

@@ -120,7 +120,7 @@ public abstract class Reference {
                     }
 
                     float percent = (100F / (float) size) * alocated;
-                    progress(path, (int) percent);
+                    progress((int) percent);
 
                     if (ready && mapParts.get(path).length - 1 == index) {
                         StringBuilder complete = new StringBuilder();
@@ -148,10 +148,9 @@ public abstract class Reference {
 
     /**
      * notify update percent
-     * @param id
      * @param value
      */
-    public abstract void progress(String id, int value);
+    public abstract void progress(int value);
 
     /**
      * tag or identifier used to identify incoming object updates

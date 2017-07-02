@@ -28,31 +28,26 @@ dependencies {
 ```java
 FlamebaseDatabase.initialize(Context context, String cluster_ip, String token);
 ```
-
+Listener for objects:
 ```java
-private GChat chat;
+final ObjectA objectA = new ObjectA();
+objectA.setColor("blue");
 
-FlamebaseDatabase.createListener(path, new FlamebaseDatabase.FlamebaseReference<GChat>() {
+FlamebaseDatabase.createListener(path, new ObjectBlower<ObjectA>() {
+
     @Override
-    public void onObjectChanges(GChat value) {
-        if (chat == null) {
-            chat = value;
-        } else {
-            chat.setName(value.getName());
-            chat.setMessages(value.getMessages());
-            chat.setMember(value.getMember());
-        }
-        messageList.getAdapter().notifyDataSetChanged();
+    public ObjectA updateObject() {
+        return objectA;
     }
 
     @Override
-    public GChat update() {
-        return chat;
+    public void onObjectChanged(ObjectA ref) {
+        objectA.setColor(ref.getColor());
     }
 
     @Override
-    public void progress(String id, int value) {
-
+    public void progress(int value) {
+        Log.e(TAG, "loading " + path + " : " + value + " %");
     }
 
     @Override
@@ -60,13 +55,45 @@ FlamebaseDatabase.createListener(path, new FlamebaseDatabase.FlamebaseReference<
         return path + "_sync";
     }
 
-    @Override
-    public Type getType() {
-        return new TypeToken<GChat>(){}.getType();
-    }
-});
+}, ObjectA.class);
 
 ```
+Listener for maps:
+```java
+Map<String, Member> contacts = new HashMap<>();
+
+FlamebaseDatabase.createListener(path, new MapBlower<Member>() {
+
+    @Override
+    public Map<String, Member> updateMap() {
+        return contacts;
+    }
+
+    @Override
+    public void onMapChanged(Map<String, Member> ref) {
+        for (Map.Entry<String, Member> entry : ref.entrySet()) {
+            if (!contacts.containsKey(entry.getKey())) {
+                contacts.put(entry.getKey(), entry.getValue());
+            } else {
+                contacts.get(entry.getKey()).setName(entry.getValue().getName());
+                contacts.get(entry.getKey()).setEmail(entry.getValue().getEmail());
+            }
+        }
+    }
+
+    @Override
+    public void progress(int value) {
+        Log.e(TAG, "loading " + path + " : " + value + " %");
+    }
+
+    @Override
+    public String getTag() {
+        return path + "_sync";
+    }
+
+}, Member.class);
+```
+
 - Database synchronization works through Firebase Cloud Messaging 
 
 ```java

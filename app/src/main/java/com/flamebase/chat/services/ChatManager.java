@@ -61,8 +61,8 @@ public class ChatManager {
             }
 
             @Override
-            public void progress(String id, int value) {
-                Log.e(TAG, "loading percent for " + id + " : " + value + " %");
+            public void progress(int value) {
+                Log.e(TAG, "loading percent for " + path + " : " + value + " %");
             }
 
             @Override
@@ -106,8 +106,8 @@ public class ChatManager {
             }
 
             @Override
-            public void progress(String id, int value) {
-                Log.e(TAG, "loading percent for " + id + " : " + value + " %");
+            public void progress(int value) {
+                Log.e(TAG, "loading percent for " + path + " : " + value + " %");
             }
 
             @Override

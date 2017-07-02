@@ -6,7 +6,7 @@ package com.flamebase.database.interfaces;
 
 public interface Blower<T> {
 
-    void progress(String id, int value);
+    void progress(int value);
     String getTag();
 
 }
