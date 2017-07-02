@@ -113,11 +113,6 @@ public class ChatActivity extends AppCompatActivity {
 
             }
 
-            @Override
-            public String getTag() {
-                return path + "_sync";
-            }
-
         }, GChat.class);
 
     }

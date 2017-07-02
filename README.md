@@ -50,11 +50,6 @@ FlamebaseDatabase.createListener(path, new ObjectBlower<ObjectA>() {
         Log.e(TAG, "loading " + path + " : " + value + " %");
     }
 
-    @Override
-    public String getTag() {
-        return path + "_sync";
-    }
-
 }, ObjectA.class);
 
 ```
@@ -84,11 +79,6 @@ FlamebaseDatabase.createListener(path, new MapBlower<Member>() {
     @Override
     public void progress(int value) {
         Log.e(TAG, "loading " + path + " : " + value + " %");
-    }
-
-    @Override
-    public String getTag() {
-        return path + "_sync";
     }
 
 }, Member.class);

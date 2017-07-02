@@ -158,7 +158,9 @@ public abstract class Reference {
      *
      * @return
      */
-    public abstract String getTag();
+    public String getTag() {
+        return path + "_sync";
+    }
 
     /**
      * returns actual reference in string format

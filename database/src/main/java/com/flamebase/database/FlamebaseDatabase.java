@@ -154,11 +154,6 @@ public class FlamebaseDatabase {
                     }
 
                     @Override
-                    public String getTag() {
-                        return mapBlower.getTag();
-                    }
-
-                    @Override
                     public Map<String, T> updateMap() {
                         return mapBlower.updateMap();
                     }
@@ -217,11 +212,6 @@ public class FlamebaseDatabase {
                     @Override
                     public void progress(int value) {
                         objectBlower.progress(value);
-                    }
-
-                    @Override
-                    public String getTag() {
-                        return objectBlower.getTag();
                     }
 
                 };

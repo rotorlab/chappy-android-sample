@@ -65,11 +65,6 @@ public class ChatManager {
                 Log.e(TAG, "loading percent for " + path + " : " + value + " %");
             }
 
-            @Override
-            public String getTag() {
-                return path + "_sync";
-            }
-
         }, GChat.class);
 
         LocalData.addPath(path);
@@ -108,11 +103,6 @@ public class ChatManager {
             @Override
             public void progress(int value) {
                 Log.e(TAG, "loading percent for " + path + " : " + value + " %");
-            }
-
-            @Override
-            public String getTag() {
-                return path + "_sync";
             }
 
         }, Member.class);
