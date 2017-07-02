@@ -17,7 +17,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -27,9 +26,7 @@ import com.flamebase.chat.services.LocalData;
 import com.flamebase.database.FlamebaseDatabase;
 import com.flamebase.database.interfaces.ObjectBlower;
 import com.google.firebase.FirebaseApp;
-import com.google.gson.reflect.TypeToken;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;

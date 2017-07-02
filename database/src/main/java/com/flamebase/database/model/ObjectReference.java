@@ -2,18 +2,14 @@ package com.flamebase.database.model;
 
 import android.content.Context;
 
-import com.flamebase.database.interfaces.Blower;
 import com.flamebase.database.interfaces.ObjectBlower;
-import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
 import com.google.firebase.messaging.RemoteMessage;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by efraespada on 29/06/2017.

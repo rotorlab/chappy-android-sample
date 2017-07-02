@@ -51,6 +51,16 @@ public abstract class MapReference<T> extends Reference {
     public abstract Map<String, T> updateMap();
 
     @Override
+    public void blowerResult(String value) {
+        Map<String, T> map = new HashMap<>();
+        LinkedTreeMap<String, T> mapTemp = gson.fromJson(value, getType(clazz));
+        for (LinkedTreeMap.Entry<String, T> entry : mapTemp.entrySet()) {
+            map.put(entry.getKey(), entry.getValue());
+        }
+        blower.onMapChanged(map);
+    }
+
+    @Override
     public String getStringReference() {
         if (updateMap() == null) {
             return "{}";

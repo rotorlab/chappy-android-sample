@@ -21,8 +21,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import static com.flamebase.database.Database.COLUMN_ID;
 import static com.flamebase.database.Database.COLUMN_DATA;
+import static com.flamebase.database.Database.COLUMN_ID;
 
 /**
  * Created by efraespada on 21/05/2017.

@@ -16,7 +16,6 @@ import com.google.gson.Gson;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -168,11 +167,6 @@ public class FlamebaseDatabase {
                     @Override
                     public String getTag() {
                         return mapBlower.getTag();
-                    }
-
-                    @Override
-                    public void blowerResult(String value) {
-
                     }
 
                     @Override
