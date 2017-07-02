@@ -3,6 +3,7 @@ package com.flamebase.chat.model;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -11,25 +12,30 @@ import java.util.Map;
 
 public class GChat {
 
-    @SerializedName("people")
+    @SerializedName("name")
     @Expose
-    Map<String, Person> people;
+    String name;
+
+    @SerializedName("members")
+    @Expose
+    List<String> member;
 
     @SerializedName("messages")
     @Expose
     Map<String, Message> messages;
 
-    public GChat(Map<String, Person> people, Map<String, Message> messages) {
-        this.people = people;
+    public GChat(String name, List<String> member, Map<String, Message> messages) {
+        this.name = name;
+        this.member = member;
         this.messages = messages;
     }
 
-    public Map<String, Person> getPeople() {
-        return people;
+    public List<String> getMember() {
+        return member;
     }
 
-    public void setPeople(Map<String, Person> people) {
-        this.people = people;
+    public void setMember(List<String> member) {
+        this.member = member;
     }
 
     public Map<String, Message> getMessages() {
@@ -40,4 +46,11 @@ public class GChat {
         this.messages = messages;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 }

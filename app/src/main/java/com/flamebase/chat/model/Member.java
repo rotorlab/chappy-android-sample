@@ -7,7 +7,7 @@ import com.google.gson.annotations.SerializedName;
  * Created by efraespada on 04/06/2017.
  */
 
-public class Person {
+public class Member {
 
     @SerializedName("name")
     @Expose
@@ -17,14 +17,19 @@ public class Person {
     @Expose
     String token;
 
+    @SerializedName("email")
+    @Expose
+    String email;
+
     @SerializedName("os")
     @Expose
     String os;
 
-    public Person(String name, String token, String os) {
+    public Member(String name, String token, String os, String email) {
         this.name = name;
         this.token = token;
         this.os = os;
+        this.email = email;
     }
 
     public String getName() {
@@ -49,5 +54,13 @@ public class Person {
 
     public void setOs(String os) {
         this.os = os;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

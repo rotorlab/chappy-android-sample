@@ -1,4 +1,4 @@
-package com.flamebase.chat.services;
+package com.flamebase.database;
 
 import android.util.Log;
 
@@ -17,7 +17,7 @@ public class Sender {
 
     private static final String TAG = Sender.class.getSimpleName();
 
-    public interface Callback {
+    public interface FlamebaseResponse {
         void onSuccess(JSONObject jsonObject);
         void onFailure(String error);
     }
@@ -27,10 +27,10 @@ public class Sender {
         // nothing to do here ..
     }
 
-    public static void getRequest(String url, final Callback callback) {
+    public static void getRequest(String url, final FlamebaseResponse callback) {
         Posty.newRequest(url)
             .method(PostyMethod.GET)
-            .header("Content-clazz", "application/json")
+            .header("Content-type", "application/json")
             .call(new PostyResponseListener() {
                 @Override
                 public void onResponse(PostyResponse respon) {
@@ -48,10 +48,10 @@ public class Sender {
             });
     }
 
-    public static void postRequest(String url, String data, final Callback callback) {
+    public static void postRequest(String url, String data, final FlamebaseResponse callback) {
         Posty.newRequest(url)
             .method(PostyMethod.POST)
-            .header("Content-clazz", "application/json")
+            .header("Content-Type", "application/json")
             .body(data)
             .call(new PostyResponseListener() {
                 @Override

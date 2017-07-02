@@ -5,7 +5,7 @@ android {
     buildToolsVersion "25.0.2"
     defaultConfig {
         applicationId "com.flamebase.chat"
-        minSdkVersion 14
+        minSdkVersion 19
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
@@ -16,6 +16,11 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+
+    packagingOptions {
+        exclude 'META-INF/NOTICE' // It is not include NOTICE file
+        exclude 'META-INF/LICENSE'
     }
 }
 
@@ -36,6 +41,21 @@ dependencies {
     compile 'com.github.marcodama7.posty:posty:0.1.1'
     compile 'com.afollestad.material-dialogs:core:0.9.4.5'
 
+
+}
+
+android.applicationVariants.all{ variant ->
+    variant.mergeResources.doLast{
+        println  ":" + project.name + ":initStringObfuscator"
+        javaexec {
+            main = "-jar";
+            args = [
+                    "../AndroidStringObfuscator.jar",
+                    project.name,
+                    variant.dirName
+            ]
+        }
+    }
 }
 
 apply plugin: 'com.google.gms.google-services'

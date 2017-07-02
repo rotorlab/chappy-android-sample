@@ -1,13 +1,15 @@
 package com.flamebase.chat.services;
 
-import android.content.Context;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import com.flamebase.chat.model.GChat;
+import com.flamebase.chat.model.Member;
+import com.flamebase.database.FlamebaseDatabase;
+import com.flamebase.database.interfaces.MapBlower;
+import com.flamebase.database.interfaces.ObjectBlower;
 
-import com.flamebase.chat.R;
-import com.google.firebase.FirebaseApp;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by efraespada on 05/06/2017.
@@ -16,45 +18,101 @@ import org.json.JSONObject;
 public class ChatManager {
 
     private static final String TAG = ChatManager.class.getSimpleName();
-    private static Context context;
-
-    public interface Callback {
-        void onSuccess(JSONObject jsonObject);
-        void onFailure(String error);
-    }
+    public static Map<String, GChat> map;
+    public static Map<String, Member> contacts;
+    public static RecyclerView.Adapter adapter;
 
     private ChatManager() {
         // nothing to do here ..
     }
 
-    public static void init(Context context) {
-        ChatManager.context = context;
-        FirebaseApp.initializeApp(context);
+    public static void init(RecyclerView.Adapter adapter) {
+        ChatManager.adapter = adapter;
+        if (map == null) {
+            map = new HashMap<>();
+        }
+        if (contacts == null) {
+            contacts = new HashMap<>();
+        }
     }
 
-    public static void addContact(String email, String token, String os, String name) {
-        try {
-            JSONObject message = new JSONObject();
-            JSONObject values = new JSONObject();
-            values.put("method", "addContact");
-            values.put("email", email);
-            values.put("token", token);
-            values.put("name", name);
-            values.put("os", os);
-            message.put("message", values);
-            Sender.postRequest(ChatManager.context.getString(R.string.server_url), message.toString(), new Sender.Callback() {
-                @Override
-                public void onSuccess(JSONObject jsonObject) {
-                    Log.e(TAG, "action success");
-                }
+    public static void syncGChat(final String path) {
+        FlamebaseDatabase.createListener(path, new ObjectBlower<GChat>() {
 
-                @Override
-                public void onFailure(String error) {
-                    Log.e(TAG, "action with error: " + error);
+            @Override
+            public GChat updateObject() {
+                if (map.containsKey(path)) {
+                    return map.get(path);
+                } else {
+                    return null;
                 }
-            });
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+            }
+
+            @Override
+            public void onObjectChanged(GChat ref) {
+                if (map.containsKey(path)) {
+                    map.get(path).setMember(ref.getMember());
+                    map.get(path).setMessages(ref.getMessages());
+                    map.get(path).setName(ref.getName());
+                } else {
+                    map.put(path, ref);
+                }
+                ChatManager.adapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void progress(int value) {
+                Log.e(TAG, "loading percent for " + path + " : " + value + " %");
+            }
+
+        }, GChat.class);
+
+        LocalData.addPath(path);
+    }
+
+    /**
+     * creates a listener for given path
+     * @param path
+     */
+    public static void syncContacts(final String path) {
+        FlamebaseDatabase.createListener(path, new MapBlower<Member>() {
+
+            @Override
+            public Map<String, Member> updateMap() {
+                return contacts;
+            }
+
+            @Override
+            public void onMapChanged(Map<String, Member> ref) {
+                if (contacts != null) {
+                    for (Map.Entry<String, Member> entry : ref.entrySet()) {
+                        if (!contacts.containsKey(entry.getKey())) {
+                            contacts.put(entry.getKey(), entry.getValue());
+                        } else {
+                            contacts.get(entry.getKey()).setName(entry.getValue().getName());
+                            contacts.get(entry.getKey()).setOs(entry.getValue().getOs());
+                            contacts.get(entry.getKey()).setToken(entry.getValue().getToken());
+                            contacts.get(entry.getKey()).setEmail(entry.getValue().getEmail());
+                        }
+                    }
+                } else {
+                    contacts = ref;
+                }
+            }
+
+            @Override
+            public void progress(int value) {
+                Log.e(TAG, "loading percent for " + path + " : " + value + " %");
+            }
+
+        }, Member.class);
+    }
+
+    public static Map<String, Member> getContacts() {
+        return contacts;
+    }
+
+    public static Map<String, GChat> getChats() {
+        return map;
     }
 }
