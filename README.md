@@ -9,15 +9,14 @@ Flamebase is an open source project that tries to emulate Firebase Database feat
 If you are doing an altruist project with Firebase, pray not to became successful, because the monthly amount will increase considerably.
 
 In this repo you can find the proper lib for android client.
-For now it still developing, so please be patient with errors and creation issues.
+For now it still developing, so please be patient with errors.
 
 ### Requirements
 Before use this lib you must initialize a **flamebase-database-server-cluster** which will be our server cluster for storing json objects.
 The server cluster is run with **node** framework. Check out the [repository](https://github.com/flamebase/flamebase-database-server-cluster) for more information.
 
 ### Usage
-
-- Import library:
+Import library:
 
 ```groovy
 repositories {
@@ -25,10 +24,10 @@ repositories {
 }
 
 dependencies {
-    compile 'com.flamebase:database:1.0.2'
+    compile 'com.flamebase:database:1.1.0'
 }
 ```
-- Init lib:
+Initialize library:
 ```java
 FlamebaseDatabase.initialize(Context context, String cluster_ip, String token);
 ```
