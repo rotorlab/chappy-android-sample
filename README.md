@@ -1,8 +1,6 @@
 # :fire: flamebase-database-android
 
-Real time JSON database (android client). Work with synchronized java objects stored as JSON objects
-
-Before start using this lib, you have to initialize a flamebase database server cluster
+Real time JSON database (android client). Work with synchronized java objects stored as JSON objects.
 
 ### What is this?
 Flamebase is an open source project that tries to emulate Firebase Database features as much as possible. I like Firebase but it's expensive for what it currently offers.
