@@ -22,7 +22,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.flamebase:database:1.1.0'
+    compile 'com.flamebase:database:1.1.3'
 }
 ```
 Initialize library:
