@@ -12,6 +12,7 @@ import com.flamebase.database.Database;
 import com.flamebase.database.ReferenceUtils;
 import com.google.firebase.messaging.RemoteMessage;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -34,8 +35,9 @@ public abstract class Reference {
     private static Map<String, String[]> mapParts;
     private Database database;
     private Context context;
+    protected Gson gson;
 
-    public int len;
+    protected int len;
 
     private static final String TAG = Reference.class.getSimpleName();
 
@@ -46,9 +48,10 @@ public abstract class Reference {
     public static String SIZE = "size";
     public static String INDEX = "index";
     public static String ACTION = "action";
+    public static String EMPTY_OBJECT = "{}";
 
-    public String path;
-    public String stringReference;
+    protected String path;
+    protected String stringReference;
 
     public static final String ACTION_SIMPLE_UPDATE    = "simple_update";
     public static final String ACTION_SLICE_UPDATE     = "slice_update";
@@ -56,23 +59,25 @@ public abstract class Reference {
     public Reference(Context context, String path) {
         this.context = context;
         this.path = path;
+        this.gson = getGsonBuilder();
         AndroidStringObfuscator.init(this.context);
-        // String name = Reference.class.getSimpleName() + ".db";
         String name = "RealtimeDatabase.db";
         this.database = new Database(this.context, name, TABLE_NAME, VERSION);
         this.mapParts = new HashMap<>();
-        this.len = 0;
         this.stringReference = getElement(path);
+        this.len = stringReference == null ? 0 : stringReference.length();
     }
 
     public Reference(Context context, String path, RemoteMessage remoteMessage) {
         this.context = context;
         this.path = path;
+        this.gson = getGsonBuilder();
         AndroidStringObfuscator.init(this.context);
         String name = "RealtimeDatabase.db";
         this.database = new Database(this.context, name, TABLE_NAME, VERSION);
-        this.len = 0;
-        this.stringReference = "{}";
+        this.mapParts = new HashMap<>();
+        this.stringReference = getElement(path);
+        this.len = stringReference == null ? 0 : stringReference.length();
         onMessageReceived(remoteMessage);
     }
 
@@ -392,5 +397,9 @@ public abstract class Reference {
         }
 
         return objects;
+    }
+
+    private Gson getGsonBuilder() {
+        return new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
     }
 }

@@ -177,6 +177,8 @@ public class FlamebaseDatabase {
                                     if (mapReference.getStringReference().length() > len) {
                                         Log.e(TAG, "not up to date : " + path);
                                         syncReference(path, true);
+                                    } else if (mapReference.getStringReference().length() < len) {
+                                        // TODO force
                                     }
 
                                 } else {
@@ -279,13 +281,14 @@ public class FlamebaseDatabase {
         }
     }
 
-    private static void sendUpdate(final String path, String differences, int len) {
+    private static void sendUpdate(final String path, String differences, int len, boolean clean) {
         try {
             JSONObject map = new JSONObject();
             map.put("method", "update_data");
             map.put("path", path);
             map.put("differences", differences);
             map.put("len", len);
+            map.put("clean", clean);
             Sender.postRequest(FlamebaseDatabase.urlServer, map.toString(), new Sender.FlamebaseResponse() {
                 @Override
                 public void onSuccess(JSONObject jsonObject) {
@@ -369,7 +372,7 @@ public class FlamebaseDatabase {
             Object[] result = pathMap.get(path).syncReference(clean);
             String diff = (String) result[1];
             int len = (int) result[0];
-            sendUpdate(path, diff, len);
+            sendUpdate(path, diff, len, clean);
         }
     }
 }
