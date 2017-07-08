@@ -31,8 +31,7 @@ FlamebaseDatabase.initialize(Context context, String cluster_ip, String token);
 ```
 Listener for objects:
 ```java
-final ObjectA objectA = new ObjectA();
-objectA.setColor("blue");
+ObjectA objectA = null;
 
 FlamebaseDatabase.createListener(path, new ObjectBlower<ObjectA>() {
 
@@ -46,7 +45,7 @@ FlamebaseDatabase.createListener(path, new ObjectBlower<ObjectA>() {
 
     /**
     * called after reference is synchronized with server
-    * or is ready to be used (1st sync.
+    * or is ready to be used (1st sync).
     * 
     * null param means there is nothing stored on db
     */
@@ -56,8 +55,10 @@ FlamebaseDatabase.createListener(path, new ObjectBlower<ObjectA>() {
             objectA = new ObjectA();
             objectA.setColor("blue");
             FlamebaseDatabase.syncReference(path);  // synchronize changes
-        } else {
-            objectA.setColor(ref.getColor());       // get up to date val
+        } else if (objectA == null) {
+            objectA = ref;
+        } else if (objectA != null) {
+            objectA.setColor(ref.getColor());       // get updated value
         }
     }
 
