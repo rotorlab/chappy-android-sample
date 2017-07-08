@@ -1,17 +1,15 @@
 package com.flamebase.database.model;
 
-import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteException;
 
 import com.efraespada.androidstringobfuscator.AndroidStringObfuscator;
 import com.efraespada.jsondiff.JSONDiff;
 import com.flamebase.database.Database;
+import com.flamebase.database.FlamebaseDatabase;
 import com.flamebase.database.ReferenceUtils;
 import com.google.firebase.messaging.RemoteMessage;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -21,9 +19,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import static com.flamebase.database.Database.COLUMN_DATA;
-import static com.flamebase.database.Database.COLUMN_ID;
-
 /**
  * Created by efraespada on 21/05/2017.
  */
@@ -32,10 +27,13 @@ public abstract class Reference {
 
     private int VERSION = 1;
     private static Map<String, String[]> mapParts;
-    private Database database;
+    public Database database;
     private Context context;
+    protected Gson gson;
+    public boolean isSynchronized;
 
     public int len;
+    public int serverLen;
 
     private static final String TAG = Reference.class.getSimpleName();
 
@@ -46,33 +44,39 @@ public abstract class Reference {
     public static String SIZE = "size";
     public static String INDEX = "index";
     public static String ACTION = "action";
+    public static String EMPTY_OBJECT = "{}";
 
-    public String path;
-    public String stringReference;
+    protected String path;
+    protected String stringReference;
 
     public static final String ACTION_SIMPLE_UPDATE    = "simple_update";
     public static final String ACTION_SLICE_UPDATE     = "slice_update";
+    public static final String ACTION_NO_UPDATE     = "no_update";
 
     public Reference(Context context, String path) {
         this.context = context;
         this.path = path;
+        this.gson = getGsonBuilder();
+        this.isSynchronized = false;
+        this.serverLen = 0;
         AndroidStringObfuscator.init(this.context);
-        // String name = Reference.class.getSimpleName() + ".db";
-        String name = "RealtimeDatabase.db";
-        this.database = new Database(this.context, name, TABLE_NAME, VERSION);
         this.mapParts = new HashMap<>();
-        this.len = 0;
-        this.stringReference = getElement(path);
+        this.stringReference = ReferenceUtils.getElement(path);
+        this.len = stringReference == null ? 0 : stringReference.length();
     }
 
     public Reference(Context context, String path, RemoteMessage remoteMessage) {
         this.context = context;
         this.path = path;
+        this.gson = getGsonBuilder();
+        this.isSynchronized = false;
+        this.serverLen = 0;
         AndroidStringObfuscator.init(this.context);
         String name = "RealtimeDatabase.db";
         this.database = new Database(this.context, name, TABLE_NAME, VERSION);
-        this.len = 0;
-        this.stringReference = "{}";
+        this.mapParts = new HashMap<>();
+        this.stringReference = ReferenceUtils.getElement(path);
+        this.len = stringReference == null ? 0 : stringReference.length();
         onMessageReceived(remoteMessage);
     }
 
@@ -86,7 +90,7 @@ public abstract class Reference {
             String action = remoteMessage.getData().get(ACTION);
             String data = remoteMessage.getData().get(REFERENCE);
             String path = remoteMessage.getData().get(PATH);
-            String rData = ReferenceUtils.hex2String(data);
+            String rData = data == null ? "{}" : ReferenceUtils.hex2String(data);
 
             if (!tag.equalsIgnoreCase(getTag())) {
                 return;
@@ -132,6 +136,10 @@ public abstract class Reference {
                         parseResult(path, result);
                     }
 
+                    break;
+
+                case ACTION_NO_UPDATE:
+                    blowerResult(stringReference);
                     break;
 
                 default:
@@ -190,7 +198,13 @@ public abstract class Reference {
     private void parseResult(String path, String data) {
         try {
             JSONObject jsonObject;
-            String prev = getStringReference();
+            String prev;
+            if (!isSynchronized) {
+                prev = stringReference;
+            } else {
+                prev = getStringReference();
+            }
+
             if (prev != null) {
                 prev = Normalizer.normalize(prev, Normalizer.Form.NFC);
                 jsonObject = new JSONObject(prev);
@@ -270,91 +284,12 @@ public abstract class Reference {
                 }
             }
 
-            addElement(path, jsonObject.toString());
+            ReferenceUtils.addElement(path, jsonObject.toString());
             stringReference = jsonObject.toString();
+            this.len = stringReference.length();
             blowerResult(stringReference);
         } catch (JSONException e) {
             e.printStackTrace();
-        }
-    }
-
-    /**
-     * updates stored path
-     * @param path
-     * @param info
-     */
-    public void addElement(String path, String info) {
-        this.len = info.length();
-        try {
-            String enId = AndroidStringObfuscator.encryptString(path);
-            // Gets the data repository in write mode
-            SQLiteDatabase db = database.getWritableDatabase();
-
-            // Create a new map of values, where column names are the keys
-            ContentValues values = new ContentValues();
-            values.put(COLUMN_ID, enId);
-            values.put(COLUMN_DATA, AndroidStringObfuscator.encryptString(info));
-
-            if (getElement(path) != null) {
-                // Filter results WHERE "title" = hash
-                String selection = COLUMN_ID + " = ?";
-                String[] selectionArgs = { enId };
-                long newRowId = db.update(database.table, values, selection, selectionArgs);
-            } else {
-                long newRowId = db.insert(database.table, null, values);
-            }
-        } catch (SQLiteException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * returns stored object
-     * @param path
-     * @return String
-     */
-    public String getElement(String path) {
-        String enPath = AndroidStringObfuscator.encryptString(path);
-        try {
-            SQLiteDatabase db = database.getReadableDatabase();
-
-            // Define a projection that specifies which columns from the database
-            // you will actually use after this query.
-            String[] projection = {
-                    COLUMN_ID,
-                    COLUMN_DATA
-            };
-
-            // Filter results WHERE "title" = hash
-            String selection = COLUMN_ID + " = ?";
-            String[] selectionArgs = { enPath };
-
-            Cursor cursor = db.query(
-                    database.table,                             // The table to query
-                    projection,                               // The columns to return
-                    selection,                                // The columns for the WHERE clause
-                    selectionArgs,                            // The values for the WHERE clause
-                    null,                                     // don't group the rows
-                    null,                                     // don't filter by row groups
-                    null                                      // The sort order
-            );
-
-            String info = null;
-            while (cursor.moveToNext()) {
-                info = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DATA));
-            }
-            cursor.close();
-
-            String res = AndroidStringObfuscator.decryptString(info);
-            if (res == null) {
-                this.len = 0;
-            } else {
-                this.len = res.length();
-            }
-            return res;
-        } catch (SQLiteException e) {
-            this.len = 0;
-            return null;
         }
     }
 
@@ -371,7 +306,7 @@ public abstract class Reference {
 
         try {
             String actual = getStringReference();
-
+            JSONDiff.setDebug(FlamebaseDatabase.debug);
             Map<String, JSONObject> diff = JSONDiff.diff(new JSONObject(stringReference), new JSONObject(actual));
 
             JSONObject jsonObject = new JSONObject();
@@ -392,5 +327,9 @@ public abstract class Reference {
         }
 
         return objects;
+    }
+
+    private Gson getGsonBuilder() {
+        return new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
     }
 }

@@ -2,16 +2,12 @@ package com.flamebase.database.model;
 
 import android.content.Context;
 
+import com.flamebase.database.ReferenceUtils;
 import com.flamebase.database.interfaces.MapBlower;
 import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
 import com.google.firebase.messaging.RemoteMessage;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.InstanceCreator;
-import com.google.gson.internal.ConstructorConstructor;
 import com.google.gson.internal.LinkedTreeMap;
-import com.google.gson.internal.bind.MapTypeAdapterFactory;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -26,21 +22,18 @@ import java.util.Map;
 public abstract class MapReference<T> extends Reference {
 
     public MapBlower<T> blower;
-    public Gson gson;
     public Class<T> clazz;
 
     public MapReference(Context context, String path, MapBlower<T> blower, Class<T> clazz) {
         super(context, path);
         this.blower = blower;
         this.clazz = clazz;
-        this.gson = new Gson();
     }
 
     public MapReference(Context context, String path, MapBlower<T> blower, Class<T> clazz, RemoteMessage remoteMessage) {
         super(context, path, remoteMessage);
         this.blower = blower;
         this.clazz = clazz;
-        this.gson = new Gson();
     }
 
     /**
@@ -52,6 +45,10 @@ public abstract class MapReference<T> extends Reference {
 
     @Override
     public void blowerResult(String value) {
+        if (!isSynchronized && value.length() == serverLen) {
+            isSynchronized = true;
+        }
+
         Map<String, T> map = new HashMap<>();
         LinkedTreeMap<String, T> mapTemp = gson.fromJson(value, getType(clazz));
         for (LinkedTreeMap.Entry<String, T> entry : mapTemp.entrySet()) {
@@ -62,19 +59,33 @@ public abstract class MapReference<T> extends Reference {
 
     @Override
     public String getStringReference() {
+        String val;
         if (updateMap() == null) {
-            return "{}";
+            if (stringReference != null && stringReference.length() > EMPTY_OBJECT.length()) {
+                val = stringReference;
+            } else {
+                val = EMPTY_OBJECT;
+            }
         } else {
-            return gson.toJson(updateMap(), getType(clazz));
+            val = gson.toJson(updateMap(), getType(clazz));
         }
+
+        Map<String, T> map = new HashMap<>();
+        LinkedTreeMap<String, T> mapTemp = gson.fromJson(val, getType(clazz));
+        for (LinkedTreeMap.Entry<String, T> entry : mapTemp.entrySet()) {
+            map.put(entry.getKey(), entry.getValue());
+        }
+        blower.onMapChanged(map);
+
+        return val;
     }
 
     @Override
     public void loadCachedReference() {
-        stringReference = getElement(path);
+        stringReference = ReferenceUtils.getElement(path);
         if (stringReference == null) {
             stringReference = getStringReference();
-            addElement(path, stringReference);
+            ReferenceUtils.addElement(path, stringReference);
         }
 
         Map<String, T> map = new HashMap<>();
@@ -86,16 +97,6 @@ public abstract class MapReference<T> extends Reference {
     }
 
 /*
-    public <V> void loadChachedReference(MapBlower<String,V> blower, Type clazz) {
-        Gson gson = new Gson();
-        stringReference = getElement(path);
-
-        if (stringReference != null) {
-            Map<String, V> map = gson.fromJson(stringReference, clazz);
-            blower.onMapChanged(map);
-        }
-    }
-
     public <V> void loadChachedReference(ListBlower<V> blower, Class<V> clazz) {
         Gson gson = new Gson();
         stringReference = getElement(path);
@@ -127,11 +128,6 @@ public abstract class MapReference<T> extends Reference {
             return null;
         }
 
-    }
-
-    private Gson getGsonBuilder() throws NoSuchMethodException {
-        ConstructorConstructor constructorConstructor = new ConstructorConstructor(new HashMap<Type, InstanceCreator<?>>());
-        return new GsonBuilder().registerTypeAdapter(Map.class, new MapTypeAdapterFactory(constructorConstructor, false)).create();
     }
 
     private static <T> Type getType(Class<T> type) {
