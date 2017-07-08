@@ -2,6 +2,7 @@ package com.flamebase.database.model;
 
 import android.content.Context;
 
+import com.flamebase.database.ReferenceUtils;
 import com.flamebase.database.interfaces.MapBlower;
 import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
@@ -44,6 +45,10 @@ public abstract class MapReference<T> extends Reference {
 
     @Override
     public void blowerResult(String value) {
+        if (!isSynchronized && value.length() == serverLen) {
+            isSynchronized = true;
+        }
+
         Map<String, T> map = new HashMap<>();
         LinkedTreeMap<String, T> mapTemp = gson.fromJson(value, getType(clazz));
         for (LinkedTreeMap.Entry<String, T> entry : mapTemp.entrySet()) {
@@ -77,10 +82,10 @@ public abstract class MapReference<T> extends Reference {
 
     @Override
     public void loadCachedReference() {
-        stringReference = getElement(path);
+        stringReference = ReferenceUtils.getElement(path);
         if (stringReference == null) {
             stringReference = getStringReference();
-            addElement(path, stringReference);
+            ReferenceUtils.addElement(path, stringReference);
         }
 
         Map<String, T> map = new HashMap<>();

@@ -2,6 +2,7 @@ package com.flamebase.database.model;
 
 import android.content.Context;
 
+import com.flamebase.database.ReferenceUtils;
 import com.flamebase.database.interfaces.ObjectBlower;
 import com.google.common.reflect.TypeToken;
 import com.google.firebase.messaging.RemoteMessage;
@@ -53,17 +54,20 @@ public abstract class ObjectReference<T> extends Reference {
 
     @Override
     public void blowerResult(String value) {
+        if (!isSynchronized) {
+            isSynchronized = true;
+        }
         blower.onObjectChanged((T) gson.fromJson(value, TypeToken.of(clazz).getType()));
     }
 
     @Override
     public void loadCachedReference() {
-        stringReference = getElement(path);
-        if (stringReference == null) {
-            stringReference = getStringReference();
-            addElement(path, stringReference);
+        stringReference = ReferenceUtils.getElement(path);
+        if (stringReference != null && stringReference.length() > EMPTY_OBJECT.length()) {
+            blower.onObjectChanged((T) gson.fromJson(stringReference, TypeToken.of(clazz).getType()));
+        } else {
+            blower.onObjectChanged(null);
         }
-        blower.onObjectChanged((T) gson.fromJson(stringReference, TypeToken.of(clazz).getType()));
     }
 
 /*
