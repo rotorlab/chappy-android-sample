@@ -36,25 +36,40 @@ objectA.setColor("blue");
 
 FlamebaseDatabase.createListener(path, new ObjectBlower<ObjectA>() {
 
+    /**
+    * object is gonna be synchronized with server
+    */
     @Override
     public ObjectA updateObject() {
         return objectA;
     }
 
+    /**
+    * called after reference is synchronized with server
+    * or is ready to be used (1st sync.
+    * 
+    * null param means there is nothing stored on db
+    */
     @Override
     public void onObjectChanged(ObjectA ref) {
-        objectA.setColor(ref.getColor());
+        if (ref == null) {                          // there is nothing saved on server
+            objectA = new ObjectA();
+            objectA.setColor("blue");
+            FlamebaseDatabase.syncReference(path);  // synchronize changes
+        } else {
+            objectA.setColor(ref.getColor());       // get up to date val
+        }
     }
 
+    /**
+    * long server updates
+    */
     @Override
     public void progress(int value) {
         Log.e(TAG, "loading " + path + " : " + value + " %");
     }
 
 }, ObjectA.class);
-
-objectA.setColor("red");
-FlamebaseDatabase.syncReference(path);
 ```
 Listener for maps:
 ```java
@@ -69,28 +84,15 @@ FlamebaseDatabase.createListener(path, new MapBlower<Member>() {
 
     @Override
     public void onMapChanged(Map<String, Member> ref) {
-        for (Map.Entry<String, Member> entry : ref.entrySet()) {
-            if (!contacts.containsKey(entry.getKey())) {
-                contacts.put(entry.getKey(), entry.getValue());
-            } else {
-                contacts.get(entry.getKey()).setName(entry.getValue().getName());
-                contacts.get(entry.getKey()).setEmail(entry.getValue().getEmail());
-            }
-        }
+        // the same for maps
     }
 
     @Override
     public void progress(int value) {
-        Log.e(TAG, "loading " + path + " : " + value + " %");
+        // percent
     }
 
 }, Member.class);
-
-Member member = new Member();
-member.setName("pit");
-member.setEmail("pit@hhh.com");
-contacts.put(member.getName(), member);
-FlamebaseDatabase.syncReference(path);
 ```
 
 - Database synchronization works through Firebase Cloud Messaging 
