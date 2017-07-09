@@ -58,7 +58,7 @@ public class FlamebaseDatabase {
     }
 
     /**
-     * Set initial config to createReference with flamebase server cluster
+     * Set initial config to sync with flamebase server cluster
      *
      * @param context
      * @param urlServer
