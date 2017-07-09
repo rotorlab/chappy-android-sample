@@ -11,7 +11,8 @@ import com.flamebase.database.interfaces.ObjectBlower;
 import com.flamebase.database.model.MapReference;
 import com.flamebase.database.model.ObjectReference;
 import com.flamebase.database.model.Reference;
-import com.flamebase.database.model.request.Sync;
+import com.flamebase.database.model.request.CreateListener;
+import com.flamebase.database.model.request.RemoveListener;
 import com.flamebase.database.model.request.UpdateFromServer;
 import com.flamebase.database.model.request.UpdateToServer;
 import com.flamebase.database.model.service.SyncResponse;
@@ -254,9 +255,9 @@ public class FlamebaseDatabase {
         }
         String sha1 = ReferenceUtils.SHA1(content);
 
-        Sync sync = new Sync("great_listener", path, token, OS, sha1, content.length());
+        CreateListener createListener = new CreateListener("create_listener", path, token, OS, sha1, content.length());
 
-        Call<SyncResponse> call = ReferenceUtils.service(FlamebaseDatabase.urlServer).sync(sync);
+        Call<SyncResponse> call = ReferenceUtils.service(FlamebaseDatabase.urlServer).createReference(createListener);
 
         call.enqueue(new Callback<SyncResponse>() {
 
@@ -272,7 +273,42 @@ public class FlamebaseDatabase {
 
             @Override
             public void onFailure(Call<SyncResponse> call, Throwable t) {
-                callback.onFailure(t.getMessage());
+                if (t.getStackTrace() != null) {
+                    callback.onFailure(t.getStackTrace().toString());
+                } else {
+                    callback.onFailure("refresh from server response error");
+                }
+            }
+        });
+    }
+
+    public static void removeListener(String path) {
+        RemoveListener removeListener = new RemoveListener("remove_listener", path, token);
+
+        Call<SyncResponse> call = ReferenceUtils.service(FlamebaseDatabase.urlServer).removeListener(removeListener);
+
+        call.enqueue(new Callback<SyncResponse>() {
+
+            @Override
+            public void onResponse(Call<SyncResponse> call, Response<SyncResponse> response) {
+                SyncResponse syncResponse = response.body();
+                if (!syncResponse.getData().toString().equals(EMPTY_OBJECT)) {
+                    if (debug) {
+                        Log.d(TAG, syncResponse.getData().get("info").getAsString());
+                    }
+                } else {
+                    Log.e(TAG, syncResponse.getError());
+
+                }
+            }
+
+            @Override
+            public void onFailure(Call<SyncResponse> call, Throwable t) {
+                if (t.getStackTrace() != null) {
+                    Log.e(TAG, "error: " + t.getStackTrace().toString());
+                } else {
+                    Log.e(TAG, "error: refresh from server response error");
+                }
             }
         });
     }
@@ -308,7 +344,7 @@ public class FlamebaseDatabase {
             }
             String sha1 = ReferenceUtils.SHA1(content);
 
-            UpdateToServer updateToServer = new UpdateToServer("update_data", path, differences, len, clean);
+            UpdateToServer updateToServer = new UpdateToServer("update_data", path, FlamebaseDatabase.token, differences, len, clean);
             Call<SyncResponse> call = ReferenceUtils.service(FlamebaseDatabase.urlServer).refreshToServer(updateToServer);
 
             call.enqueue(new Callback<SyncResponse>() {
@@ -329,8 +365,10 @@ public class FlamebaseDatabase {
 
                 @Override
                 public void onFailure(Call<SyncResponse> call, Throwable t) {
-                    if (FlamebaseDatabase.debug) {
-                        Log.d(TAG, t.getMessage());
+                    if (t.getMessage() != null) {
+                        Log.e(TAG, t.getMessage());
+                    } else {
+                        Log.e(TAG, "update response error");
                     }
                 }
             });
@@ -389,7 +427,11 @@ public class FlamebaseDatabase {
 
             @Override
             public void onFailure(Call<SyncResponse> call, Throwable t) {
-                callback.onFailure(t.getMessage());
+                if (t.getStackTrace() != null) {
+                    callback.onFailure(t.getStackTrace().toString());
+                } else {
+                    callback.onFailure("refresh from server response error");
+                }
             }
         });
     }

@@ -1,6 +1,7 @@
 package com.flamebase.database.interfaces;
 
-import com.flamebase.database.model.request.Sync;
+import com.flamebase.database.model.request.CreateListener;
+import com.flamebase.database.model.request.RemoveListener;
 import com.flamebase.database.model.request.UpdateFromServer;
 import com.flamebase.database.model.request.UpdateToServer;
 import com.flamebase.database.model.service.SyncResponse;
@@ -18,7 +19,11 @@ public interface FlamebaseService {
 
     @Headers("Content-Type: application/json")
     @POST("/")
-    Call<SyncResponse> sync(@Body Sync sync);
+    Call<SyncResponse> createReference(@Body CreateListener createListener);
+
+    @Headers("Content-Type: application/json")
+    @POST("/")
+    Call<SyncResponse> removeListener(@Body RemoveListener removeListener);
 
     @Headers("Content-Type: application/json")
     @POST("/")
