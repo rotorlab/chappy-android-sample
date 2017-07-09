@@ -22,7 +22,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.flamebase:database:1.2.0'
+    compile 'com.flamebase:database:1.3.0'
 }
 ```
 Initialize library:
@@ -74,7 +74,7 @@ FlamebaseDatabase.createListener(path, new ObjectBlower<ObjectA>() {
 ```
 Listener for maps:
 ```java
-Map<String, Member> contacts = new HashMap<>();
+Map<String, Member> contacts = null;
 
 FlamebaseDatabase.createListener(path, new MapBlower<Member>() {
 
