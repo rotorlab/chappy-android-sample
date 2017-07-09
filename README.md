@@ -14,7 +14,7 @@ Before use this lib you must initialize a **flamebase-database-server-cluster** 
 The server cluster is run with **node** framework. Check out the [repository](https://github.com/flamebase/flamebase-database-server-cluster) for more information.
 
 ### Usage
-Import library:
+- Import library:
 
 ```groovy
 repositories {
@@ -25,11 +25,23 @@ dependencies {
     compile 'com.flamebase:database:1.3.0'
 }
 ```
-Initialize library:
+- Initialize library:
 ```java
 FlamebaseDatabase.initialize(Context context, String cluster_ip, String token);
 ```
-Listener for objects:
+- Database synchronization works through Firebase Cloud Messaging 
+
+```java
+public class FMService extends FirebaseMessagingService {
+
+    @Override
+    public void onMessageReceived(RemoteMessage remoteMessage) {
+        super.onMessageReceived(remoteMessage);
+        FlamebaseDatabase.onMessageReceived(remoteMessage);
+    }
+}
+```
+- Listener for objects:
 ```java
 ObjectA objectA = null;
 
@@ -72,7 +84,7 @@ FlamebaseDatabase.createListener(path, new ObjectBlower<ObjectA>() {
 
 }, ObjectA.class);
 ```
-Listener for maps:
+- Listener for maps:
 ```java
 Map<String, Member> contacts = null;
 
@@ -95,16 +107,7 @@ FlamebaseDatabase.createListener(path, new MapBlower<Member>() {
 
 }, Member.class);
 ```
-
-- Database synchronization works through Firebase Cloud Messaging 
-
+- Remove listener in server by calling:
 ```java
-public class FMService extends FirebaseMessagingService {
-
-    @Override
-    public void onMessageReceived(RemoteMessage remoteMessage) {
-        super.onMessageReceived(remoteMessage);
-        FlamebaseDatabase.onMessageReceived(remoteMessage);
-    }
-}
+FlamebaseDatabase.removeListener(path);
 ```
