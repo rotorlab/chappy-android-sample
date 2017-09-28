@@ -49,9 +49,12 @@ public abstract class Reference {
     protected String path;
     protected String stringReference;
 
-    public static final String ACTION_SIMPLE_UPDATE    = "simple_update";
-    public static final String ACTION_SLICE_UPDATE     = "slice_update";
-    public static final String ACTION_NO_UPDATE     = "no_update";
+    public static final String ACTION_SIMPLE_UPDATE     = "simple_update";
+    public static final String ACTION_SLICE_UPDATE      = "slice_update";
+    public static final String ACTION_NO_UPDATE         = "no_update";
+    public static final String ACTION_SIMPLE_CONTENT    = "simple_content";
+    public static final String ACTION_SLICE_CONTENT     = "slice_content";
+    public static final String ACTION_NO_CONTENT        = "no_content";
 
     public Reference(Context context, String path) {
         this.context = context;
@@ -99,7 +102,7 @@ public abstract class Reference {
             switch (action) {
 
                 case ACTION_SIMPLE_UPDATE:
-                    parseResult(path, rData);
+                    parseUpdateResult(path, rData);
                     break;
 
                 case ACTION_SLICE_UPDATE:
@@ -133,13 +136,57 @@ public abstract class Reference {
                         }
                         mapParts.remove(path);
                         String result = complete.toString();
-                        parseResult(path, result);
+                        parseUpdateResult(path, result);
                     }
 
                     break;
 
                 case ACTION_NO_UPDATE:
                     blowerResult(stringReference);
+                    break;
+
+                case ACTION_SIMPLE_CONTENT:
+                    parseContentResult(path, rData);
+                    break;
+
+                case ACTION_SLICE_CONTENT:
+                    int sizeContent = Integer.parseInt(remoteMessage.getData().get(SIZE));
+                    int indexContent = Integer.parseInt(remoteMessage.getData().get(INDEX));
+                    if (mapParts.containsKey(path)) {
+                        mapParts.get(path)[indexContent] = rData;
+                    } else {
+                        String[] partsContent = new String[sizeContent];
+                        partsContent[indexContent] = rData;
+                        mapParts.put(path, partsContent);
+                    }
+
+                    boolean readyContent = true;
+                    int alocatedContent = 0;
+                    for (int p = mapParts.get(path).length - 1; p >= 0; p--) {
+                        if (mapParts.get(path)[p] == null) {
+                            readyContent = false;
+                        } else {
+                            alocatedContent++;
+                        }
+                    }
+
+                    float percentContent = (100F / (float) sizeContent) * alocatedContent;
+                    progress((int) percentContent);
+
+                    if (readyContent && mapParts.get(path).length - 1 == indexContent) {
+                        StringBuilder completeContent = new StringBuilder();
+                        for (int i = 0; i < mapParts.get(path).length; i++) {
+                            completeContent.append(mapParts.get(path)[i]);
+                        }
+                        mapParts.remove(path);
+                        String resultContent = completeContent.toString();
+                        parseContentResult(path, resultContent);
+                    }
+
+                    break;
+
+                case ACTION_NO_CONTENT:
+                    blowerResult("{}");
                     break;
 
                 default:
@@ -195,7 +242,7 @@ public abstract class Reference {
      * @param path
      * @param data
      */
-    private void parseResult(String path, String data) {
+    private void parseUpdateResult(String path, String data) {
         try {
             JSONObject jsonObject;
             String prev;
@@ -291,6 +338,18 @@ public abstract class Reference {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * updates current string object with incoming data
+     * @param path
+     * @param data
+     */
+    private void parseContentResult(String path, String data) {
+        ReferenceUtils.addElement(path, data);
+        stringReference = data;
+        this.len = stringReference.length();
+        blowerResult(stringReference);
     }
 
     public Object[] syncReference(boolean clean) {

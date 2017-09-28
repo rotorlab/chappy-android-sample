@@ -52,7 +52,8 @@ public class MainActivity extends AppCompatActivity {
         FirebaseApp.initializeApp(this);
         LocalData.init(this);
 
-        FlamebaseDatabase.initialize(this, getString(R.string.database_url), FirebaseInstanceId.getInstance().getToken());
+        FlamebaseDatabase.initialize(this, BuildConfig.database_url, FirebaseInstanceId.getInstance().getToken());
+        FlamebaseDatabase.setDebug(true);
 
         chatsList = (RecyclerView) findViewById(R.id.chats_list);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());

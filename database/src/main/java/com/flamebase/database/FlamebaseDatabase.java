@@ -58,7 +58,7 @@ public class FlamebaseDatabase {
     }
 
     /**
-     * Set initial config to sync with flamebase server cluster
+     * Set initial config to createReference with flamebase server cluster
      *
      * @param context
      * @param urlServer
@@ -273,8 +273,8 @@ public class FlamebaseDatabase {
 
             @Override
             public void onFailure(Call<SyncResponse> call, Throwable t) {
-                if (t.getStackTrace() != null) {
-                    callback.onFailure(t.getStackTrace().toString());
+                if (t.getMessage() != null) {
+                    callback.onFailure(t.getMessage().toString());
                 } else {
                     callback.onFailure("refresh from server response error");
                 }
@@ -282,7 +282,7 @@ public class FlamebaseDatabase {
         });
     }
 
-    public static void removeListener(String path) {
+    public static void removeListener(final String path) {
         RemoveListener removeListener = new RemoveListener("remove_listener", path, token);
 
         Call<SyncResponse> call = ReferenceUtils.service(FlamebaseDatabase.urlServer).removeListener(removeListener);
@@ -293,6 +293,7 @@ public class FlamebaseDatabase {
             public void onResponse(Call<SyncResponse> call, Response<SyncResponse> response) {
                 SyncResponse syncResponse = response.body();
                 if (!syncResponse.getData().toString().equals(EMPTY_OBJECT)) {
+                    ReferenceUtils.removeElement(path);
                     if (debug) {
                         Log.d(TAG, syncResponse.getData().get("info").getAsString());
                     }

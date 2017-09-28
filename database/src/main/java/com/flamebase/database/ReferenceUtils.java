@@ -88,18 +88,19 @@ public class ReferenceUtils {
      * @param info
      */
     public static void addElement(final String path, String info) {
+        if (database == null) {
+            String name = "RealtimeDatabase.db";
+            database = new Database(context, name, TABLE_NAME, VERSION);
+        }
         try {
             String enId = AndroidStringObfuscator.encryptString(path);
-            // Gets the data repository in write mode
             SQLiteDatabase db = database.getWritableDatabase();
 
-            // Create a new map of values, where column names are the keys
             ContentValues values = new ContentValues();
             values.put(COLUMN_ID, enId);
             values.put(COLUMN_DATA, AndroidStringObfuscator.encryptString(info));
 
             if (exist(path)) {
-                // Filter results WHERE "title" = hash
                 String selection = COLUMN_ID + " = ?";
                 String[] selectionArgs = { enId };
                 long newRowId = db.update(database.table, values, selection, selectionArgs);
@@ -152,6 +153,30 @@ public class ReferenceUtils {
         }
     }
 
+    public static void removeElement(String path) {
+        if (database == null) {
+            String name = "RealtimeDatabase.db";
+            database = new Database(context, name, TABLE_NAME, VERSION);
+        }
+        String enPath = AndroidStringObfuscator.encryptString(path);
+        try {
+            SQLiteDatabase db = database.getReadableDatabase();
+
+            String selection = COLUMN_ID + " = ?";
+            String[] selectionArgs = {enPath};
+
+            int result = db.delete(
+                    database.table,                             // The table to query
+                    selection,                                // The columns for the WHERE clause
+                    selectionArgs                            // The values for the WHERE clause
+            );
+
+        } catch (SQLiteException e) {
+            e.printStackTrace();
+        }
+    }
+
+
     /**
      * returns stored object
      * @param path
@@ -165,15 +190,11 @@ public class ReferenceUtils {
         String enPath = AndroidStringObfuscator.encryptString(path);
         try {
             SQLiteDatabase db = database.getReadableDatabase();
-
-            // Define a projection that specifies which columns from the database
-            // you will actually use after this query.
             String[] projection = {
                     COLUMN_ID,
                     COLUMN_DATA
             };
 
-            // Filter results WHERE "title" = hash
             String selection = COLUMN_ID + " = ?";
             String[] selectionArgs = { enPath };
 
@@ -204,8 +225,8 @@ public class ReferenceUtils {
     }
 
     public static FlamebaseService service(String url) {
-        OkHttpClient.Builder httpClient = new OkHttpClient.Builder().connectTimeout(60, TimeUnit.SECONDS).readTimeout(60, TimeUnit.SECONDS)
-                .writeTimeout(60, TimeUnit.SECONDS);
+        OkHttpClient.Builder httpClient = new OkHttpClient.Builder().connectTimeout(120, TimeUnit.SECONDS).readTimeout(120, TimeUnit.SECONDS)
+                .writeTimeout(120, TimeUnit.SECONDS);
 
         Retrofit.Builder builder = new Retrofit.Builder().baseUrl(url).addConverterFactory(GsonConverterFactory.create());
 
