@@ -62,6 +62,9 @@ public class MainActivity extends AppCompatActivity {
 
         ChatManager.init(chatsList.getAdapter());
 
+        String contactPath = "/contacts";
+        ChatManager.syncContacts(contactPath);
+
 
         JSONArray array = LocalData.getLocalPaths();
         for (int i = 0; i < array.length(); i++) {
@@ -124,11 +127,9 @@ public class MainActivity extends AppCompatActivity {
                             EditText email = (EditText) dialog.getCustomView().findViewById(R.id.etEmail);
 
                             if (!TextUtils.isEmpty(name.getText()) && !TextUtils.isEmpty(email.getText())) {
-                                setData(name.getText().toString(), email.getText().toString());
+                                setUserAndSynchronize(name.getText().toString(), email.getText().toString());
 
-                                String contactPath = "/contacts";
 
-                                ChatManager.syncContacts(contactPath);
 
                                 Member member = new Member(name.getText().toString(), FirebaseInstanceId.getInstance().getToken(), "android", email.getText().toString());
                                 ChatManager.contacts.put(email.getText().toString(), member);
@@ -145,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
                     })
                     .show();
         } else {
-            syncUser();
+            loadUserAndSynchronize();
         }
     }
 
@@ -190,7 +191,7 @@ public class MainActivity extends AppCompatActivity {
                     })
                     .show();
         } else {
-            syncUser();
+            loadUserAndSynchronize();
         }
     }
 
@@ -209,32 +210,31 @@ public class MainActivity extends AppCompatActivity {
         return prefs.getString("name", null) == null || prefs.getString("email", null) == null;
     }
 
-    public void syncUser() {
-        SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
-        String name = prefs.getString("name", null);
-        String email = prefs.getString("email", null);
-        String contactPath = "/contacts";
 
-        Member member = new Member(name, FirebaseInstanceId.getInstance().getToken(), "android", email);
+    public void loadUserAndSynchronize() {
+        SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+        String name = prefs.getString(getString(R.string.var_name), null);
+        String id = prefs.getString(getString(R.string.var_id), null);
+
+        Member member = new Member(name, FirebaseInstanceId.getInstance().getToken(), getString(R.string.var_os), id);
         ChatManager.contacts.put(name, member);
 
-        ChatManager.syncContacts(contactPath);
-
-        FlamebaseDatabase.syncReference(contactPath, false);
+        FlamebaseDatabase.syncReference(getString(R.string.contact_path), false);
     }
 
-
-    public void setData(String name, String email) {
+    /**
+     * Sets current user name and ID.
+     * @param name
+     * @param id
+     */
+    public void setUserAndSynchronize(String name, String id) {
         SharedPreferences.Editor editor = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE).edit();
         editor.putString("name", name).apply();
-        editor.putString("email", email).apply();
-        String contactPath = "/contacts";
+        editor.putString("id", id).apply();
 
-        ChatManager.syncContacts(contactPath);
-
-        Member member = new Member(name, FirebaseInstanceId.getInstance().getToken(), "android", email);
+        Member member = new Member(name, FirebaseInstanceId.getInstance().getToken(), "android", id);
         ChatManager.contacts.put(name, member);
 
-        FlamebaseDatabase.syncReference(contactPath, false);
+        FlamebaseDatabase.syncReference(getString(R.string.contact_path), false);
     }
 }

@@ -24,12 +24,6 @@ android {
             buildConfigField "String", "database_url", "\"http://10.0.2.2:1507/\""
         }
     }
-    sourceSets {
-        // Encapsulates configurations for the main source set.
-        main {
-
-        }
-    }
 }
 
 dependencies {

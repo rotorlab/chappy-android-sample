@@ -15,6 +15,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.Normalizer;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -29,6 +30,7 @@ public abstract class Reference {
     private static Map<String, String[]> mapParts;
     public Database database;
     private Context context;
+    private Date lastChangeTime;
     protected Gson gson;
     public boolean isSynchronized;
 
@@ -352,14 +354,20 @@ public abstract class Reference {
         blowerResult(stringReference);
     }
 
+    /**
+     * Returns a {@code Object[]} object. If {@code clean} param is TRUE
+     * differences var is built from empty JSON object.
+     * Index 0: differences value length
+     * Index 1: differences value
+     * @param clean
+     * @return Object[]
+     */
     public Object[] syncReference(boolean clean) {
         int len;
         Gson gson = new Gson();
         Object[] objects = new Object[2];
 
-        if (clean) {
-            this.stringReference = "{}";
-        } else if (stringReference == null) {
+        if (clean || stringReference == null) {
             this.stringReference = "{}";
         }
 
@@ -386,6 +394,23 @@ public abstract class Reference {
         }
 
         return objects;
+    }
+
+    /**
+     * Updates {@code lastChangeTime} var
+     * @param time
+     */
+    public void updateLastChangeTime(Date time) {
+        lastChangeTime = time;
+    }
+
+    /**
+     * Returns TRUE if reference is up to date.
+     * @return
+     */
+    public boolean isSynchronized() {
+
+        return true;
     }
 
     private Gson getGsonBuilder() {
