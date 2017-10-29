@@ -1,6 +1,7 @@
 package com.flamebase.database;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.efraespada.androidstringobfuscator.AndroidStringObfuscator;
@@ -58,7 +59,7 @@ public class FlamebaseDatabase {
     }
 
     /**
-     * Set initial config to sync with flamebase server cluster
+     * Set initial config to createReference with flamebase server cluster
      *
      * @param context
      * @param urlServer
@@ -135,7 +136,7 @@ public class FlamebaseDatabase {
 
                 pathMap.put(path, mapReference);
 
-                FlamebaseDatabase.syncWithServer(path, new Sender.FlamebaseResponse() {
+                syncWithServer(path, new Sender.FlamebaseResponse() {
                     @Override
                     public void onSuccess(JsonObject jsonObject) {
                         mapReference.serverLen = jsonObject.get("len").getAsInt();
@@ -186,7 +187,7 @@ public class FlamebaseDatabase {
 
                 pathMap.put(path, objectReference);
 
-                FlamebaseDatabase.syncWithServer(path, new Sender.FlamebaseResponse() {
+                syncWithServer(path, new Sender.FlamebaseResponse() {
                     @Override
                     public void onSuccess(JsonObject jsonObject) {
                         objectReference.serverLen = jsonObject.get("len").getAsInt();
@@ -273,8 +274,8 @@ public class FlamebaseDatabase {
 
             @Override
             public void onFailure(Call<SyncResponse> call, Throwable t) {
-                if (t.getStackTrace() != null) {
-                    callback.onFailure(t.getStackTrace().toString());
+                if (t.getMessage() != null) {
+                    callback.onFailure(t.getMessage().toString());
                 } else {
                     callback.onFailure("refresh from server response error");
                 }
@@ -282,7 +283,7 @@ public class FlamebaseDatabase {
         });
     }
 
-    public static void removeListener(String path) {
+    public static void removeListener(final String path) {
         RemoveListener removeListener = new RemoveListener("remove_listener", path, token);
 
         Call<SyncResponse> call = ReferenceUtils.service(FlamebaseDatabase.urlServer).removeListener(removeListener);
@@ -293,6 +294,7 @@ public class FlamebaseDatabase {
             public void onResponse(Call<SyncResponse> call, Response<SyncResponse> response) {
                 SyncResponse syncResponse = response.body();
                 if (!syncResponse.getData().toString().equals(EMPTY_OBJECT)) {
+                    ReferenceUtils.removeElement(path);
                     if (debug) {
                         Log.d(TAG, syncResponse.getData().get("info").getAsString());
                     }
@@ -313,8 +315,8 @@ public class FlamebaseDatabase {
         });
     }
 
-    private static void refreshToServer(final String path, String differences, int len, boolean clean) {
-        if (pathMap.get(path).isSynchronized) {
+    private static void refreshToServer(final String path, @NonNull String differences, @NonNull Integer len, boolean clean) {
+        if (!pathMap.get(path).isSynchronized) {
             /*
             if (jsonObject.has("error") && jsonObject.getString("error") != null) {
                 String error = jsonObject.getString("error");
@@ -393,11 +395,17 @@ public class FlamebaseDatabase {
         syncReference(path, false);
     }
 
+    /**
+     * Updates {@code Map<String, Reference> pathMap} invoking {@code syncReference()} on Reference object.
+     *
+     * @param path
+     * @param clean
+     */
     public static void syncReference(String path, boolean clean) {
         if (pathMap.containsKey(path)) {
             Object[] result = pathMap.get(path).syncReference(clean);
             String diff = (String) result[1];
-            int len = (int) result[0];
+            Integer len = (Integer) result[0];
             refreshToServer(path, diff, len, clean);
         }
     }

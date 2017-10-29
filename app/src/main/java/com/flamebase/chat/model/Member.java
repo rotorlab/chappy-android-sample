@@ -17,19 +17,19 @@ public class Member {
     @Expose
     String token;
 
-    @SerializedName("email")
+    @SerializedName("id")
     @Expose
-    String email;
+    String id;
 
     @SerializedName("os")
     @Expose
     String os;
 
-    public Member(String name, String token, String os, String email) {
+    public Member(String name, String token, String os, String id) {
         this.name = name;
         this.token = token;
         this.os = os;
-        this.email = email;
+        this.id = id;
     }
 
     public String getName() {
@@ -56,11 +56,11 @@ public class Member {
         this.os = os;
     }
 
-    public String getEmail() {
-        return email;
+    public String getId() {
+        return id;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setId(String id) {
+        this.id = id;
     }
 }

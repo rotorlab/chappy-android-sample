@@ -92,7 +92,7 @@ public class ChatManager {
                             contacts.get(entry.getKey()).setName(entry.getValue().getName());
                             contacts.get(entry.getKey()).setOs(entry.getValue().getOs());
                             contacts.get(entry.getKey()).setToken(entry.getValue().getToken());
-                            contacts.get(entry.getKey()).setEmail(entry.getValue().getEmail());
+                            contacts.get(entry.getKey()).setId(entry.getValue().getId());
                         }
                     }
                 } else {

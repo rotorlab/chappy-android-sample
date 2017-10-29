@@ -1,13 +1,16 @@
 <resources>
     <string name="app_name">Database</string>
     <string name="action_settings">Settings</string>
-    <string name="action_email">Set email</string>
+    <string name="action_email">Set id</string>
     <string name="action_create_group">Create group</string>
     <string name="action_add_contact_to_group">Add contact</string>
     <string name="askIdTitle">Who are you?</string>
     <string name="askIdGroupName">Group name</string>
     <string name="agree">Ok</string>
     <string name="disagree">Cancel</string>
-    <string name="server_url">http://192.168.0.155:3003/</string>
-    <string name="database_url">http://192.168.0.155:1507/</string>
+    <string name="contact_path">/contacts</string>
+    <string name="var_id">id</string>
+    <string name="var_name">name</string>
+    <string name="var_os">android</string>
+    <string name="server_url">http://192.168.0.192:3003/</string>
 </resources>
