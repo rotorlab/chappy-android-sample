@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.3"
+    buildToolsVersion '26.0.2'
     defaultConfig {
         applicationId "com.flamebase.chat"
         minSdkVersion 19
@@ -11,6 +11,7 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+    flavorDimensions("emulator")
     buildTypes {
         release {
             minifyEnabled false
@@ -22,6 +23,7 @@ android {
             applicationId "com.flamebase.chat"
             versionNameSuffix "-emulator"
             buildConfigField "String", "database_url", "\"http://10.0.2.2:1507/\""
+            dimension "emulator"
         }
     }
 }
