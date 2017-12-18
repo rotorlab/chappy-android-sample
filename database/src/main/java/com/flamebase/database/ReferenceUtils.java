@@ -6,7 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 
-import com.efraespada.androidstringobfuscator.AndroidStringObfuscator;
+import com.efraespada.stringcarelibrary.SC;
 import com.flamebase.database.interfaces.FlamebaseService;
 
 import java.io.UnsupportedEncodingException;
@@ -93,12 +93,12 @@ public class ReferenceUtils {
             database = new Database(context, name, TABLE_NAME, VERSION);
         }
         try {
-            String enId = AndroidStringObfuscator.encryptString(path);
+            String enId = SC.encryptString(path);
             SQLiteDatabase db = database.getWritableDatabase();
 
             ContentValues values = new ContentValues();
             values.put(COLUMN_ID, enId);
-            values.put(COLUMN_DATA, AndroidStringObfuscator.encryptString(info));
+            values.put(COLUMN_DATA, SC.encryptString(info));
 
             if (exist(path)) {
                 String selection = COLUMN_ID + " = ?";
@@ -117,7 +117,7 @@ public class ReferenceUtils {
             String name = "RealtimeDatabase.db";
             database = new Database(context, name, TABLE_NAME, VERSION);
         }
-        String enPath = AndroidStringObfuscator.encryptString(path);
+        String enPath = SC.encryptString(path);
         try {
             SQLiteDatabase db = database.getReadableDatabase();
 
@@ -158,7 +158,7 @@ public class ReferenceUtils {
             String name = "RealtimeDatabase.db";
             database = new Database(context, name, TABLE_NAME, VERSION);
         }
-        String enPath = AndroidStringObfuscator.encryptString(path);
+        String enPath = SC.encryptString(path);
         try {
             SQLiteDatabase db = database.getReadableDatabase();
 
@@ -187,7 +187,7 @@ public class ReferenceUtils {
             String name = "RealtimeDatabase.db";
             database = new Database(context, name, TABLE_NAME, VERSION);
         }
-        String enPath = AndroidStringObfuscator.encryptString(path);
+        String enPath = SC.encryptString(path);
         try {
             SQLiteDatabase db = database.getReadableDatabase();
             String[] projection = {
@@ -215,7 +215,7 @@ public class ReferenceUtils {
             cursor.close();
 
             if (info != null) {
-                return AndroidStringObfuscator.decryptString(info);
+                return SC.decryptString(info);
             } else {
                 return null;
             }
