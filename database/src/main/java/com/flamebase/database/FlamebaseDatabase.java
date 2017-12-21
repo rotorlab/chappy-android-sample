@@ -4,7 +4,7 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.efraespada.androidstringobfuscator.AndroidStringObfuscator;
+import com.efraespada.stringcarelibrary.SC;
 import com.flamebase.database.interfaces.Blower;
 import com.flamebase.database.interfaces.ListBlower;
 import com.flamebase.database.interfaces.MapBlower;
@@ -68,7 +68,7 @@ public class FlamebaseDatabase {
         FlamebaseDatabase.context = context;
         FlamebaseDatabase.urlServer = urlServer;
         FlamebaseDatabase.token = token;
-        AndroidStringObfuscator.init(context);
+        SC.init(context);
         ReferenceUtils.initialize(context);
         FlamebaseDatabase.gson = new Gson();
         if (FlamebaseDatabase.pathMap == null) {

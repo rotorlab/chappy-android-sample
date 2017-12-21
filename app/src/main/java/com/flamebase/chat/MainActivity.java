@@ -124,16 +124,10 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                             EditText name = (EditText) dialog.getCustomView().findViewById(R.id.etName);
-                            EditText email = (EditText) dialog.getCustomView().findViewById(R.id.etEmail);
+                            EditText id = (EditText) dialog.getCustomView().findViewById(R.id.etId);
 
-                            if (!TextUtils.isEmpty(name.getText()) && !TextUtils.isEmpty(email.getText())) {
-                                setUserAndSynchronize(name.getText().toString(), email.getText().toString());
-
-
-
-                                Member member = new Member(name.getText().toString(), FirebaseInstanceId.getInstance().getToken(), "android", email.getText().toString());
-                                ChatManager.contacts.put(email.getText().toString(), member);
-
+                            if (!TextUtils.isEmpty(name.getText()) && !TextUtils.isEmpty(id.getText())) {
+                                setUserAndSynchronize(name.getText().toString(), id.getText().toString());
                                 dialog.dismiss();
                             }
                         }
@@ -190,8 +184,6 @@ public class MainActivity extends AppCompatActivity {
                         }
                     })
                     .show();
-        } else {
-            loadUserAndSynchronize();
         }
     }
 
@@ -207,10 +199,13 @@ public class MainActivity extends AppCompatActivity {
 
     public boolean isFirstRun() {
         SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
-        return prefs.getString("name", null) == null || prefs.getString("email", null) == null;
+        return prefs.getString(getString(R.string.var_name), null) == null || prefs.getString(getString(R.string.var_id), null) == null;
     }
 
 
+    /**
+     * Loads current user as Member object and synchronizes it to server.
+     */
     public void loadUserAndSynchronize() {
         SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
         String name = prefs.getString(getString(R.string.var_name), null);
@@ -229,10 +224,10 @@ public class MainActivity extends AppCompatActivity {
      */
     public void setUserAndSynchronize(String name, String id) {
         SharedPreferences.Editor editor = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE).edit();
-        editor.putString("name", name).apply();
-        editor.putString("id", id).apply();
+        editor.putString(getString(R.string.var_name), name).apply();
+        editor.putString(getString(R.string.var_id), id).apply();
 
-        Member member = new Member(name, FirebaseInstanceId.getInstance().getToken(), "android", id);
+        Member member = new Member(name, FirebaseInstanceId.getInstance().getToken(), getString(R.string.var_os), id);
         ChatManager.contacts.put(name, member);
 
         FlamebaseDatabase.syncReference(getString(R.string.contact_path), false);

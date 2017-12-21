@@ -2,11 +2,12 @@ package com.flamebase.database.model;
 
 import android.content.Context;
 
-import com.efraespada.androidstringobfuscator.AndroidStringObfuscator;
 import com.efraespada.jsondiff.JSONDiff;
+import com.efraespada.stringcarelibrary.SC;
 import com.flamebase.database.Database;
 import com.flamebase.database.FlamebaseDatabase;
 import com.flamebase.database.ReferenceUtils;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.RemoteMessage;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -30,8 +31,9 @@ public abstract class Reference {
     private static Map<String, String[]> mapParts;
     public Database database;
     private Context context;
-    private Date lastChangeTime;
+    private String lastToken;
     protected Gson gson;
+
     public boolean isSynchronized;
 
     public int len;
@@ -62,9 +64,9 @@ public abstract class Reference {
         this.context = context;
         this.path = path;
         this.gson = getGsonBuilder();
-        this.isSynchronized = false;
         this.serverLen = 0;
-        AndroidStringObfuscator.init(this.context);
+        this.lastToken = null;
+        SC.init(this.context);
         this.mapParts = new HashMap<>();
         this.stringReference = ReferenceUtils.getElement(path);
         this.len = stringReference == null ? 0 : stringReference.length();
@@ -74,9 +76,9 @@ public abstract class Reference {
         this.context = context;
         this.path = path;
         this.gson = getGsonBuilder();
-        this.isSynchronized = false;
         this.serverLen = 0;
-        AndroidStringObfuscator.init(this.context);
+        this.lastToken = null;
+        SC.init(this.context);
         String name = "RealtimeDatabase.db";
         this.database = new Database(this.context, name, TABLE_NAME, VERSION);
         this.mapParts = new HashMap<>();
@@ -397,20 +399,11 @@ public abstract class Reference {
     }
 
     /**
-     * Updates {@code lastChangeTime} var
-     * @param time
-     */
-    public void updateLastChangeTime(Date time) {
-        lastChangeTime = time;
-    }
-
-    /**
      * Returns TRUE if reference is up to date.
      * @return
      */
     public boolean isSynchronized() {
-
-        return true;
+        return lastToken != null && lastToken.equals(FirebaseInstanceId.getInstance().getToken());
     }
 
     private Gson getGsonBuilder() {
