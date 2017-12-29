@@ -38,6 +38,7 @@ public abstract class Reference {
 
     public int len;
     public int serverLen;
+    public int queueLen;
 
     private static final String TAG = Reference.class.getSimpleName();
 

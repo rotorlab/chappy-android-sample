@@ -3,6 +3,7 @@ package com.flamebase.chat;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -25,6 +26,7 @@ import com.flamebase.chat.model.Message;
 import com.flamebase.chat.services.ChatManager;
 import com.flamebase.chat.services.LocalData;
 import com.flamebase.database.FlamebaseDatabase;
+import com.flamebase.database.model.TokenListener;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.iid.FirebaseInstanceId;
 
@@ -50,33 +52,38 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         FirebaseApp.initializeApp(this);
-        LocalData.init(this);
 
-        FlamebaseDatabase.initialize(this, BuildConfig.database_url, FirebaseInstanceId.getInstance().getToken());
-        FlamebaseDatabase.setDebug(true);
+        LocalData.init(this);
 
         chatsList = (RecyclerView) findViewById(R.id.chats_list);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
         chatsList.setLayoutManager(mLayoutManager);
-        chatsList.setAdapter(new ChatAdapter(this));
 
-        ChatManager.init(chatsList.getAdapter());
+        FlamebaseDatabase.initialize(this, BuildConfig.database_url, FirebaseInstanceId.getInstance(), new TokenListener() {
+            @Override
+            public void databaseReady() {
+                chatsList.setAdapter(new ChatAdapter(MainActivity.this));
 
-        String contactPath = "/contacts";
-        ChatManager.syncContacts(contactPath);
+                ChatManager.init(chatsList.getAdapter());
+
+                String contactPath = "/contacts";
+                ChatManager.syncContacts(contactPath);
 
 
-        JSONArray array = LocalData.getLocalPaths();
-        for (int i = 0; i < array.length(); i++) {
-            try {
-                String path = array.getString(i);
-                ChatManager.syncGChat(path);
-            } catch (JSONException e) {
-                e.printStackTrace();
+                JSONArray array = LocalData.getLocalPaths();
+                for (int i = 0; i < array.length(); i++) {
+                    try {
+                        String path = array.getString(i);
+                        ChatManager.syncGChat(path);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                askForEmail();
             }
-        }
-
-        askForEmail();
+        });
+        FlamebaseDatabase.setDebug(true);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -194,6 +201,7 @@ public class MainActivity extends AppCompatActivity {
             materialDialog.dismiss();
             materialDialog = null;
         }
+        FlamebaseDatabase.removeListener("/contacts");
         super.onDestroy();
     }
 

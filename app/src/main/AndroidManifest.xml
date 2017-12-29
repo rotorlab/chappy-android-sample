@@ -31,8 +31,7 @@
             </intent-filter>
         </service>
         <service
-            android:name=".services.FIService"
-            android:exported="true">
+            android:name=".services.FIService">
             <intent-filter>
                 <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
             </intent-filter>

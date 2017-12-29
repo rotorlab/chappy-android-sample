@@ -84,6 +84,8 @@ public class ChatManager {
 
             @Override
             public void onMapChanged(Map<String, Member> ref) {
+                Log.e(TAG, "reference: " + ref.size());
+
                 if (contacts != null) {
                     for (Map.Entry<String, Member> entry : ref.entrySet()) {
                         if (!contacts.containsKey(entry.getKey())) {

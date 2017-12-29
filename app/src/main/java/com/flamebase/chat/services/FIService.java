@@ -1,6 +1,8 @@
 package com.flamebase.chat.services;
 
 
+import com.flamebase.database.FlamebaseDatabase;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.FirebaseInstanceIdService;
 
 /**
@@ -12,5 +14,6 @@ public class FIService extends FirebaseInstanceIdService {
     @Override
     public void onTokenRefresh() {
         super.onTokenRefresh();
+        FlamebaseDatabase.onTokenRefresh(FirebaseInstanceId.getInstance().getToken());
     }
 }

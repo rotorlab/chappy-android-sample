@@ -1,6 +1,8 @@
 package com.flamebase.database;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -12,11 +14,13 @@ import com.flamebase.database.interfaces.ObjectBlower;
 import com.flamebase.database.model.MapReference;
 import com.flamebase.database.model.ObjectReference;
 import com.flamebase.database.model.Reference;
+import com.flamebase.database.model.TokenListener;
 import com.flamebase.database.model.request.CreateListener;
 import com.flamebase.database.model.request.RemoveListener;
 import com.flamebase.database.model.request.UpdateFromServer;
 import com.flamebase.database.model.request.UpdateToServer;
 import com.flamebase.database.model.service.SyncResponse;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.RemoteMessage;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -39,6 +43,7 @@ public class FlamebaseDatabase {
 
     private static final String TAG = FlamebaseDatabase.class.getSimpleName();
 
+    private static TokenListener listener;
     private static Context context;
     private static String urlServer;
     private static String token;
@@ -58,22 +63,41 @@ public class FlamebaseDatabase {
         // nothing to do here
     }
 
+    public static void onTokenRefresh(String token) {
+        FlamebaseDatabase.token = token;
+        Runnable task = new Runnable() {
+            @Override
+            public void run() {
+                start();
+            }
+        };
+        new Handler(Looper.getMainLooper()).post(task);
+    }
+
     /**
      * Set initial config to createReference with flamebase server cluster
      *
      * @param context
      * @param urlServer
      */
-    public static void initialize(Context context, String urlServer, String token) {
+    public static void initialize(Context context, String urlServer, final FirebaseInstanceId fii, final TokenListener listener) {
         FlamebaseDatabase.context = context;
         FlamebaseDatabase.urlServer = urlServer;
-        FlamebaseDatabase.token = token;
-        SC.init(context);
-        ReferenceUtils.initialize(context);
+        FlamebaseDatabase.listener = listener;
         FlamebaseDatabase.gson = new Gson();
         if (FlamebaseDatabase.pathMap == null) {
             FlamebaseDatabase.pathMap = new HashMap<>();
         }
+        if (FlamebaseDatabase.token == null && fii.getToken() != null) {
+            FlamebaseDatabase.token = fii.getToken();
+            start();
+        }
+    }
+
+    private static void start() {
+        SC.init(context);
+        ReferenceUtils.initialize(context);
+        FlamebaseDatabase.listener.databaseReady();
     }
 
     /**
@@ -139,12 +163,20 @@ public class FlamebaseDatabase {
                 syncWithServer(path, new Sender.FlamebaseResponse() {
                     @Override
                     public void onSuccess(JsonObject jsonObject) {
-                        mapReference.serverLen = jsonObject.get("len").getAsInt();
+                        mapReference.serverLen = jsonObject.get("objectLen").getAsInt();
+                        mapReference.queueLen = jsonObject.get("queueLen").getAsInt();
                         String respon = jsonObject.get("info").getAsString();
 
                         switch (respon) {
 
                             case "updates_sent":
+                                if (FlamebaseDatabase.debug) {
+                                    Log.d(TAG, respon);
+                                }
+                                break;
+
+                            case "queue_ready":
+
                                 if (FlamebaseDatabase.debug) {
                                     Log.d(TAG, respon);
                                 }
@@ -210,6 +242,12 @@ public class FlamebaseDatabase {
                                                 }
                                                 break;
 
+                                            case "queue_ready":
+                                                if (FlamebaseDatabase.debug) {
+                                                    Log.d(TAG, respon);
+                                                }
+                                                break;
+
                                             default:
                                                 if (FlamebaseDatabase.debug) {
                                                     Log.d(TAG, respon);
@@ -231,6 +269,12 @@ public class FlamebaseDatabase {
                                     Log.d(TAG, respon);
                                 }
                                 objectReference.loadCachedReference();
+                                break;
+
+                            case "queue_ready":
+                                if (FlamebaseDatabase.debug) {
+                                    Log.d(TAG, respon);
+                                }
                                 break;
 
                             default:
