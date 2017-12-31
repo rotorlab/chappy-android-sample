@@ -137,12 +137,14 @@ public class MainActivity extends AppCompatActivity {
                                 setUserAndSynchronize(name.getText().toString(), id.getText().toString());
                                 dialog.dismiss();
                             }
+                            materialDialog = null;
                         }
                     })
                     .onNegative(new MaterialDialog.SingleButtonCallback() {
                         @Override
                         public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                             dialog.dismiss();
+                            materialDialog = null;
                         }
                     })
                     .show();
@@ -165,16 +167,18 @@ public class MainActivity extends AppCompatActivity {
                             EditText name = (EditText) dialog.getCustomView().findViewById(R.id.etName);
                             if (!TextUtils.isEmpty(name.getText())) {
                                 SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
-                                String email = prefs.getString("email", null);
+                                String id = prefs.getString(getString(R.string.var_name), null);
                                 String groupPath = "/chats/" + new Date().getTime();
 
                                 List<String> members = new ArrayList<>();
-                                members.add(email);
+                                members.add(id);
                                 Map<String, Message> messageMap = new HashMap<>();
                                 GChat gChat = new GChat(name.getText().toString(), members, messageMap);
                                 ChatManager.map.put(groupPath, gChat);
 
                                 ChatManager.syncGChat(groupPath);
+
+
 
                                 //FlamebaseDatabase.syncReference(groupPath, false);
 
@@ -201,7 +205,7 @@ public class MainActivity extends AppCompatActivity {
             materialDialog.dismiss();
             materialDialog = null;
         }
-        FlamebaseDatabase.removeListener("/contacts");
+        //FlamebaseDatabase.removeListener("/contacts");
         super.onDestroy();
     }
 

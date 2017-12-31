@@ -28,6 +28,12 @@ android {
             buildConfigField "String", "database_url", "\"http://10.0.2.2:1507/\""
             dimension "origin"
         }
+        device {
+            applicationId "com.flamebase.chat"
+            versionNameSuffix "-device"
+            buildConfigField "String", "database_url", "\"http://192.168.1.129:1507/\""
+            dimension "origin"
+        }
     }
 }
 

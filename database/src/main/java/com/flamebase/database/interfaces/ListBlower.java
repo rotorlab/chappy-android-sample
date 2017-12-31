@@ -9,6 +9,7 @@ import java.util.List;
 public interface ListBlower<T> extends Blower<T> {
 
     List<T> updateList();
+
     void onListChanged(List<T> ref);
 
 }

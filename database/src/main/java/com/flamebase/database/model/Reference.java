@@ -7,7 +7,6 @@ import com.efraespada.stringcarelibrary.SC;
 import com.flamebase.database.Database;
 import com.flamebase.database.FlamebaseDatabase;
 import com.flamebase.database.ReferenceUtils;
-import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.RemoteMessage;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -16,7 +15,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.Normalizer;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -25,14 +23,14 @@ import java.util.Map;
  * Created by efraespada on 21/05/2017.
  */
 
-public abstract class Reference {
+public abstract class Reference<T> {
 
     private int VERSION = 1;
     private static Map<String, String[]> mapParts;
     public Database database;
     private Context context;
-    private String lastToken;
     protected Gson gson;
+    public Map<Long, T> blowerMap;
 
     public boolean isSynchronized;
 
@@ -66,7 +64,6 @@ public abstract class Reference {
         this.path = path;
         this.gson = getGsonBuilder();
         this.serverLen = 0;
-        this.lastToken = null;
         SC.init(this.context);
         this.mapParts = new HashMap<>();
         this.stringReference = ReferenceUtils.getElement(path);
@@ -78,7 +75,6 @@ public abstract class Reference {
         this.path = path;
         this.gson = getGsonBuilder();
         this.serverLen = 0;
-        this.lastToken = null;
         SC.init(this.context);
         String name = "RealtimeDatabase.db";
         this.database = new Database(this.context, name, TABLE_NAME, VERSION);
@@ -212,6 +208,8 @@ public abstract class Reference {
      */
     public abstract void progress(int value);
 
+    public abstract void addBlower(long creation, T blower);
+
     /**
      * tag or identifier used to identify incoming object updates
      * from server cluster
@@ -250,12 +248,8 @@ public abstract class Reference {
     private void parseUpdateResult(String path, String data) {
         try {
             JSONObject jsonObject;
-            String prev;
-            if (!isSynchronized) {
-                prev = stringReference;
-            } else {
-                prev = getStringReference();
-            }
+
+            String prev = getStringReference();
 
             if (prev != null) {
                 prev = Normalizer.normalize(prev, Normalizer.Form.NFC);
@@ -397,14 +391,6 @@ public abstract class Reference {
         }
 
         return objects;
-    }
-
-    /**
-     * Returns TRUE if reference is up to date.
-     * @return
-     */
-    public boolean isSynchronized() {
-        return lastToken != null && lastToken.equals(FirebaseInstanceId.getInstance().getToken());
     }
 
     private Gson getGsonBuilder() {

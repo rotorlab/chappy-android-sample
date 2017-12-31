@@ -18,8 +18,8 @@ import java.util.Map;
 public class ChatManager {
 
     private static final String TAG = ChatManager.class.getSimpleName();
-    public static Map<String, GChat> map;
-    public static Map<String, Member> contacts;
+    public static final Map<String, GChat> map = new HashMap<>();
+    public static final Map<String, Member> contacts = new HashMap<>();
     public static RecyclerView.Adapter adapter;
 
     private ChatManager() {
@@ -28,16 +28,10 @@ public class ChatManager {
 
     public static void init(RecyclerView.Adapter adapter) {
         ChatManager.adapter = adapter;
-        if (map == null) {
-            map = new HashMap<>();
-        }
-        if (contacts == null) {
-            contacts = new HashMap<>();
-        }
     }
 
     public static void syncGChat(final String path) {
-        FlamebaseDatabase.createListener(path, new ObjectBlower<GChat>() {
+        FlamebaseDatabase.getInstance().createListener(path, new ObjectBlower<GChat>() {
 
             @Override
             public GChat updateObject() {
@@ -57,6 +51,8 @@ public class ChatManager {
                 } else {
                     map.put(path, ref);
                 }
+                Log.e(TAG, "chats: " + map.size());
+
                 ChatManager.adapter.notifyDataSetChanged();
             }
 
@@ -67,6 +63,7 @@ public class ChatManager {
 
         }, GChat.class);
 
+
         LocalData.addPath(path);
     }
 
@@ -75,7 +72,7 @@ public class ChatManager {
      * @param path
      */
     public static void syncContacts(final String path) {
-        FlamebaseDatabase.createListener(path, new MapBlower<Member>() {
+        FlamebaseDatabase.getInstance().createListener(path, new MapBlower<Member>() {
 
             @Override
             public Map<String, Member> updateMap() {
@@ -86,19 +83,15 @@ public class ChatManager {
             public void onMapChanged(Map<String, Member> ref) {
                 Log.e(TAG, "reference: " + ref.size());
 
-                if (contacts != null) {
-                    for (Map.Entry<String, Member> entry : ref.entrySet()) {
-                        if (!contacts.containsKey(entry.getKey())) {
-                            contacts.put(entry.getKey(), entry.getValue());
-                        } else {
-                            contacts.get(entry.getKey()).setName(entry.getValue().getName());
-                            contacts.get(entry.getKey()).setOs(entry.getValue().getOs());
-                            contacts.get(entry.getKey()).setToken(entry.getValue().getToken());
-                            contacts.get(entry.getKey()).setId(entry.getValue().getId());
-                        }
+                for (Map.Entry<String, Member> entry : ref.entrySet()) {
+                    if (!contacts.containsKey(entry.getKey())) {
+                        contacts.put(entry.getKey(), entry.getValue());
+                    } else {
+                        contacts.get(entry.getKey()).setName(entry.getValue().getName());
+                        contacts.get(entry.getKey()).setOs(entry.getValue().getOs());
+                        contacts.get(entry.getKey()).setToken(entry.getValue().getToken());
+                        contacts.get(entry.getKey()).setId(entry.getValue().getId());
                     }
-                } else {
-                    contacts = ref;
                 }
             }
 

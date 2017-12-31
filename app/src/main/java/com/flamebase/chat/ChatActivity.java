@@ -39,6 +39,7 @@ public class ChatActivity extends AppCompatActivity {
     private GChat chat;
     private Button sendButton;
     private EditText messageText;
+    private FlamebaseDatabase flamebaseDatabase;
 
 
     @Override
@@ -72,7 +73,7 @@ public class ChatActivity extends AppCompatActivity {
                     Message message = new Message(name, messageText.getText().toString());
                     chat.getMessages().put(String.valueOf(new Date().getTime()), message);
 
-                    FlamebaseDatabase.syncReference(path);
+                    flamebaseDatabase.sync();
                     messageText.setText("");
                     messageList.getAdapter().notifyDataSetChanged();
                 }
@@ -89,7 +90,7 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
 
-        FlamebaseDatabase.createListener(path, new ObjectBlower<GChat>() {
+        flamebaseDatabase = FlamebaseDatabase.getInstance().createListener(path, new ObjectBlower<GChat>() {
 
             @Override
             public GChat updateObject() {
@@ -100,6 +101,7 @@ public class ChatActivity extends AppCompatActivity {
             public void onObjectChanged(GChat ref) {
                 if (chat == null) {
                     chat = ref;
+                    ChatActivity.this.setTitle(ref.getName());
                 } else {
                     chat.setName(ref.getName());
                     chat.setMessages(ref.getMessages());
@@ -141,6 +143,11 @@ public class ChatActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    protected void onDestroy() {
+        flamebaseDatabase.removeListener();
+        super.onDestroy();
+    }
 
     public class MessageAdapter extends RecyclerView.Adapter<ViewHolder> {
 

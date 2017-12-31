@@ -9,6 +9,7 @@ public class UpdateToServer {
     private String method;
     private String path;
     private String token;
+    private String os;
     private String differences;
     private int len;
     private boolean clean;
@@ -17,10 +18,11 @@ public class UpdateToServer {
         // nothing to do here
     }
 
-    public UpdateToServer(String method, String path, String token, String differences, int len, boolean clean) {
+    public UpdateToServer(String method, String path, String token, String os, String differences, int len, boolean clean) {
         this.method = method;
         this.path = path;
         this.token = token;
+        this.os = os;
         this.differences = differences;
         this.len = len;
         this.clean = clean;
