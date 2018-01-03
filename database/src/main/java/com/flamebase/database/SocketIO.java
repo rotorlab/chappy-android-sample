@@ -5,14 +5,15 @@ import android.os.Handler;
 import android.os.Looper;
 
 import com.flamebase.database.model.CallbackIO;
-import com.github.nkzawa.emitter.Emitter;
-import com.github.nkzawa.socketio.client.IO;
-import com.github.nkzawa.socketio.client.Socket;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.net.URISyntaxException;
+
+import io.socket.client.Ack;
+import io.socket.client.IO;
+import io.socket.client.Socket;
+import io.socket.emitter.Emitter;
 
 /**
  * Created by efraespada on 03/01/2018.
@@ -31,13 +32,35 @@ public class SocketIO {
 
             @Override
             public void call(final Object... args) {
-                Runnable task = new Runnable() {
-                    @Override
-                    public void run() {
-                        callbackIO.received((JSONObject) args[0]);
+                if (args.length == 2) {
+                    Object o = args[args.length - 1];
+                    if (o instanceof Ack) {
+                        Ack ack = (Ack) args[args.length - 1];
+                        ack.call();
                     }
-                };
-                new Handler(Looper.getMainLooper()).post(task);
+
+                    Runnable task = new Runnable() {
+                        @Override
+                        public void run() {
+                            callbackIO.received((JSONObject) args[0]);
+                        }
+                    };
+                    new Handler(Looper.getMainLooper()).post(task);
+                } else if (args.length == 1) {
+                    Object o = args[0];
+                    if (o instanceof Ack) {
+                        Ack ack = (Ack) args[0];
+                        ack.call();
+                    } else if (o instanceof JSONObject) {
+                        Runnable task = new Runnable() {
+                            @Override
+                            public void run() {
+                                callbackIO.received((JSONObject) args[0]);
+                            }
+                        };
+                        new Handler(Looper.getMainLooper()).post(task);
+                    }
+                }
 
                 /*
                 JSONObject data = (JSONObject) args[0];
@@ -54,7 +77,9 @@ public class SocketIO {
         };
 
         try {
-            mSocket = IO.socket(url);
+            IO.Options opts = new IO.Options();
+            opts.reconnection = true;
+            mSocket = IO.socket(url, opts);
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
@@ -62,6 +87,7 @@ public class SocketIO {
         if (mSocket != null) {
             mSocket.on(key, onNewMessage);
             mSocket.connect();
+            mSocket.io().timeout(-1);
         }
 
         return mSocket;
