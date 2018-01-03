@@ -11,6 +11,7 @@ import com.flamebase.database.interfaces.Blower;
 import com.flamebase.database.interfaces.ListBlower;
 import com.flamebase.database.interfaces.MapBlower;
 import com.flamebase.database.interfaces.ObjectBlower;
+import com.flamebase.database.model.CallbackIO;
 import com.flamebase.database.model.MapReference;
 import com.flamebase.database.model.ObjectReference;
 import com.flamebase.database.model.Reference;
@@ -20,10 +21,13 @@ import com.flamebase.database.model.request.RemoveListener;
 import com.flamebase.database.model.request.UpdateFromServer;
 import com.flamebase.database.model.request.UpdateToServer;
 import com.flamebase.database.model.service.SyncResponse;
+import com.github.nkzawa.socketio.client.Socket;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.RemoteMessage;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.Date;
@@ -204,6 +208,15 @@ public class FlamebaseDatabase {
                     @Override
                     public void onFailure(String error) {
                         Log.e(TAG, "error: " + error);
+                    }
+                });
+
+                Socket socketIO = SocketIO.getInstance(urlServer, "test", new CallbackIO() {
+                    @Override
+                    public void received(JSONObject jsonObject) {
+                        Log.e("TESTTTTTTT", "----");
+                        Log.e("TESTTTTTTT", jsonObject.toString());
+                        Log.e("TESTTTTTTT", "----");
                     }
                 });
 

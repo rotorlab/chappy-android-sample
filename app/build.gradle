@@ -55,7 +55,6 @@ dependencies {
     implementation 'com.afollestad.material-dialogs:core:0.9.6.0'
     implementation "com.stringcare:library:$stringcare_version"
 
-
 }
 
 apply plugin: 'com.google.gms.google-services'

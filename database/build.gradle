@@ -45,6 +45,9 @@ dependencies {
     implementation 'com.google.code.findbugs:jsr305:2.0.1'
     implementation 'com.google.guava:guava:22.0-android'
     implementation "com.stringcare:library:$stringcare_version"
+    implementation ('com.github.nkzawa:socket.io-client:0.4.1'){
+        exclude group: 'org.json', module: 'json'
+    }
 }
 
 def siteUrl = 'https://github.com/flamebase/flamebase-database-android'
