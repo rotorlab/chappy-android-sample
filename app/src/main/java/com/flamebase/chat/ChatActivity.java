@@ -105,7 +105,7 @@ public class ChatActivity extends AppCompatActivity {
                 } else {
                     chat.setName(ref.getName());
                     chat.setMessages(ref.getMessages());
-                    chat.setMember(ref.getMember());
+                    chat.setMembers(ref.getMembers());
                 }
                 messageList.getAdapter().notifyDataSetChanged();
             }

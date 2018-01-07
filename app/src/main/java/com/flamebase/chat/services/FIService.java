@@ -14,6 +14,5 @@ public class FIService extends FirebaseInstanceIdService {
     @Override
     public void onTokenRefresh() {
         super.onTokenRefresh();
-        FlamebaseDatabase.onTokenRefresh(FirebaseInstanceId.getInstance().getToken());
     }
 }

@@ -18,24 +18,24 @@ public class GChat {
 
     @SerializedName("members")
     @Expose
-    List<String> member;
+    List<String> members;
 
     @SerializedName("messages")
     @Expose
     Map<String, Message> messages;
 
-    public GChat(String name, List<String> member, Map<String, Message> messages) {
+    public GChat(String name, List<String> members, Map<String, Message> messages) {
         this.name = name;
-        this.member = member;
+        this.members = members;
         this.messages = messages;
     }
 
-    public List<String> getMember() {
-        return member;
+    public List<String> getMembers() {
+        return members;
     }
 
-    public void setMember(List<String> member) {
-        this.member = member;
+    public void setMembers(List<String> members) {
+        this.members = members;
     }
 
     public Map<String, Message> getMessages() {

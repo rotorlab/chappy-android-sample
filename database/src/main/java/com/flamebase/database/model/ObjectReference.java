@@ -31,13 +31,6 @@ public abstract class ObjectReference<T> extends Reference<ObjectBlower<T>> {
         this.clazz = clazz;
     }
 
-    public ObjectReference(Context context, String path, long blowerCreation, ObjectBlower<T> blower, Class<T> clazz, RemoteMessage remoteMessage) {
-        super(context, path, remoteMessage);
-        blowerMap = new HashMap<>();
-        blowerMap.put(blowerCreation, blower);
-        this.clazz = clazz;
-    }
-
     /**
      * called when object is synchronized with cluster or path
      * not exists in local db and is stored (cached references)

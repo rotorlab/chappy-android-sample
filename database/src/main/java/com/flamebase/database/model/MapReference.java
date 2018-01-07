@@ -32,13 +32,6 @@ public abstract class MapReference<T> extends Reference<MapBlower<T>> {
         this.clazz = clazz;
     }
 
-    public MapReference(Context context, String path, long blowerCreation, MapBlower<T> blower, Class<T> clazz, RemoteMessage remoteMessage) {
-        super(context, path, remoteMessage);
-        blowerMap = new HashMap<>();
-        blowerMap.put(blowerCreation, blower);
-        this.clazz = clazz;
-    }
-
     @Override
     public void blowerResult(String value) {
         Map<String, T> map = new HashMap<>();

@@ -19,6 +19,7 @@ public class ChatManager {
 
     private static final String TAG = ChatManager.class.getSimpleName();
     public static final Map<String, GChat> map = new HashMap<>();
+    public static final Map<String, FlamebaseDatabase> mapFDB = new HashMap<>();
     public static final Map<String, Member> contacts = new HashMap<>();
     public static RecyclerView.Adapter adapter;
 
@@ -31,47 +32,57 @@ public class ChatManager {
     }
 
     public static void syncGChat(final String path) {
-        FlamebaseDatabase.getInstance().createListener(path, new ObjectBlower<GChat>() {
+        if (mapFDB.containsKey(path)) {
+            mapFDB.get(path).sync();
+        }
+    }
 
-            @Override
-            public GChat updateObject() {
-                if (map.containsKey(path)) {
-                    return map.get(path);
-                } else {
-                    return null;
+    public static void addGChat(final String path) {
+        if (!mapFDB.containsKey(path)) {
+            FlamebaseDatabase fdb = FlamebaseDatabase.getInstance().createListener(path, new ObjectBlower<GChat>() {
+
+                @Override
+                public GChat updateObject() {
+                    if (map.containsKey(path)) {
+                        return map.get(path);
+                    } else {
+                        return null;
+                    }
                 }
-            }
 
-            @Override
-            public void onObjectChanged(GChat ref) {
-                if (map.containsKey(path)) {
-                    map.get(path).setMember(ref.getMember());
-                    map.get(path).setMessages(ref.getMessages());
-                    map.get(path).setName(ref.getName());
-                } else {
-                    map.put(path, ref);
+                @Override
+                public void onObjectChanged(GChat ref) {
+                    if (ref == null) {
+
+                    } else if (map.containsKey(path)) {
+                        map.get(path).setMembers(ref.getMembers());
+                        map.get(path).setMessages(ref.getMessages());
+                        map.get(path).setName(ref.getName());
+                    } else {
+                        map.put(path, ref);
+                    }
+                    Log.e(TAG, "chats: " + map.size());
+
+                    ChatManager.adapter.notifyDataSetChanged();
                 }
-                Log.e(TAG, "chats: " + map.size());
 
-                ChatManager.adapter.notifyDataSetChanged();
-            }
+                @Override
+                public void progress(int value) {
+                    Log.e(TAG, "loading percent for " + path + " : " + value + " %");
+                }
 
-            @Override
-            public void progress(int value) {
-                Log.e(TAG, "loading percent for " + path + " : " + value + " %");
-            }
-
-        }, GChat.class);
-
-
-        LocalData.addPath(path);
+            }, GChat.class);
+            mapFDB.put(path, fdb);
+            LocalData.addPath(path);
+        }
     }
 
     /**
      * creates a listener for given path
-     * @param path
      */
-    public static void syncContacts(final String path) {
+    public static void syncContacts() {
+
+        final String path = "/contacts";
         FlamebaseDatabase.getInstance().createListener(path, new MapBlower<Member>() {
 
             @Override

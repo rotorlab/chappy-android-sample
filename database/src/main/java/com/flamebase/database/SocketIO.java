@@ -3,6 +3,7 @@ package com.flamebase.database;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import com.flamebase.database.model.CallbackIO;
 
@@ -86,8 +87,11 @@ public class SocketIO {
 
         if (mSocket != null) {
             mSocket.on(key, onNewMessage);
-            mSocket.connect();
             mSocket.io().timeout(-1);
+            if (!mSocket.connected()) {
+                Log.d(FlamebaseDatabase.class.getSimpleName(), "connecting socket");
+                mSocket.connect();
+            }
         }
 
         return mSocket;

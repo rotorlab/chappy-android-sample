@@ -3,7 +3,6 @@ package com.flamebase.chat;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -34,7 +33,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,16 +63,14 @@ public class MainActivity extends AppCompatActivity {
                 chatsList.setAdapter(new ChatAdapter(MainActivity.this));
 
                 ChatManager.init(chatsList.getAdapter());
-
-                String contactPath = "/contacts";
-                ChatManager.syncContacts(contactPath);
+                ChatManager.syncContacts();
 
 
                 JSONArray array = LocalData.getLocalPaths();
                 for (int i = 0; i < array.length(); i++) {
                     try {
                         String path = array.getString(i);
-                        ChatManager.syncGChat(path);
+                        ChatManager.addGChat(path);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -168,17 +164,15 @@ public class MainActivity extends AppCompatActivity {
                             if (!TextUtils.isEmpty(name.getText())) {
                                 SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
                                 String id = prefs.getString(getString(R.string.var_name), null);
-                                String groupPath = "/chats/" + new Date().getTime();
+                                String groupPath = "/chats/" + name.getText().toString().trim().replace(" ", "_");
 
                                 List<String> members = new ArrayList<>();
                                 members.add(id);
                                 Map<String, Message> messageMap = new HashMap<>();
                                 GChat gChat = new GChat(name.getText().toString(), members, messageMap);
                                 ChatManager.map.put(groupPath, gChat);
-
+                                ChatManager.addGChat(groupPath);
                                 ChatManager.syncGChat(groupPath);
-
-
 
                                 //FlamebaseDatabase.syncReference(groupPath, false);
 
@@ -239,7 +233,7 @@ public class MainActivity extends AppCompatActivity {
         editor.putString(getString(R.string.var_name), name).apply();
         editor.putString(getString(R.string.var_id), id).apply();
 
-        Member member = new Member(name, FirebaseInstanceId.getInstance().getToken(), getString(R.string.var_os), id);
+        Member member = new Member(name, FlamebaseDatabase.getToken(), getString(R.string.var_os), id);
         ChatManager.contacts.put(name, member);
 
         FlamebaseDatabase.syncReference(getString(R.string.contact_path), false);

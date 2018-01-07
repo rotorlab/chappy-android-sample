@@ -70,30 +70,16 @@ public abstract class Reference<T> {
         this.len = stringReference == null ? 0 : stringReference.length();
     }
 
-    public Reference(Context context, String path, RemoteMessage remoteMessage) {
-        this.context = context;
-        this.path = path;
-        this.gson = getGsonBuilder();
-        this.serverLen = 0;
-        SC.init(this.context);
-        String name = "RealtimeDatabase.db";
-        this.database = new Database(this.context, name, TABLE_NAME, VERSION);
-        this.mapParts = new HashMap<>();
-        this.stringReference = ReferenceUtils.getElement(path);
-        this.len = stringReference == null ? 0 : stringReference.length();
-        onMessageReceived(remoteMessage);
-    }
-
     /**
      * checks if push message comes from server cluster
-     * @param remoteMessage
+     * @param json
      */
-    public void onMessageReceived(RemoteMessage remoteMessage) {
+    public void onMessageReceived(JSONObject json) {
         try {
-            String tag = remoteMessage.getData().get(STAG);
-            String action = remoteMessage.getData().get(ACTION);
-            String data = remoteMessage.getData().get(REFERENCE);
-            String path = remoteMessage.getData().get(PATH);
+            String tag = json.getString(STAG);
+            String action = json.getString(ACTION);
+            String data = json.getString(REFERENCE);
+            String path = json.getString(PATH);
             String rData = data == null ? "{}" : ReferenceUtils.hex2String(data);
 
             if (!tag.equalsIgnoreCase(getTag())) {
@@ -107,8 +93,8 @@ public abstract class Reference<T> {
                     break;
 
                 case ACTION_SLICE_UPDATE:
-                    int size = Integer.parseInt(remoteMessage.getData().get(SIZE));
-                    int index = Integer.parseInt(remoteMessage.getData().get(INDEX));
+                    int size = json.getInt(SIZE);
+                    int index = json.getInt(INDEX);
                     if (mapParts.containsKey(path)) {
                         mapParts.get(path)[index] = rData;
                     } else {
@@ -151,8 +137,8 @@ public abstract class Reference<T> {
                     break;
 
                 case ACTION_SLICE_CONTENT:
-                    int sizeContent = Integer.parseInt(remoteMessage.getData().get(SIZE));
-                    int indexContent = Integer.parseInt(remoteMessage.getData().get(INDEX));
+                    int sizeContent = json.getInt(SIZE);
+                    int indexContent = json.getInt(INDEX);
                     if (mapParts.containsKey(path)) {
                         mapParts.get(path)[indexContent] = rData;
                     } else {

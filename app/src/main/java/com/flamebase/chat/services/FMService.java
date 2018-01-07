@@ -15,6 +15,6 @@ public class FMService extends FirebaseMessagingService {
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
-        FlamebaseDatabase.onMessageReceived(remoteMessage);
+        //FlamebaseDatabase.onMessageReceived(remoteMessage);
     }
 }

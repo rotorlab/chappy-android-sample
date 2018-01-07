@@ -3,6 +3,7 @@ package com.flamebase.database;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -54,13 +55,13 @@ public class FlamebaseDatabase {
     private static final String OS = "android";
     private static Context context;
     private static TokenListener listener;
+    private static String deviceId;
     private static String urlServer;
     private static String token;
 
     private Long blowerCreation;
     private String path;
     private int requestToClose;
-    private Socket socketIO;
 
     private static Gson gson;
     public static Boolean debug = false;
@@ -75,25 +76,16 @@ public class FlamebaseDatabase {
 
     private FlamebaseDatabase() {
         requestToClose = 0;
-        socketIO = SocketIO.getInstance(urlServer, KEY, new CallbackIO() {
-            @Override
-            public void received(JSONObject jsonObject) {
-                Log.e("TESTTTTTTT", "----");
-                Log.e("TESTTTTTTT", jsonObject.toString());
-                Log.e("TESTTTTTTT", "----");
-            }
-        });
     }
 
-    public static void onTokenRefresh(String token) {
-        FlamebaseDatabase.token = token;
-        Runnable task = new Runnable() {
+    private Socket getSocketIO() {
+        return SocketIO.getInstance(urlServer, KEY, new CallbackIO() {
             @Override
-            public void run() {
-                start();
+            public void received(JSONObject jsonObject) {
+                Log.d(FlamebaseDatabase.class.getSimpleName(), jsonObject.toString());
+                onMessageReceived(jsonObject);
             }
-        };
-        new Handler(Looper.getMainLooper()).post(task);
+        });
     }
 
     /**
@@ -107,11 +99,14 @@ public class FlamebaseDatabase {
         FlamebaseDatabase.urlServer = urlServer;
         FlamebaseDatabase.listener = listener;
         FlamebaseDatabase.gson = new Gson();
+        FlamebaseDatabase.token = getToken();
+
         if (FlamebaseDatabase.pathMap == null) {
             FlamebaseDatabase.pathMap = new HashMap<>();
         }
-        if (FlamebaseDatabase.token == null && fii.getToken() != null) {
-            FlamebaseDatabase.token = fii.getToken();
+
+        Log.e(FlamebaseDatabase.class.getSimpleName(), "token: " + FlamebaseDatabase.token);
+        if (FlamebaseDatabase.token != null) {
             start();
         }
     }
@@ -124,7 +119,7 @@ public class FlamebaseDatabase {
 
     private static void print(Object... args) {
         JSONObject o = (JSONObject) args[0];
-        Log.e(FlamebaseDatabase.class.getSimpleName(), o.toString());
+        Log.e(FlamebaseDatabase.class.getSimpleName(), "lerelele: " + o.toString());
     }
 
     /**
@@ -137,6 +132,10 @@ public class FlamebaseDatabase {
 
     public static FlamebaseDatabase getInstance() {
         return new FlamebaseDatabase();
+    }
+
+    public static String getToken() {
+        return ReferenceUtils.SHA1(Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID));
     }
 
     /**
@@ -192,7 +191,7 @@ public class FlamebaseDatabase {
 
                 pathMap.put(this.path, mapReference);
 
-                mapReference.loadCachedReference();
+                //mapReference.loadCachedReference();
 
                 syncWithServer(this.path);
 
@@ -213,14 +212,14 @@ public class FlamebaseDatabase {
 
                 pathMap.put(this.path, objectReference);
 
-                objectReference.loadCachedReference();
+                //objectReference.loadCachedReference();
 
                 syncWithServer(this.path);
 
                 break;
         }
 
-        syncReference(this.path, true);
+        //syncReference(this.path, true);
 
         return this;
     }
@@ -235,10 +234,11 @@ public class FlamebaseDatabase {
         CreateListener createListener = new CreateListener("create_listener", this.path, token, OS, sha1, content.length());
 
         Gson gson = new Gson();
-        socketIO.emit(KEY, gson.toJson(createListener, CreateListener.class), new Ack() {
+
+        getSocketIO().emit(KEY, gson.toJson(createListener, CreateListener.class), new Ack() {
             @Override
             public void call(Object... args) {
-                print(args);
+                print((JSONObject) args[0]);
             }
         });
     }
@@ -253,10 +253,10 @@ public class FlamebaseDatabase {
             if (reference.blowerMap.size() <= 1 || (reference.blowerMap.size() > 1 && reference.blowerMap.size() == requestToClose)) {
                 RemoveListener removeListener = new RemoveListener("remove_listener", path, token);
                 Gson gson = new Gson();
-                socketIO.emit(KEY, gson.toJson(removeListener, RemoveListener.class), new Ack() {
+                getSocketIO().emit(KEY, gson.toJson(removeListener, RemoveListener.class), new Ack() {
                     @Override
                     public void call(Object... args) {
-                        print(args);
+                        print((JSONObject) args[0]);
                     }
                 });
             } else {
@@ -267,6 +267,14 @@ public class FlamebaseDatabase {
 
     private void refreshToServer(final String path, @NonNull String differences, @NonNull Integer len, boolean clean) {
         String content = ReferenceUtils.getElement(path);
+
+        if (differences.equals(EMPTY_OBJECT)) {
+            Log.e(FlamebaseDatabase.class.getSimpleName(), "no differences: " + differences);
+            return;
+        } else {
+            Log.d(FlamebaseDatabase.class.getSimpleName(), "differences: " + differences);
+        }
+
         if (content == null) {
             content = EMPTY_OBJECT;
         }
@@ -275,14 +283,29 @@ public class FlamebaseDatabase {
         UpdateToServer updateToServer = new UpdateToServer("update_data", path, FlamebaseDatabase.token, "android", differences, len, clean);
 
         Gson gson = new Gson();
-        socketIO.emit(KEY, gson.toJson(updateToServer, UpdateToServer.class), new Ack() {
-            @Override
-            public void call(Object... args) {
-                print(args);
-            }
-        });
+        getSocketIO().emit(KEY, gson.toJson(updateToServer, UpdateToServer.class));
     }
 
+    public static void onMessageReceived(JSONObject jsonObject) {
+        try {
+            if (jsonObject.has("data")) {
+                JSONObject data = (JSONObject) jsonObject.get("data");
+                if (data.has(PATH)) {
+                    String path = data.getString(PATH);
+                    if (pathMap.containsKey(path)) {
+                        //Log.d(FlamebaseDatabase.class.getSimpleName(), data.toString());
+                        pathMap.get(path).onMessageReceived(data);
+                    } else {
+
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /*
     public static void onMessageReceived(RemoteMessage remoteMessage) {
         try {
             String path = remoteMessage.getData().get(PATH);
@@ -297,6 +320,7 @@ public class FlamebaseDatabase {
         }
 
     }
+    */
 
     public void sync() {
         sync(false);
