@@ -3,7 +3,7 @@ apply plugin: 'com.android.application'
 android {
 
     compileSdkVersion 26
-    buildToolsVersion '27.0.2'
+    buildToolsVersion '27.0.3'
     defaultConfig {
         applicationId "com.flamebase.chat"
         minSdkVersion 19
@@ -31,7 +31,7 @@ android {
         device {
             applicationId "com.flamebase.chat"
             versionNameSuffix "-device"
-            buildConfigField "String", "database_url", "\"http://192.168.1.134:1507/\""
+            buildConfigField "String", "database_url", "\"http://172.20.10.8:1507/\""
             dimension "origin"
         }
     }

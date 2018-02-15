@@ -1,13 +1,10 @@
 package com.flamebase.database;
 
 import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.efraespada.stringcarelibrary.SC;
 import com.flamebase.database.interfaces.Blower;
 import com.flamebase.database.interfaces.ListBlower;
 import com.flamebase.database.interfaces.MapBlower;
@@ -23,16 +20,13 @@ import com.flamebase.database.model.request.UpdateFromServer;
 import com.flamebase.database.model.request.UpdateToServer;
 import com.flamebase.database.model.service.SyncResponse;
 import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.messaging.RemoteMessage;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
+import com.stringcare.library.SC;
 
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Map;
 
 import io.socket.client.Ack;
 import io.socket.client.Socket;

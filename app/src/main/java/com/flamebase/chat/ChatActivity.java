@@ -99,6 +99,7 @@ public class ChatActivity extends AppCompatActivity {
 
             @Override
             public void onObjectChanged(GChat ref) {
+                sendButton.setEnabled(ref != null);
                 if (chat == null) {
                     chat = ref;
                     ChatActivity.this.setTitle(ref.getName());
@@ -141,6 +142,12 @@ public class ChatActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        sendButton.setEnabled(chat != null);
     }
 
     @Override

@@ -3,13 +3,12 @@ package com.flamebase.database.model;
 import android.content.Context;
 
 import com.efraespada.jsondiff.JSONDiff;
-import com.efraespada.stringcarelibrary.SC;
 import com.flamebase.database.Database;
 import com.flamebase.database.FlamebaseDatabase;
 import com.flamebase.database.ReferenceUtils;
-import com.google.firebase.messaging.RemoteMessage;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.stringcare.library.SC;
 
 import org.json.JSONException;
 import org.json.JSONObject;
