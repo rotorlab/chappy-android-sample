@@ -6,11 +6,13 @@ android {
     buildToolsVersion '27.0.3'
     defaultConfig {
         applicationId "com.flamebase.chat"
-        minSdkVersion 19
+        minSdkVersion 24
         targetSdkVersion 26
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true
+
     }
 
     flavorDimensions "origin"
@@ -34,6 +36,11 @@ android {
             buildConfigField "String", "database_url", "\"http://172.20.10.8:1507/\""
             dimension "origin"
         }
+    }
+
+    compileOptions {
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
     }
 }
 

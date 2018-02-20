@@ -25,9 +25,6 @@ import com.flamebase.chat.model.Message;
 import com.flamebase.chat.services.ChatManager;
 import com.flamebase.chat.services.LocalData;
 import com.flamebase.database.FlamebaseDatabase;
-import com.flamebase.database.model.TokenListener;
-import com.google.firebase.FirebaseApp;
-import com.google.firebase.iid.FirebaseInstanceId;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -36,6 +33,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -49,36 +47,13 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FirebaseApp.initializeApp(this);
-
         LocalData.init(this);
 
         chatsList = (RecyclerView) findViewById(R.id.chats_list);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
         chatsList.setLayoutManager(mLayoutManager);
 
-        FlamebaseDatabase.initialize(this, BuildConfig.database_url, FirebaseInstanceId.getInstance(), new TokenListener() {
-            @Override
-            public void databaseReady() {
-                chatsList.setAdapter(new ChatAdapter(MainActivity.this));
-
-                ChatManager.init(chatsList.getAdapter());
-                ChatManager.syncContacts();
-
-
-                JSONArray array = LocalData.getLocalPaths();
-                for (int i = 0; i < array.length(); i++) {
-                    try {
-                        String path = array.getString(i);
-                        ChatManager.addGChat(path);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                askForEmail();
-            }
-        });
+        FlamebaseDatabase.initialize(this, BuildConfig.database_url);
         FlamebaseDatabase.setDebug(true);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -89,6 +64,24 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+
+        chatsList.setAdapter(new ChatAdapter(MainActivity.this));
+
+        ChatManager.init(chatsList.getAdapter());
+        ChatManager.syncContacts();
+
+
+        JSONArray array = LocalData.getLocalPaths();
+        for (int i = 0; i < array.length(); i++) {
+            try {
+                String path = array.getString(i);
+                ChatManager.addGChat(path);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        askForEmail();
     }
 
     @Override
@@ -217,7 +210,7 @@ public class MainActivity extends AppCompatActivity {
         String name = prefs.getString(getString(R.string.var_name), null);
         String id = prefs.getString(getString(R.string.var_id), null);
 
-        Member member = new Member(name, FirebaseInstanceId.getInstance().getToken(), getString(R.string.var_os), id);
+        Member member = new Member(name, UUID.randomUUID().toString(), getString(R.string.var_os), id);
         ChatManager.contacts.put(name, member);
 
         FlamebaseDatabase.syncReference(getString(R.string.contact_path), false);

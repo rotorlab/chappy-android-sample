@@ -1,6 +1,7 @@
 package com.flamebase.database;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -19,7 +20,6 @@ import com.flamebase.database.model.request.RemoveListener;
 import com.flamebase.database.model.request.UpdateFromServer;
 import com.flamebase.database.model.request.UpdateToServer;
 import com.flamebase.database.model.service.SyncResponse;
-import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.gson.Gson;
 import com.stringcare.library.SC;
 
@@ -27,6 +27,7 @@ import org.json.JSONObject;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.UUID;
 
 import io.socket.client.Ack;
 import io.socket.client.Socket;
@@ -34,6 +35,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import static android.content.Context.MODE_PRIVATE;
 import static com.flamebase.database.model.Reference.EMPTY_OBJECT;
 import static com.flamebase.database.model.Reference.PATH;
 
@@ -49,9 +51,10 @@ public class FlamebaseDatabase {
     private static final String OS = "android";
     private static Context context;
     private static TokenListener listener;
-    private static String deviceId;
+    private static String id;
     private static String urlServer;
     private static String token;
+    // private static RedisClient client;
 
     private Long blowerCreation;
     private String path;
@@ -88,27 +91,57 @@ public class FlamebaseDatabase {
      * @param context
      * @param urlServer
      */
-    public static void initialize(Context context, String urlServer, final FirebaseInstanceId fii, final TokenListener listener) {
+    public static void initialize(Context context, String urlServer) {
         FlamebaseDatabase.context = context;
         FlamebaseDatabase.urlServer = urlServer;
-        FlamebaseDatabase.listener = listener;
         FlamebaseDatabase.gson = new Gson();
         FlamebaseDatabase.token = getToken();
+        SharedPreferences shared = context.getSharedPreferences("flamebase_config", MODE_PRIVATE);
+        FlamebaseDatabase.id = shared.getString("flamebase_id", UUID.randomUUID().toString());
+        //FlamebaseDatabase.client = RedisClient.create("redis://localhost");
 
         if (FlamebaseDatabase.pathMap == null) {
             FlamebaseDatabase.pathMap = new HashMap<>();
         }
 
-        Log.e(FlamebaseDatabase.class.getSimpleName(), "token: " + FlamebaseDatabase.token);
-        if (FlamebaseDatabase.token != null) {
-            start();
-        }
-    }
-
-    private static void start() {
         SC.init(context);
         ReferenceUtils.initialize(context);
-        FlamebaseDatabase.listener.databaseReady();
+
+        /*
+        RedisPubSubCommands<String, String> connection = client.connectPubSub().sync();
+        connection.getStatefulConnection().addListener(new RedisPubSubListener<String, String>() {
+            @Override
+            public void message(String channel, String message) {
+
+            }
+
+            @Override
+            public void message(String pattern, String channel, String message) {
+
+            }
+
+            @Override
+            public void subscribed(String channel, long count) {
+
+            }
+
+            @Override
+            public void psubscribed(String pattern, long count) {
+
+            }
+
+            @Override
+            public void unsubscribed(String channel, long count) {
+
+            }
+
+            @Override
+            public void punsubscribed(String pattern, long count) {
+
+            }
+        });
+        connection.subscribe(FlamebaseDatabase.id);
+        */
     }
 
     private static void print(Object... args) {
@@ -228,7 +261,6 @@ public class FlamebaseDatabase {
         CreateListener createListener = new CreateListener("create_listener", this.path, token, OS, sha1, content.length());
 
         Gson gson = new Gson();
-
         getSocketIO().emit(KEY, gson.toJson(createListener, CreateListener.class), new Ack() {
             @Override
             public void call(Object... args) {
@@ -277,7 +309,12 @@ public class FlamebaseDatabase {
         UpdateToServer updateToServer = new UpdateToServer("update_data", path, FlamebaseDatabase.token, "android", differences, len, clean);
 
         Gson gson = new Gson();
-        getSocketIO().emit(KEY, gson.toJson(updateToServer, UpdateToServer.class));
+        getSocketIO().emit(KEY, gson.toJson(updateToServer, UpdateToServer.class), new Ack() {
+            @Override
+            public void call(Object... args) {
+                print((JSONObject) args[0]);
+            }
+        });
     }
 
     public static void onMessageReceived(JSONObject jsonObject) {
