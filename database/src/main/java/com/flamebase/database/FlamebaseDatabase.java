@@ -1,12 +1,17 @@
 package com.flamebase.database;
 
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.os.IBinder;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.flamebase.database.interfaces.Blower;
+import com.flamebase.database.interfaces.FlamebaseResponse;
 import com.flamebase.database.interfaces.ListBlower;
 import com.flamebase.database.interfaces.MapBlower;
 import com.flamebase.database.interfaces.ObjectBlower;
@@ -29,6 +34,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
 
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.pubsub.RedisPubSubListener;
+import io.lettuce.core.pubsub.api.sync.RedisPubSubCommands;
 import io.socket.client.Ack;
 import io.socket.client.Socket;
 import retrofit2.Call;
@@ -51,10 +59,13 @@ public class FlamebaseDatabase {
     private static final String OS = "android";
     private static Context context;
     private static TokenListener listener;
-    private static String id;
+    public static String id;
     private static String urlServer;
+    public static String urlRedis;
     private static String token;
-    // private static RedisClient client;
+
+    private static FlamebaseService flamebaseService;
+    private static Boolean isServiceBound;
 
     private Long blowerCreation;
     private String path;
@@ -76,12 +87,9 @@ public class FlamebaseDatabase {
     }
 
     private Socket getSocketIO() {
-        return SocketIO.getInstance(urlServer, KEY, new CallbackIO() {
-            @Override
-            public void received(JSONObject jsonObject) {
-                Log.d(FlamebaseDatabase.class.getSimpleName(), jsonObject.toString());
-                onMessageReceived(jsonObject);
-            }
+        return SocketIO.getInstance(urlServer, KEY, jsonObject -> {
+            Log.d(FlamebaseDatabase.class.getSimpleName(), jsonObject.toString());
+            onMessageReceived(jsonObject);
         });
     }
 
@@ -91,14 +99,17 @@ public class FlamebaseDatabase {
      * @param context
      * @param urlServer
      */
-    public static void initialize(Context context, String urlServer) {
+    public static void initialize(Context context, String urlServer, String redisServer) {
         FlamebaseDatabase.context = context;
         FlamebaseDatabase.urlServer = urlServer;
+        FlamebaseDatabase.urlRedis = redisServer;
         FlamebaseDatabase.gson = new Gson();
         FlamebaseDatabase.token = getToken();
         SharedPreferences shared = context.getSharedPreferences("flamebase_config", MODE_PRIVATE);
-        FlamebaseDatabase.id = shared.getString("flamebase_id", UUID.randomUUID().toString());
-        //FlamebaseDatabase.client = RedisClient.create("redis://localhost");
+        FlamebaseDatabase.id = shared.getString("flamebase_id", null);
+        if (FlamebaseDatabase.id == null) {
+            FlamebaseDatabase.id = generateNewId();
+        }
 
         if (FlamebaseDatabase.pathMap == null) {
             FlamebaseDatabase.pathMap = new HashMap<>();
@@ -106,42 +117,15 @@ public class FlamebaseDatabase {
 
         SC.init(context);
         ReferenceUtils.initialize(context);
+        start();
+    }
 
-        /*
-        RedisPubSubCommands<String, String> connection = client.connectPubSub().sync();
-        connection.getStatefulConnection().addListener(new RedisPubSubListener<String, String>() {
-            @Override
-            public void message(String channel, String message) {
-
-            }
-
-            @Override
-            public void message(String pattern, String channel, String message) {
-
-            }
-
-            @Override
-            public void subscribed(String channel, long count) {
-
-            }
-
-            @Override
-            public void psubscribed(String pattern, long count) {
-
-            }
-
-            @Override
-            public void unsubscribed(String channel, long count) {
-
-            }
-
-            @Override
-            public void punsubscribed(String pattern, long count) {
-
-            }
-        });
-        connection.subscribe(FlamebaseDatabase.id);
-        */
+    private static String generateNewId() {
+        String id = UUID.randomUUID().toString();
+        SharedPreferences.Editor shared = context.getSharedPreferences("flamebase_config", MODE_PRIVATE).edit();
+        shared.putString("flamebase_id", id);
+        shared.apply();
+        return id;
     }
 
     private static void print(Object... args) {
@@ -384,7 +368,7 @@ public class FlamebaseDatabase {
         }
     }
 
-    public static void refreshFromServer(String path, final Sender.FlamebaseResponse callback) {
+    public static void refreshFromServer(String path, final FlamebaseResponse callback) {
 
         String content = ReferenceUtils.getElement(path);
         if (content == null) {
@@ -416,5 +400,64 @@ public class FlamebaseDatabase {
                 }
             }
         });
+    }
+
+    public static void stop() {
+        if (isServiceBound != null && isServiceBound && flamebaseService != null && flamebaseService.getServiceConnection() != null) {
+            flamebaseService.stopService();
+            try {
+                context.unbindService(flamebaseService.getServiceConnection());
+            } catch (IllegalArgumentException e) {
+                // nothing to do here
+            }
+
+            if (debug) Log.e(TAG, "unbound");
+            context.stopService(new Intent(context, FlamebaseService.class));
+            isServiceBound = false;
+        }
+    }
+
+    private static void start() {
+        if (isServiceBound == null || !isServiceBound) {
+            Intent i = new Intent(context, FlamebaseService.class);
+            context.startService(i);
+            context.bindService(i, getServiceConnection(new FlamebaseService()), Context.BIND_AUTO_CREATE);
+            isServiceBound = true;
+        }
+        /*
+          else {
+            flamebaseService.stopService();
+            flamebaseService.startService();
+        }
+        */
+    }
+
+    public static void onResume() {
+        start();
+    }
+
+    public static void onPause() {
+        if (flamebaseService != null && isServiceBound != null && isServiceBound) {
+            context.unbindService(flamebaseService.getServiceConnection());
+            isServiceBound = false;
+        }
+    }
+
+    private static ServiceConnection getServiceConnection(Object obj) {
+        if (obj instanceof FlamebaseService) return new ServiceConnection() {
+            public void onServiceConnected(ComponentName className, IBinder service) {
+                if (service instanceof FlamebaseService.FBinder) {
+                    flamebaseService = ((FlamebaseService.FBinder) service).getService();
+                    flamebaseService.setServiceConnection(this);
+                    if (debug) Log.e(TAG, "instanced service");
+                }
+            }
+
+            public void onServiceDisconnected(ComponentName className) {
+                if (className.getClassName().equals(FlamebaseService.class.getName())) flamebaseService = null;
+                if (debug) Log.e(TAG, "disconnected");
+            }
+        };
+        return null;
     }
 }

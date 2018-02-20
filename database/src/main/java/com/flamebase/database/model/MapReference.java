@@ -6,13 +6,10 @@ import com.flamebase.database.ReferenceUtils;
 import com.flamebase.database.interfaces.MapBlower;
 import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
-import com.google.firebase.messaging.RemoteMessage;
 import com.google.gson.internal.LinkedTreeMap;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

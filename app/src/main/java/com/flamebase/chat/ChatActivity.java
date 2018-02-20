@@ -25,7 +25,6 @@ import com.flamebase.chat.model.Message;
 import com.flamebase.chat.services.LocalData;
 import com.flamebase.database.FlamebaseDatabase;
 import com.flamebase.database.interfaces.ObjectBlower;
-import com.google.firebase.FirebaseApp;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,7 +40,6 @@ public class ChatActivity extends AppCompatActivity {
     private EditText messageText;
     private FlamebaseDatabase flamebaseDatabase;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,7 +51,6 @@ public class ChatActivity extends AppCompatActivity {
 
         final String path = intent.getStringExtra("path");
 
-        FirebaseApp.initializeApp(this);
         LocalData.init(this);
 
         messageList = (RecyclerView) findViewById(R.id.messages_list);

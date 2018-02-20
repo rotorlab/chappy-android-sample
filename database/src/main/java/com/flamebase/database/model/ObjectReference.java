@@ -3,15 +3,11 @@ package com.flamebase.database.model;
 import android.content.Context;
 
 import com.flamebase.database.ReferenceUtils;
-import com.flamebase.database.interfaces.MapBlower;
 import com.flamebase.database.interfaces.ObjectBlower;
 import com.google.common.reflect.TypeToken;
-import com.google.firebase.messaging.RemoteMessage;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

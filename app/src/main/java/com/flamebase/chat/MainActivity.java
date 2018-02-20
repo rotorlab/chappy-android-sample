@@ -25,6 +25,7 @@ import com.flamebase.chat.model.Message;
 import com.flamebase.chat.services.ChatManager;
 import com.flamebase.chat.services.LocalData;
 import com.flamebase.database.FlamebaseDatabase;
+import com.flamebase.database.FlamebaseService;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -53,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
         chatsList.setLayoutManager(mLayoutManager);
 
-        FlamebaseDatabase.initialize(this, BuildConfig.database_url);
+        FlamebaseDatabase.initialize(this, BuildConfig.database_url, BuildConfig.redis_url);
         FlamebaseDatabase.setDebug(true);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -82,6 +83,18 @@ public class MainActivity extends AppCompatActivity {
         }
 
         askForEmail();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        FlamebaseDatabase.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        FlamebaseDatabase.onPause();
+        super.onPause();
     }
 
     @Override
