@@ -17,29 +17,13 @@ The server cluster is run with **node** framework. Check out the [repository](ht
 - Import library:
 
 ```groovy
-repositories {
-    jcenter()
-}
-
-dependencies {
-    compile 'com.flamebase:database:1.3.0'
-}
+implementation 'com.flamebase:database:1.4.0'
 ```
 - Initialize library:
 ```java
-FlamebaseDatabase.initialize(Context context, String cluster_ip, String token);
+FlamebaseDatabase.initialize(Context context, String cluster_ip, String redis_ip);
 ```
-- Database synchronization works through Firebase Cloud Messaging 
 
-```java
-public class FMService extends FirebaseMessagingService {
-
-    @Override
-    public void onMessageReceived(RemoteMessage remoteMessage) {
-        super.onMessageReceived(remoteMessage);
-        FlamebaseDatabase.onMessageReceived(remoteMessage);
-    }
-}
 ```
 - Listener for objects:
 ```java
