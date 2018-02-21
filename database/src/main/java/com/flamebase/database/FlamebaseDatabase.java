@@ -6,16 +6,14 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.IBinder;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.flamebase.database.interfaces.Blower;
-import com.flamebase.database.interfaces.FlamebaseResponse;
 import com.flamebase.database.interfaces.ListBlower;
 import com.flamebase.database.interfaces.MapBlower;
 import com.flamebase.database.interfaces.ObjectBlower;
-import com.flamebase.database.model.CallbackIO;
+import com.flamebase.database.interfaces.StatusListener;
 import com.flamebase.database.model.MapReference;
 import com.flamebase.database.model.ObjectReference;
 import com.flamebase.database.model.Reference;
@@ -35,10 +33,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
 
-import io.lettuce.core.RedisClient;
-import io.lettuce.core.pubsub.RedisPubSubListener;
-import io.lettuce.core.pubsub.api.sync.RedisPubSubCommands;
-import io.socket.client.Ack;
 import io.socket.client.Socket;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -63,6 +57,7 @@ public class FlamebaseDatabase {
     public static String id;
     private static String urlServer;
     public static String urlRedis;
+    public static StatusListener statusListener;
 
     private static FlamebaseService flamebaseService;
     private static Boolean isServiceBound;
@@ -99,10 +94,11 @@ public class FlamebaseDatabase {
      * @param context
      * @param urlServer
      */
-    public static void initialize(Context context, String urlServer, String redisServer) {
+    public static void initialize(Context context, String urlServer, String redisServer, StatusListener statusListener) {
         FlamebaseDatabase.context = context;
         FlamebaseDatabase.urlServer = urlServer;
         FlamebaseDatabase.urlRedis = redisServer;
+        FlamebaseDatabase.statusListener = statusListener;
         FlamebaseDatabase.gson = new Gson();
         SharedPreferences shared = context.getSharedPreferences("flamebase_config", MODE_PRIVATE);
         FlamebaseDatabase.id = shared.getString("flamebase_id", null);
@@ -199,7 +195,7 @@ public class FlamebaseDatabase {
 
                 //mapReference.loadCachedReference();
 
-                syncWithServer(this.path);
+                syncWithServer();
 
                 break;
 
@@ -220,17 +216,17 @@ public class FlamebaseDatabase {
 
                 //objectReference.loadCachedReference();
 
-                syncWithServer(this.path);
+                syncWithServer();
 
                 break;
         }
 
-        //syncReference(this.path, true);
+        // syncReference(this.path, true);
 
         return this;
     }
 
-    private void syncWithServer(String path) {
+    private void syncWithServer() {
         String content = ReferenceUtils.getElement(this.path);
         if (content == null) {
             content = EMPTY_OBJECT;

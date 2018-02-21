@@ -22,7 +22,7 @@ import java.nio.ByteBuffer;
 import io.lettuce.core.codec.RedisCodec;
 
 /**
- * Status message output.
+ * StatusListener message output.
  *
  * @param <K> Key type.
  * @param <V> Value type.

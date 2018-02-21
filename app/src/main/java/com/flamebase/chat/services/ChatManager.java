@@ -2,6 +2,7 @@ package com.flamebase.chat.services;
 
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+
 import com.flamebase.chat.model.GChat;
 import com.flamebase.chat.model.Member;
 import com.flamebase.database.FlamebaseDatabase;

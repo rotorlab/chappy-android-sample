@@ -25,7 +25,7 @@ import com.flamebase.chat.model.Message;
 import com.flamebase.chat.services.ChatManager;
 import com.flamebase.chat.services.LocalData;
 import com.flamebase.database.FlamebaseDatabase;
-import com.flamebase.database.FlamebaseService;
+import com.flamebase.database.interfaces.StatusListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -47,14 +47,34 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
         LocalData.init(this);
 
         chatsList = (RecyclerView) findViewById(R.id.chats_list);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
         chatsList.setLayoutManager(mLayoutManager);
 
-        FlamebaseDatabase.initialize(this, BuildConfig.database_url, BuildConfig.redis_url);
+        FlamebaseDatabase.initialize(this, BuildConfig.database_url, BuildConfig.redis_url, new StatusListener() {
+            @Override
+            public void ready() {
+                ChatManager.syncContacts();
+
+                chatsList.setAdapter(new ChatAdapter(MainActivity.this));
+                ChatManager.init(chatsList.getAdapter());
+
+
+                JSONArray array = LocalData.getLocalPaths();
+                for (int i = 0; i < array.length(); i++) {
+                    try {
+                        String path = array.getString(i);
+                        ChatManager.addGChat(path);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                askForEmail();
+            }
+        });
         FlamebaseDatabase.setDebug(true);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -65,24 +85,6 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
-
-        chatsList.setAdapter(new ChatAdapter(MainActivity.this));
-
-        ChatManager.init(chatsList.getAdapter());
-        ChatManager.syncContacts();
-
-
-        JSONArray array = LocalData.getLocalPaths();
-        for (int i = 0; i < array.length(); i++) {
-            try {
-                String path = array.getString(i);
-                ChatManager.addGChat(path);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-
-        askForEmail();
     }
 
     @Override

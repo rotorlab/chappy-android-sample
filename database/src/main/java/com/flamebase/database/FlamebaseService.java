@@ -4,7 +4,9 @@ import android.app.Service;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -27,6 +29,7 @@ public class FlamebaseService extends Service {
     private static RedisClient client;
     private static RedisPubSubCommands<String, String> connection;
     private ServiceConnection sc;
+    private boolean connectedToRedis;
 
     @Override
     public void onCreate() {
@@ -50,7 +53,9 @@ public class FlamebaseService extends Service {
 
             @Override
             public void subscribed(String channel, long count) {
-                // nothing to do here
+                connectedToRedis = true;
+                Runnable task = () -> FlamebaseDatabase.statusListener.ready();
+                new Handler(Looper.getMainLooper()).post(task);
             }
 
             @Override
@@ -60,7 +65,7 @@ public class FlamebaseService extends Service {
 
             @Override
             public void unsubscribed(String channel, long count) {
-                // nothing to do here
+                connectedToRedis = false;
             }
 
             @Override
