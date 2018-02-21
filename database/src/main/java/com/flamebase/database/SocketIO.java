@@ -29,17 +29,27 @@ public class SocketIO {
     public static Socket getInstance(String url, String key, final CallbackIO callbackIO) {
         Socket mSocket = null;
 
-        Emitter.Listener onNewMessage = new Emitter.Listener() {
+        Emitter.Listener onNewMessage = args -> {
+            if (args.length == 2) {
+                Object o = args[args.length - 1];
+                if (o instanceof Ack) {
+                    Ack ack = (Ack) args[args.length - 1];
+                    ack.call();
+                }
 
-            @Override
-            public void call(final Object... args) {
-                if (args.length == 2) {
-                    Object o = args[args.length - 1];
-                    if (o instanceof Ack) {
-                        Ack ack = (Ack) args[args.length - 1];
-                        ack.call();
+                Runnable task = new Runnable() {
+                    @Override
+                    public void run() {
+                        callbackIO.received((JSONObject) args[0]);
                     }
-
+                };
+                new Handler(Looper.getMainLooper()).post(task);
+            } else if (args.length == 1) {
+                Object o = args[0];
+                if (o instanceof Ack) {
+                    Ack ack = (Ack) args[0];
+                    ack.call();
+                } else if (o instanceof JSONObject) {
                     Runnable task = new Runnable() {
                         @Override
                         public void run() {
@@ -47,34 +57,20 @@ public class SocketIO {
                         }
                     };
                     new Handler(Looper.getMainLooper()).post(task);
-                } else if (args.length == 1) {
-                    Object o = args[0];
-                    if (o instanceof Ack) {
-                        Ack ack = (Ack) args[0];
-                        ack.call();
-                    } else if (o instanceof JSONObject) {
-                        Runnable task = new Runnable() {
-                            @Override
-                            public void run() {
-                                callbackIO.received((JSONObject) args[0]);
-                            }
-                        };
-                        new Handler(Looper.getMainLooper()).post(task);
-                    }
                 }
-
-                /*
-                JSONObject data = (JSONObject) args[0];
-                String username;
-                String message;
-                try {
-                    username = data.getString("username");
-                    message = data.getString("message");
-                } catch (JSONException e) {
-                    return;
-                }
-                */
             }
+
+            /*
+            JSONObject data = (JSONObject) args[0];
+            String username;
+            String message;
+            try {
+                username = data.getString("username");
+                message = data.getString("message");
+            } catch (JSONException e) {
+                return;
+            }
+            */
         };
 
         try {
@@ -88,6 +84,10 @@ public class SocketIO {
         if (mSocket != null) {
             mSocket.on(key, onNewMessage);
             mSocket.io().timeout(-1);
+            if (mSocket.connected()) {
+                mSocket.disconnect();
+                Log.d(FlamebaseDatabase.class.getSimpleName(), "disconnecting socket");
+            }
             if (!mSocket.connected()) {
                 Log.d(FlamebaseDatabase.class.getSimpleName(), "connecting socket");
                 mSocket.connect();

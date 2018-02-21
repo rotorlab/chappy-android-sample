@@ -8,6 +8,9 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.pubsub.RedisPubSubListener;
 import io.lettuce.core.pubsub.api.sync.RedisPubSubCommands;
@@ -33,20 +36,21 @@ public class FlamebaseService extends Service {
         connection.getStatefulConnection().addListener(new RedisPubSubListener<String, String>() {
             @Override
             public void message(String channel, String message) {
-                Log.e("test", "channel: " + channel);
-                Log.e("test", "message: " + message);
+                try {
+                    FlamebaseDatabase.onMessageReceived(new JSONObject(message));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
 
             @Override
             public void message(String pattern, String channel, String message) {
-                Log.e("test", "pat: " + pattern + " channel: " + channel);
-                Log.e("test", "pat: " + pattern + " message: " + message);
+                // nothing to do here
             }
 
             @Override
             public void subscribed(String channel, long count) {
-                Log.e("test", "suscribed to channel: " + channel);
-                Log.e("test", "count of channel " + channel + " -> " + count);
+                // nothing to do here
             }
 
             @Override
@@ -56,8 +60,7 @@ public class FlamebaseService extends Service {
 
             @Override
             public void unsubscribed(String channel, long count) {
-                Log.e("test", "unsuscribed to channel: " + channel);
-                Log.e("test", "count of channel " + channel + " -> " + count);
+                // nothing to do here
             }
 
             @Override

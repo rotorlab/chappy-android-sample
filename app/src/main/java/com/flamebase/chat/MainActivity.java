@@ -214,7 +214,6 @@ public class MainActivity extends AppCompatActivity {
         return prefs.getString(getString(R.string.var_name), null) == null || prefs.getString(getString(R.string.var_id), null) == null;
     }
 
-
     /**
      * Loads current user as Member object and synchronizes it to server.
      */
@@ -239,7 +238,7 @@ public class MainActivity extends AppCompatActivity {
         editor.putString(getString(R.string.var_name), name).apply();
         editor.putString(getString(R.string.var_id), id).apply();
 
-        Member member = new Member(name, FlamebaseDatabase.getToken(), getString(R.string.var_os), id);
+        Member member = new Member(name, FlamebaseDatabase.id, getString(R.string.var_os), id);
         ChatManager.contacts.put(name, member);
 
         FlamebaseDatabase.syncReference(getString(R.string.contact_path), false);

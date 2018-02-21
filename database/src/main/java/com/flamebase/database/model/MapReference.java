@@ -137,8 +137,7 @@ public abstract class MapReference<T> extends Reference<MapBlower<T>> {
     }
 
     private static <T> Type getType(Class<T> type) {
-        return new TypeToken<Map<String, T>>() {}
-                .where(new TypeParameter<T>() {}, type)
-                .getType();
+        TypeToken t = new TypeToken<Map<String, T>>() {}.where(new TypeParameter<T>() {}, type);
+        return t.getType();
     }
 }

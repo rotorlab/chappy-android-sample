@@ -30,6 +30,7 @@ import com.stringcare.library.SC;
 
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
@@ -62,7 +63,6 @@ public class FlamebaseDatabase {
     public static String id;
     private static String urlServer;
     public static String urlRedis;
-    private static String token;
 
     private static FlamebaseService flamebaseService;
     private static Boolean isServiceBound;
@@ -104,7 +104,6 @@ public class FlamebaseDatabase {
         FlamebaseDatabase.urlServer = urlServer;
         FlamebaseDatabase.urlRedis = redisServer;
         FlamebaseDatabase.gson = new Gson();
-        FlamebaseDatabase.token = getToken();
         SharedPreferences shared = context.getSharedPreferences("flamebase_config", MODE_PRIVATE);
         FlamebaseDatabase.id = shared.getString("flamebase_id", null);
         if (FlamebaseDatabase.id == null) {
@@ -143,10 +142,6 @@ public class FlamebaseDatabase {
 
     public static FlamebaseDatabase getInstance() {
         return new FlamebaseDatabase();
-    }
-
-    public static String getToken() {
-        return ReferenceUtils.SHA1(Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID));
     }
 
     /**
@@ -242,13 +237,30 @@ public class FlamebaseDatabase {
         }
         String sha1 = ReferenceUtils.SHA1(content);
 
-        CreateListener createListener = new CreateListener("create_listener", this.path, token, OS, sha1, content.length());
+        CreateListener createListener = new CreateListener("create_listener", this.path, FlamebaseDatabase.id, OS, sha1, content.length());
 
-        Gson gson = new Gson();
-        getSocketIO().emit(KEY, gson.toJson(createListener, CreateListener.class), new Ack() {
+        Call<SyncResponse> call = ReferenceUtils.service(FlamebaseDatabase.urlServer).createReference(createListener);
+
+        call.enqueue(new Callback<SyncResponse>() {
+
             @Override
-            public void call(Object... args) {
-                print((JSONObject) args[0]);
+            public void onResponse(Call<SyncResponse> call, Response<SyncResponse> response) {
+                if (response.errorBody() != null && !response.isSuccessful()) {
+                    try {
+                        Log.e(TAG, response.errorBody().string());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<SyncResponse> call, Throwable t) {
+                if (t.getStackTrace() != null) {
+                    Log.e(TAG, t.getStackTrace().toString());
+                } else {
+                    Log.e(TAG, "create listener response error");
+                }
             }
         });
     }
@@ -261,12 +273,28 @@ public class FlamebaseDatabase {
         if (pathMap.containsKey(path)) {
             Reference reference = pathMap.get(path);
             if (reference.blowerMap.size() <= 1 || (reference.blowerMap.size() > 1 && reference.blowerMap.size() == requestToClose)) {
-                RemoveListener removeListener = new RemoveListener("remove_listener", path, token);
-                Gson gson = new Gson();
-                getSocketIO().emit(KEY, gson.toJson(removeListener, RemoveListener.class), new Ack() {
+                RemoveListener removeListener = new RemoveListener("remove_listener", path, FlamebaseDatabase.id);
+                Call<SyncResponse> call = ReferenceUtils.service(FlamebaseDatabase.urlServer).removeListener(removeListener);
+                call.enqueue(new Callback<SyncResponse>() {
+
                     @Override
-                    public void call(Object... args) {
-                        print((JSONObject) args[0]);
+                    public void onResponse(Call<SyncResponse> call, Response<SyncResponse> response) {
+                        if (response.errorBody() != null && !response.isSuccessful()) {
+                            try {
+                                Log.e(TAG, response.errorBody().string());
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<SyncResponse> call, Throwable t) {
+                        if (t.getStackTrace() != null) {
+                            Log.e(TAG, t.getStackTrace().toString());
+                        } else {
+                            Log.e(TAG, "remove listener response error");
+                        }
                     }
                 });
             } else {
@@ -290,13 +318,29 @@ public class FlamebaseDatabase {
         }
         String sha1 = ReferenceUtils.SHA1(content);
 
-        UpdateToServer updateToServer = new UpdateToServer("update_data", path, FlamebaseDatabase.token, "android", differences, len, clean);
+        UpdateToServer updateToServer = new UpdateToServer("update_data", path, FlamebaseDatabase.id, "android", differences, len, clean);
+        Call<SyncResponse> call = ReferenceUtils.service(FlamebaseDatabase.urlServer).refreshToServer(updateToServer);
 
-        Gson gson = new Gson();
-        getSocketIO().emit(KEY, gson.toJson(updateToServer, UpdateToServer.class), new Ack() {
+        call.enqueue(new Callback<SyncResponse>() {
+
             @Override
-            public void call(Object... args) {
-                print((JSONObject) args[0]);
+            public void onResponse(Call<SyncResponse> call, Response<SyncResponse> response) {
+                if (response.errorBody() != null && !response.isSuccessful()) {
+                    try {
+                        Log.e(TAG, response.errorBody().string());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<SyncResponse> call, Throwable t) {
+                if (t.getStackTrace() != null) {
+                    Log.e(TAG, t.getStackTrace().toString());
+                } else {
+                    Log.e(TAG, "update to server response error");
+                }
             }
         });
     }
@@ -319,23 +363,6 @@ public class FlamebaseDatabase {
             e.printStackTrace();
         }
     }
-
-    /*
-    public static void onMessageReceived(RemoteMessage remoteMessage) {
-        try {
-            String path = remoteMessage.getData().get(PATH);
-            if (pathMap.containsKey(path)) {
-                Log.d(FlamebaseDatabase.class.getSimpleName(), remoteMessage.getData().toString());
-                pathMap.get(path).onMessageReceived(remoteMessage);
-            } else {
-
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }
-    */
 
     public void sync() {
         sync(false);
@@ -368,7 +395,7 @@ public class FlamebaseDatabase {
         }
     }
 
-    public static void refreshFromServer(String path, final FlamebaseResponse callback) {
+    public static void refreshFromServer(String path) {
 
         String content = ReferenceUtils.getElement(path);
         if (content == null) {
@@ -376,27 +403,28 @@ public class FlamebaseDatabase {
         }
         String sha1 = ReferenceUtils.SHA1(content);
 
-        UpdateFromServer updateFromServer = new UpdateFromServer("get_updates", path, content, content.length(), token, "android");
+        UpdateFromServer updateFromServer = new UpdateFromServer("get_updates", path, content, content.length(), FlamebaseDatabase.id, "android");
         Call<SyncResponse> call = ReferenceUtils.service(FlamebaseDatabase.urlServer).refreshFromServer(updateFromServer);
 
         call.enqueue(new Callback<SyncResponse>() {
 
             @Override
             public void onResponse(Call<SyncResponse> call, Response<SyncResponse> response) {
-                SyncResponse syncResponse = response.body();
-                if (!syncResponse.getData().toString().equals(EMPTY_OBJECT)) {
-                    callback.onSuccess(syncResponse.getData());
-                } else {
-                    callback.onFailure(syncResponse.getError());
+                if (response.errorBody() != null && !response.isSuccessful()) {
+                    try {
+                        Log.e(TAG, response.errorBody().string());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
 
             @Override
             public void onFailure(Call<SyncResponse> call, Throwable t) {
                 if (t.getStackTrace() != null) {
-                    callback.onFailure(t.getStackTrace().toString());
+                    Log.e(TAG, t.getStackTrace().toString());
                 } else {
-                    callback.onFailure("refresh from server response error");
+                    Log.e(TAG, "update from server response error");
                 }
             }
         });
