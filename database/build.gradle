@@ -1,29 +1,32 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
 
 version = "1.3.0"
 
 android {
 
-    compileSdkVersion 26
-    buildToolsVersion '27.0.2'
+    compileSdkVersion 27
+    buildToolsVersion '27.0.3'
 
     defaultConfig {
-        minSdkVersion 19
-        targetSdkVersion 26
+        minSdkVersion 14
+        targetSdkVersion 27
         versionCode 7
         versionName version
-
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-
+        multiDexEnabled true
     }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
 }
 
 dependencies {
@@ -31,19 +34,38 @@ dependencies {
     androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    implementation 'com.android.support:appcompat-v7:26.1.0'
+    implementation 'com.android.support:appcompat-v7:27.0.2'
     testImplementation 'junit:junit:4.12'
-    implementation 'com.google.firebase:firebase-core:11.8.0'
-    implementation 'com.google.firebase:firebase-messaging:11.8.0'
     implementation 'com.google.code.gson:gson:2.8.2'
-    testImplementation group: 'org.skyscreamer', name: 'jsonassert', version: '1.5.0'
-    implementation 'com.github.marcodama7.posty:posty:0.1.2'
-    implementation 'com.efraespada:jsondiff:1.1.0'
-    implementation 'org.skyscreamer:jsonassert:1.5.0'
+    implementation ('com.efraespada:jsondiff:1.1.0') {
+        //exclude group: 'com.fasterxml.jackson.core', module: 'jackson-databind'
+    }
     implementation 'com.squareup.retrofit2:retrofit:2.3.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.3.0'
     implementation 'com.google.code.findbugs:jsr305:2.0.1'
+    // implementation 'io.netty:netty-all:4.1.21.Final'
+
+    implementation "redis.clients:jedis:2.9.0"
+
+    //implementation 'io.lettuce:lettuce-core:5.0.0.RELEASE'
+    /*
+    implementation 'org.skyscreamer:jsonassert:1.5.0'
+    implementation "io.projectreactor:reactor-core:3.1.4.RELEASE"
+    implementation 'org.latencyutils:LatencyUtils:2.0.3'
+    implementation 'io.reactivex.rxjava2:rxjava:2.1.9'
+    implementation 'io.reactivex:rxjava-reactive-streams:1.2.1'
+    implementation 'org.springframework:spring-beans:5.0.4.RELEASE'
+    implementation 'io.netty:netty-all:4.1.21.Final'
+    implementation 'javax.enterprise:cdi-api:2.0'
+    implementation 'org.apache.commons:commons-pool2:2.0'
+    implementation 'org.yaml:snakeyaml:1.19'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"*/
+
+    // implementation 'org.redisson:redisson:2.11.1'
+
+    //noinspection GradleDependency
     implementation 'com.google.guava:guava:22.0-android'
+    //noinspection GradleDependency
     implementation "com.stringcare:library:$stringcare_version"
 }
 

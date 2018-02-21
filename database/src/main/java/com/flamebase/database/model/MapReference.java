@@ -6,13 +6,10 @@ import com.flamebase.database.ReferenceUtils;
 import com.flamebase.database.interfaces.MapBlower;
 import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
-import com.google.firebase.messaging.RemoteMessage;
 import com.google.gson.internal.LinkedTreeMap;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,13 +24,6 @@ public abstract class MapReference<T> extends Reference<MapBlower<T>> {
 
     public MapReference(Context context, String path, long blowerCreation, MapBlower<T> blower, Class<T> clazz) {
         super(context, path);
-        blowerMap = new HashMap<>();
-        blowerMap.put(blowerCreation, blower);
-        this.clazz = clazz;
-    }
-
-    public MapReference(Context context, String path, long blowerCreation, MapBlower<T> blower, Class<T> clazz, RemoteMessage remoteMessage) {
-        super(context, path, remoteMessage);
         blowerMap = new HashMap<>();
         blowerMap.put(blowerCreation, blower);
         this.clazz = clazz;
@@ -147,8 +137,7 @@ public abstract class MapReference<T> extends Reference<MapBlower<T>> {
     }
 
     private static <T> Type getType(Class<T> type) {
-        return new TypeToken<Map<String, T>>() {}
-                .where(new TypeParameter<T>() {}, type)
-                .getType();
+        TypeToken t = new TypeToken<Map<String, T>>() {}.where(new TypeParameter<T>() {}, type);
+        return t.getType();
     }
 }

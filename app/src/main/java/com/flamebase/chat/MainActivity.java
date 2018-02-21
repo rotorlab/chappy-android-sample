@@ -3,7 +3,6 @@ package com.flamebase.chat;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -26,18 +25,16 @@ import com.flamebase.chat.model.Message;
 import com.flamebase.chat.services.ChatManager;
 import com.flamebase.chat.services.LocalData;
 import com.flamebase.database.FlamebaseDatabase;
-import com.flamebase.database.model.TokenListener;
-import com.google.firebase.FirebaseApp;
-import com.google.firebase.iid.FirebaseInstanceId;
+import com.flamebase.database.interfaces.StatusListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -50,31 +47,26 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        FirebaseApp.initializeApp(this);
-
         LocalData.init(this);
 
         chatsList = (RecyclerView) findViewById(R.id.chats_list);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
         chatsList.setLayoutManager(mLayoutManager);
 
-        FlamebaseDatabase.initialize(this, BuildConfig.database_url, FirebaseInstanceId.getInstance(), new TokenListener() {
+        FlamebaseDatabase.initialize(this, BuildConfig.database_url, BuildConfig.redis_url, new StatusListener() {
             @Override
-            public void databaseReady() {
+            public void ready() {
+                ChatManager.syncContacts();
+
                 chatsList.setAdapter(new ChatAdapter(MainActivity.this));
-
                 ChatManager.init(chatsList.getAdapter());
-
-                String contactPath = "/contacts";
-                ChatManager.syncContacts(contactPath);
 
 
                 JSONArray array = LocalData.getLocalPaths();
                 for (int i = 0; i < array.length(); i++) {
                     try {
                         String path = array.getString(i);
-                        ChatManager.syncGChat(path);
+                        ChatManager.addGChat(path);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -93,6 +85,18 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        FlamebaseDatabase.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        FlamebaseDatabase.onPause();
+        super.onPause();
     }
 
     @Override
@@ -168,17 +172,15 @@ public class MainActivity extends AppCompatActivity {
                             if (!TextUtils.isEmpty(name.getText())) {
                                 SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
                                 String id = prefs.getString(getString(R.string.var_name), null);
-                                String groupPath = "/chats/" + new Date().getTime();
+                                String groupPath = "/chats/" + name.getText().toString().trim().replace(" ", "_");
 
                                 List<String> members = new ArrayList<>();
                                 members.add(id);
                                 Map<String, Message> messageMap = new HashMap<>();
                                 GChat gChat = new GChat(name.getText().toString(), members, messageMap);
                                 ChatManager.map.put(groupPath, gChat);
-
+                                ChatManager.addGChat(groupPath);
                                 ChatManager.syncGChat(groupPath);
-
-
 
                                 //FlamebaseDatabase.syncReference(groupPath, false);
 
@@ -214,7 +216,6 @@ public class MainActivity extends AppCompatActivity {
         return prefs.getString(getString(R.string.var_name), null) == null || prefs.getString(getString(R.string.var_id), null) == null;
     }
 
-
     /**
      * Loads current user as Member object and synchronizes it to server.
      */
@@ -223,7 +224,7 @@ public class MainActivity extends AppCompatActivity {
         String name = prefs.getString(getString(R.string.var_name), null);
         String id = prefs.getString(getString(R.string.var_id), null);
 
-        Member member = new Member(name, FirebaseInstanceId.getInstance().getToken(), getString(R.string.var_os), id);
+        Member member = new Member(name, UUID.randomUUID().toString(), getString(R.string.var_os), id);
         ChatManager.contacts.put(name, member);
 
         FlamebaseDatabase.syncReference(getString(R.string.contact_path), false);
@@ -239,7 +240,7 @@ public class MainActivity extends AppCompatActivity {
         editor.putString(getString(R.string.var_name), name).apply();
         editor.putString(getString(R.string.var_id), id).apply();
 
-        Member member = new Member(name, FirebaseInstanceId.getInstance().getToken(), getString(R.string.var_os), id);
+        Member member = new Member(name, FlamebaseDatabase.id, getString(R.string.var_os), id);
         ChatManager.contacts.put(name, member);
 
         FlamebaseDatabase.syncReference(getString(R.string.contact_path), false);
