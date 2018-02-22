@@ -71,7 +71,6 @@ public abstract class Reference<T> {
 
     /**
      * checks if push message comes from server cluster
-     * @param json
      */
     public void onMessageReceived(JSONObject json) {
         try {
@@ -189,7 +188,6 @@ public abstract class Reference<T> {
 
     /**
      * notify update percent
-     * @param value
      */
     public abstract void progress(int value);
 
@@ -199,7 +197,7 @@ public abstract class Reference<T> {
      * tag or identifier used to identify incoming object updates
      * from server cluster
      *
-     * @return
+     * @return String
      */
     public String getTag() {
         return path + "_sync";
