@@ -15,6 +15,9 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
+
+import redis.client.RedisClient;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 
@@ -38,6 +41,12 @@ public class FlamebaseService extends Service {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
+        try {
+            RedisClient client = new RedisClient(FlamebaseDatabase.urlRedis, 6379);
+            client.subscribe();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         jedis = new Jedis(FlamebaseDatabase.urlRedis);
         listener = new JedisPubSub() {
             @Override
@@ -101,14 +110,18 @@ public class FlamebaseService extends Service {
     public void startService() {
         if (!initialized) {
             initialized = true;
-            new AsyncSub().execute();
+            if (jedis != null && listener != null) {
+                jedis.subscribe(listener, FlamebaseDatabase.urlRedis);
+            }
         }
     }
 
     public void stopService() {
         if (initialized) {
             initialized = false;
-            new AsyncUnSub().execute();
+            if (jedis != null && listener != null) {
+                listener.unsubscribe(FlamebaseDatabase.id);
+            }
         }
     }
 
@@ -145,7 +158,7 @@ public class FlamebaseService extends Service {
         @Override
         protected Void doInBackground(Void... voids) {
             if (jedis != null && listener != null) {
-                listener.unsubscribe(FlamebaseDatabase.id);
+                jedis.subscribe(listener, FlamebaseDatabase.urlRedis);
             }
             return null;
         }
