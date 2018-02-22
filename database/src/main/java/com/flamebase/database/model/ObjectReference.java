@@ -30,8 +30,6 @@ public abstract class ObjectReference<T> extends Reference<ObjectBlower<T>> {
     /**
      * called when object is synchronized with cluster or path
      * not exists in local db and is stored (cached references)
-     *
-     * @return T object
      */
     @Override
     public void addBlower(long creation, ObjectBlower<T> blower) {

@@ -20,7 +20,19 @@ Check out [flamebase-database-server-cluster repo](https://github.com/flamebase/
 - Import library:
 
 ```groovy
-implementation 'com.flamebase:database:1.4.0'
+android {
+ 
+    defaultConfig {
+    
+        multiDexEnabled true
+        
+    }
+    
+}
+ 
+dependencies {
+    implementation 'com.flamebase:database:1.4.0'
+}
 ```
 - Initialize library:
 ```java

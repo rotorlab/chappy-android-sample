@@ -14,6 +14,7 @@ android {
         targetSdkVersion 27
         versionCode 7
         versionName version
+        multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
