@@ -6,12 +6,11 @@ android {
     buildToolsVersion '27.0.3'
     defaultConfig {
         applicationId "com.flamebase.chat"
-        minSdkVersion 24
+        minSdkVersion 14
         targetSdkVersion 27
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-        multiDexEnabled true
     }
 
     flavorDimensions "origin"
@@ -27,14 +26,14 @@ android {
             applicationId "com.flamebase.chat"
             versionNameSuffix "-emulator"
             buildConfigField "String", "database_url", "\"http://10.0.2.2:1507/\""
-            buildConfigField "String", "redis_url", "\"10.0.2.2:6379\""
+            buildConfigField "String", "redis_url", "\"redis://10.0.2.2\""
             dimension "origin"
         }
         device {
             applicationId "com.flamebase.chat"
             versionNameSuffix "-device"
             buildConfigField "String", "database_url", "\"http://172.20.10.8:1507/\""
-            buildConfigField "String", "redis_url", "\"172.20.10.8:6379\""
+            buildConfigField "String", "redis_url", "\"redis://172.20.10.8\""
             dimension "origin"
         }
     }

@@ -3,7 +3,6 @@ package com.flamebase.database;
 import android.app.Service;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
@@ -12,14 +11,13 @@ import android.os.StrictMode;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.lambdaworks.redis.RedisClient;
+import com.lambdaworks.redis.pubsub.RedisPubSubConnection;
+import com.lambdaworks.redis.pubsub.RedisPubSubListener;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
-
-import redis.client.RedisClient;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPubSub;
 
 /**
  * Created by efrainespada on 20/02/2018.
@@ -30,8 +28,8 @@ public class FlamebaseService extends Service {
     private static final String TAG = FlamebaseService.class.getSimpleName();
     private final IBinder binder = new FlamebaseService.FBinder();
     private static boolean initialized;
-    private static JedisPubSub listener;
-    private static Jedis jedis;
+    private static RedisClient client;
+    private static RedisPubSubConnection<String, String> connection;
     private ServiceConnection sc;
     private boolean connectedToRedis;
 
@@ -41,29 +39,26 @@ public class FlamebaseService extends Service {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
-        try {
-            RedisClient client = new RedisClient(FlamebaseDatabase.urlRedis, 6379);
-            client.subscribe();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        jedis = new Jedis(FlamebaseDatabase.urlRedis);
-        listener = new JedisPubSub() {
+        client = RedisClient.create(FlamebaseDatabase.urlRedis);
+        connection = client.connectPubSub();
+        connection.addListener(new RedisPubSubListener<String, String>() {
             @Override
-            public void onMessage(String channel, String message) {
-                super.onMessage(channel, message);
+            public void message(String s, String s2) {
                 try {
-                    FlamebaseDatabase.onMessageReceived(new JSONObject(message));
+                    FlamebaseDatabase.onMessageReceived(new JSONObject(s2));
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }
 
             @Override
-            public void onSubscribe(String channel, int subscribedChannels) {
-                super.onSubscribe(channel, subscribedChannels);
-                connectedToRedis = true;
+            public void message(String s, String k1, String s2) {
+                // nothing to do here
+            }
 
+            @Override
+            public void subscribed(String s, long l) {
+                connectedToRedis = true;
                 Runnable task = new Runnable() {
                     @Override
                     public void run() {
@@ -74,11 +69,20 @@ public class FlamebaseService extends Service {
             }
 
             @Override
-            public void onUnsubscribe(String channel, int subscribedChannels) {
-                super.onUnsubscribe(channel, subscribedChannels);
+            public void psubscribed(String s, long l) {
+                // nothing to do here
+            }
+
+            @Override
+            public void unsubscribed(String s, long l) {
                 connectedToRedis = false;
             }
-        };
+
+            @Override
+            public void punsubscribed(String s, long l) {
+                // nothing to do here
+            }
+        });
     }
 
     @Override
@@ -110,8 +114,8 @@ public class FlamebaseService extends Service {
     public void startService() {
         if (!initialized) {
             initialized = true;
-            if (jedis != null && listener != null) {
-                jedis.subscribe(listener, FlamebaseDatabase.urlRedis);
+            if (client != null && connection != null) {
+                connection.subscribe(FlamebaseDatabase.id);
             }
         }
     }
@@ -119,8 +123,8 @@ public class FlamebaseService extends Service {
     public void stopService() {
         if (initialized) {
             initialized = false;
-            if (jedis != null && listener != null) {
-                listener.unsubscribe(FlamebaseDatabase.id);
+            if (client != null && connection != null) {
+                connection.unsubscribe(FlamebaseDatabase.id);
             }
         }
     }
@@ -140,28 +144,6 @@ public class FlamebaseService extends Service {
             return FlamebaseService.this;
         }
 
-    }
-
-    public class AsyncSub extends AsyncTask<Void, Void, Void> {
-
-        @Override
-        protected Void doInBackground(Void... voids) {
-            if (jedis != null && listener != null) {
-                jedis.subscribe(listener, FlamebaseDatabase.urlRedis);
-            }
-            return null;
-        }
-    }
-
-    public class AsyncUnSub extends AsyncTask<Void, Void, Void> {
-
-        @Override
-        protected Void doInBackground(Void... voids) {
-            if (jedis != null && listener != null) {
-                jedis.subscribe(listener, FlamebaseDatabase.urlRedis);
-            }
-            return null;
-        }
     }
 
 }
