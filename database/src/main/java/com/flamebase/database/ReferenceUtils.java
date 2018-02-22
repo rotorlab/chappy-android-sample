@@ -6,15 +6,18 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 
-import com.efraespada.androidstringobfuscator.AndroidStringObfuscator;
 import com.flamebase.database.interfaces.FlamebaseService;
+import com.stringcare.library.SC;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.TimeUnit;
 
+import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
+import okhttp3.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -88,18 +91,19 @@ public class ReferenceUtils {
      * @param info
      */
     public static void addElement(final String path, String info) {
+        if (database == null) {
+            String name = "RealtimeDatabase.db";
+            database = new Database(context, name, TABLE_NAME, VERSION);
+        }
         try {
-            String enId = AndroidStringObfuscator.encryptString(path);
-            // Gets the data repository in write mode
+            String enId = SC.encryptString(path);
             SQLiteDatabase db = database.getWritableDatabase();
 
-            // Create a new map of values, where column names are the keys
             ContentValues values = new ContentValues();
             values.put(COLUMN_ID, enId);
-            values.put(COLUMN_DATA, AndroidStringObfuscator.encryptString(info));
+            values.put(COLUMN_DATA, SC.encryptString(info));
 
             if (exist(path)) {
-                // Filter results WHERE "title" = hash
                 String selection = COLUMN_ID + " = ?";
                 String[] selectionArgs = { enId };
                 long newRowId = db.update(database.table, values, selection, selectionArgs);
@@ -116,7 +120,7 @@ public class ReferenceUtils {
             String name = "RealtimeDatabase.db";
             database = new Database(context, name, TABLE_NAME, VERSION);
         }
-        String enPath = AndroidStringObfuscator.encryptString(path);
+        String enPath = SC.encryptString(path);
         try {
             SQLiteDatabase db = database.getReadableDatabase();
 
@@ -152,6 +156,30 @@ public class ReferenceUtils {
         }
     }
 
+    public static void removeElement(String path) {
+        if (database == null) {
+            String name = "RealtimeDatabase.db";
+            database = new Database(context, name, TABLE_NAME, VERSION);
+        }
+        String enPath = SC.encryptString(path);
+        try {
+            SQLiteDatabase db = database.getReadableDatabase();
+
+            String selection = COLUMN_ID + " = ?";
+            String[] selectionArgs = {enPath};
+
+            int result = db.delete(
+                    database.table,                             // The table to query
+                    selection,                                // The columns for the WHERE clause
+                    selectionArgs                            // The values for the WHERE clause
+            );
+
+        } catch (SQLiteException e) {
+            e.printStackTrace();
+        }
+    }
+
+
     /**
      * returns stored object
      * @param path
@@ -162,18 +190,14 @@ public class ReferenceUtils {
             String name = "RealtimeDatabase.db";
             database = new Database(context, name, TABLE_NAME, VERSION);
         }
-        String enPath = AndroidStringObfuscator.encryptString(path);
+        String enPath = SC.encryptString(path);
         try {
             SQLiteDatabase db = database.getReadableDatabase();
-
-            // Define a projection that specifies which columns from the database
-            // you will actually use after this query.
             String[] projection = {
                     COLUMN_ID,
                     COLUMN_DATA
             };
 
-            // Filter results WHERE "title" = hash
             String selection = COLUMN_ID + " = ?";
             String[] selectionArgs = { enPath };
 
@@ -194,7 +218,7 @@ public class ReferenceUtils {
             cursor.close();
 
             if (info != null) {
-                return AndroidStringObfuscator.decryptString(info);
+                return SC.decryptString(info);
             } else {
                 return null;
             }
@@ -204,8 +228,18 @@ public class ReferenceUtils {
     }
 
     public static FlamebaseService service(String url) {
-        OkHttpClient.Builder httpClient = new OkHttpClient.Builder().connectTimeout(60, TimeUnit.SECONDS).readTimeout(60, TimeUnit.SECONDS)
-                .writeTimeout(60, TimeUnit.SECONDS);
+        OkHttpClient.Builder httpClient = new OkHttpClient.Builder()
+                .connectTimeout(120, TimeUnit.SECONDS)
+                .readTimeout(120, TimeUnit.SECONDS)
+                .writeTimeout(120, TimeUnit.SECONDS)
+                .addInterceptor(new Interceptor() {
+                    @Override
+                    public Response intercept(Chain chain) throws IOException {
+                        // TODO intercept time out exceptions
+                        Response response = chain.proceed(chain.request());
+                        return response;
+                    }
+                });
 
         Retrofit.Builder builder = new Retrofit.Builder().baseUrl(url).addConverterFactory(GsonConverterFactory.create());
 

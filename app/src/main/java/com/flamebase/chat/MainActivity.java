@@ -25,17 +25,16 @@ import com.flamebase.chat.model.Message;
 import com.flamebase.chat.services.ChatManager;
 import com.flamebase.chat.services.LocalData;
 import com.flamebase.database.FlamebaseDatabase;
-import com.google.firebase.FirebaseApp;
-import com.google.firebase.iid.FirebaseInstanceId;
+import com.flamebase.database.interfaces.StatusListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -48,31 +47,35 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        FirebaseApp.initializeApp(this);
         LocalData.init(this);
-
-        FlamebaseDatabase.initialize(this, getString(R.string.database_url), FirebaseInstanceId.getInstance().getToken());
 
         chatsList = (RecyclerView) findViewById(R.id.chats_list);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
         chatsList.setLayoutManager(mLayoutManager);
-        chatsList.setAdapter(new ChatAdapter(this));
 
-        ChatManager.init(chatsList.getAdapter());
+        FlamebaseDatabase.initialize(this, BuildConfig.database_url, BuildConfig.redis_url, new StatusListener() {
+            @Override
+            public void ready() {
+                ChatManager.syncContacts();
+
+                chatsList.setAdapter(new ChatAdapter(MainActivity.this));
+                ChatManager.init(chatsList.getAdapter());
 
 
-        JSONArray array = LocalData.getLocalPaths();
-        for (int i = 0; i < array.length(); i++) {
-            try {
-                String path = array.getString(i);
-                ChatManager.syncGChat(path);
-            } catch (JSONException e) {
-                e.printStackTrace();
+                JSONArray array = LocalData.getLocalPaths();
+                for (int i = 0; i < array.length(); i++) {
+                    try {
+                        String path = array.getString(i);
+                        ChatManager.addGChat(path);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                askForEmail();
             }
-        }
-
-        askForEmail();
+        });
+        FlamebaseDatabase.setDebug(true);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -82,6 +85,18 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        FlamebaseDatabase.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        FlamebaseDatabase.onPause();
+        super.onPause();
     }
 
     @Override
@@ -120,31 +135,25 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                             EditText name = (EditText) dialog.getCustomView().findViewById(R.id.etName);
-                            EditText email = (EditText) dialog.getCustomView().findViewById(R.id.etEmail);
+                            EditText id = (EditText) dialog.getCustomView().findViewById(R.id.etId);
 
-                            if (!TextUtils.isEmpty(name.getText()) && !TextUtils.isEmpty(email.getText())) {
-                                setData(name.getText().toString(), email.getText().toString());
-
-                                String contactPath = "/contacts";
-
-                                ChatManager.syncContacts(contactPath);
-
-                                Member member = new Member(name.getText().toString(), FirebaseInstanceId.getInstance().getToken(), "android", email.getText().toString());
-                                ChatManager.contacts.put(email.getText().toString(), member);
-
+                            if (!TextUtils.isEmpty(name.getText()) && !TextUtils.isEmpty(id.getText())) {
+                                setUserAndSynchronize(name.getText().toString(), id.getText().toString());
                                 dialog.dismiss();
                             }
+                            materialDialog = null;
                         }
                     })
                     .onNegative(new MaterialDialog.SingleButtonCallback() {
                         @Override
                         public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                             dialog.dismiss();
+                            materialDialog = null;
                         }
                     })
                     .show();
         } else {
-            syncUser();
+            loadUserAndSynchronize();
         }
     }
 
@@ -162,15 +171,15 @@ public class MainActivity extends AppCompatActivity {
                             EditText name = (EditText) dialog.getCustomView().findViewById(R.id.etName);
                             if (!TextUtils.isEmpty(name.getText())) {
                                 SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
-                                String email = prefs.getString("email", null);
-                                String groupPath = "/chats/" + new Date().getTime();
+                                String id = prefs.getString(getString(R.string.var_name), null);
+                                String groupPath = "/chats/" + name.getText().toString().trim().replace(" ", "_");
 
                                 List<String> members = new ArrayList<>();
-                                members.add(email);
+                                members.add(id);
                                 Map<String, Message> messageMap = new HashMap<>();
                                 GChat gChat = new GChat(name.getText().toString(), members, messageMap);
                                 ChatManager.map.put(groupPath, gChat);
-
+                                ChatManager.addGChat(groupPath);
                                 ChatManager.syncGChat(groupPath);
 
                                 //FlamebaseDatabase.syncReference(groupPath, false);
@@ -188,8 +197,6 @@ public class MainActivity extends AppCompatActivity {
                         }
                     })
                     .show();
-        } else {
-            syncUser();
         }
     }
 
@@ -200,40 +207,42 @@ public class MainActivity extends AppCompatActivity {
             materialDialog.dismiss();
             materialDialog = null;
         }
+        //FlamebaseDatabase.removeListener("/contacts");
         super.onDestroy();
     }
 
     public boolean isFirstRun() {
         SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
-        return prefs.getString("name", null) == null || prefs.getString("email", null) == null;
+        return prefs.getString(getString(R.string.var_name), null) == null || prefs.getString(getString(R.string.var_id), null) == null;
     }
 
-    public void syncUser() {
+    /**
+     * Loads current user as Member object and synchronizes it to server.
+     */
+    public void loadUserAndSynchronize() {
         SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
-        String name = prefs.getString("name", null);
-        String email = prefs.getString("email", null);
-        String contactPath = "/contacts";
+        String name = prefs.getString(getString(R.string.var_name), null);
+        String id = prefs.getString(getString(R.string.var_id), null);
 
-        Member member = new Member(name, FirebaseInstanceId.getInstance().getToken(), "android", email);
+        Member member = new Member(name, UUID.randomUUID().toString(), getString(R.string.var_os), id);
         ChatManager.contacts.put(name, member);
 
-        ChatManager.syncContacts(contactPath);
-
-        FlamebaseDatabase.syncReference(contactPath, false);
+        FlamebaseDatabase.syncReference(getString(R.string.contact_path), false);
     }
 
-
-    public void setData(String name, String email) {
+    /**
+     * Sets current user name and ID.
+     * @param name
+     * @param id
+     */
+    public void setUserAndSynchronize(String name, String id) {
         SharedPreferences.Editor editor = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE).edit();
-        editor.putString("name", name).apply();
-        editor.putString("email", email).apply();
-        String contactPath = "/contacts";
+        editor.putString(getString(R.string.var_name), name).apply();
+        editor.putString(getString(R.string.var_id), id).apply();
 
-        ChatManager.syncContacts(contactPath);
-
-        Member member = new Member(name, FirebaseInstanceId.getInstance().getToken(), "android", email);
+        Member member = new Member(name, FlamebaseDatabase.id, getString(R.string.var_os), id);
         ChatManager.contacts.put(name, member);
 
-        FlamebaseDatabase.syncReference(contactPath, false);
+        FlamebaseDatabase.syncReference(getString(R.string.contact_path), false);
     }
 }

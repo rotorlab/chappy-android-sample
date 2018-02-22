@@ -2,14 +2,13 @@ package com.flamebase.database.model;
 
 import android.content.Context;
 
-import com.efraespada.androidstringobfuscator.AndroidStringObfuscator;
 import com.efraespada.jsondiff.JSONDiff;
 import com.flamebase.database.Database;
 import com.flamebase.database.FlamebaseDatabase;
 import com.flamebase.database.ReferenceUtils;
-import com.google.firebase.messaging.RemoteMessage;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.stringcare.library.SC;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -23,17 +22,20 @@ import java.util.Map;
  * Created by efraespada on 21/05/2017.
  */
 
-public abstract class Reference {
+public abstract class Reference<T> {
 
     private int VERSION = 1;
     private static Map<String, String[]> mapParts;
     public Database database;
     private Context context;
     protected Gson gson;
+    public Map<Long, T> blowerMap;
+
     public boolean isSynchronized;
 
     public int len;
     public int serverLen;
+    public int queueLen;
 
     private static final String TAG = Reference.class.getSimpleName();
 
@@ -49,47 +51,34 @@ public abstract class Reference {
     protected String path;
     protected String stringReference;
 
-    public static final String ACTION_SIMPLE_UPDATE    = "simple_update";
-    public static final String ACTION_SLICE_UPDATE     = "slice_update";
-    public static final String ACTION_NO_UPDATE     = "no_update";
+    public static final String ACTION_SIMPLE_UPDATE     = "simple_update";
+    public static final String ACTION_SLICE_UPDATE      = "slice_update";
+    public static final String ACTION_NO_UPDATE         = "no_update";
+    public static final String ACTION_SIMPLE_CONTENT    = "simple_content";
+    public static final String ACTION_SLICE_CONTENT     = "slice_content";
+    public static final String ACTION_NO_CONTENT        = "no_content";
 
     public Reference(Context context, String path) {
         this.context = context;
         this.path = path;
         this.gson = getGsonBuilder();
-        this.isSynchronized = false;
         this.serverLen = 0;
-        AndroidStringObfuscator.init(this.context);
+        SC.init(this.context);
         this.mapParts = new HashMap<>();
         this.stringReference = ReferenceUtils.getElement(path);
         this.len = stringReference == null ? 0 : stringReference.length();
-    }
-
-    public Reference(Context context, String path, RemoteMessage remoteMessage) {
-        this.context = context;
-        this.path = path;
-        this.gson = getGsonBuilder();
-        this.isSynchronized = false;
-        this.serverLen = 0;
-        AndroidStringObfuscator.init(this.context);
-        String name = "RealtimeDatabase.db";
-        this.database = new Database(this.context, name, TABLE_NAME, VERSION);
-        this.mapParts = new HashMap<>();
-        this.stringReference = ReferenceUtils.getElement(path);
-        this.len = stringReference == null ? 0 : stringReference.length();
-        onMessageReceived(remoteMessage);
     }
 
     /**
      * checks if push message comes from server cluster
-     * @param remoteMessage
+     * @param json
      */
-    public void onMessageReceived(RemoteMessage remoteMessage) {
+    public void onMessageReceived(JSONObject json) {
         try {
-            String tag = remoteMessage.getData().get(STAG);
-            String action = remoteMessage.getData().get(ACTION);
-            String data = remoteMessage.getData().get(REFERENCE);
-            String path = remoteMessage.getData().get(PATH);
+            String tag = json.getString(STAG);
+            String action = json.getString(ACTION);
+            String data = json.getString(REFERENCE);
+            String path = json.getString(PATH);
             String rData = data == null ? "{}" : ReferenceUtils.hex2String(data);
 
             if (!tag.equalsIgnoreCase(getTag())) {
@@ -99,12 +88,12 @@ public abstract class Reference {
             switch (action) {
 
                 case ACTION_SIMPLE_UPDATE:
-                    parseResult(path, rData);
+                    parseUpdateResult(path, rData);
                     break;
 
                 case ACTION_SLICE_UPDATE:
-                    int size = Integer.parseInt(remoteMessage.getData().get(SIZE));
-                    int index = Integer.parseInt(remoteMessage.getData().get(INDEX));
+                    int size = json.getInt(SIZE);
+                    int index = json.getInt(INDEX);
                     if (mapParts.containsKey(path)) {
                         mapParts.get(path)[index] = rData;
                     } else {
@@ -133,13 +122,57 @@ public abstract class Reference {
                         }
                         mapParts.remove(path);
                         String result = complete.toString();
-                        parseResult(path, result);
+                        parseUpdateResult(path, result);
                     }
 
                     break;
 
                 case ACTION_NO_UPDATE:
                     blowerResult(stringReference);
+                    break;
+
+                case ACTION_SIMPLE_CONTENT:
+                    parseContentResult(path, rData);
+                    break;
+
+                case ACTION_SLICE_CONTENT:
+                    int sizeContent = json.getInt(SIZE);
+                    int indexContent = json.getInt(INDEX);
+                    if (mapParts.containsKey(path)) {
+                        mapParts.get(path)[indexContent] = rData;
+                    } else {
+                        String[] partsContent = new String[sizeContent];
+                        partsContent[indexContent] = rData;
+                        mapParts.put(path, partsContent);
+                    }
+
+                    boolean readyContent = true;
+                    int alocatedContent = 0;
+                    for (int p = mapParts.get(path).length - 1; p >= 0; p--) {
+                        if (mapParts.get(path)[p] == null) {
+                            readyContent = false;
+                        } else {
+                            alocatedContent++;
+                        }
+                    }
+
+                    float percentContent = (100F / (float) sizeContent) * alocatedContent;
+                    progress((int) percentContent);
+
+                    if (readyContent && mapParts.get(path).length - 1 == indexContent) {
+                        StringBuilder completeContent = new StringBuilder();
+                        for (int i = 0; i < mapParts.get(path).length; i++) {
+                            completeContent.append(mapParts.get(path)[i]);
+                        }
+                        mapParts.remove(path);
+                        String resultContent = completeContent.toString();
+                        parseContentResult(path, resultContent);
+                    }
+
+                    break;
+
+                case ACTION_NO_CONTENT:
+                    blowerResult("{}");
                     break;
 
                 default:
@@ -159,6 +192,8 @@ public abstract class Reference {
      * @param value
      */
     public abstract void progress(int value);
+
+    public abstract void addBlower(long creation, T blower);
 
     /**
      * tag or identifier used to identify incoming object updates
@@ -195,15 +230,11 @@ public abstract class Reference {
      * @param path
      * @param data
      */
-    private void parseResult(String path, String data) {
+    private void parseUpdateResult(String path, String data) {
         try {
             JSONObject jsonObject;
-            String prev;
-            if (!isSynchronized) {
-                prev = stringReference;
-            } else {
-                prev = getStringReference();
-            }
+
+            String prev = getStringReference();
 
             if (prev != null) {
                 prev = Normalizer.normalize(prev, Normalizer.Form.NFC);
@@ -293,14 +324,32 @@ public abstract class Reference {
         }
     }
 
+    /**
+     * updates current string object with incoming data
+     * @param path
+     * @param data
+     */
+    private void parseContentResult(String path, String data) {
+        ReferenceUtils.addElement(path, data);
+        stringReference = data;
+        this.len = stringReference.length();
+        blowerResult(stringReference);
+    }
+
+    /**
+     * Returns a {@code Object[]} object. If {@code clean} param is TRUE
+     * differences var is built from empty JSON object.
+     * Index 0: differences value length
+     * Index 1: differences value
+     * @param clean
+     * @return Object[]
+     */
     public Object[] syncReference(boolean clean) {
         int len;
         Gson gson = new Gson();
         Object[] objects = new Object[2];
 
-        if (clean) {
-            this.stringReference = "{}";
-        } else if (stringReference == null) {
+        if (clean || stringReference == null) {
             this.stringReference = "{}";
         }
 

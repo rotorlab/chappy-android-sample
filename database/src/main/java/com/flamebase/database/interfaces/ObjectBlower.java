@@ -7,6 +7,7 @@ package com.flamebase.database.interfaces;
 public interface ObjectBlower <T> extends Blower<T> {
 
     T updateObject();
+
     void onObjectChanged(T ref);
 
 }

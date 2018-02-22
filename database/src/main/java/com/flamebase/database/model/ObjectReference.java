@@ -5,30 +5,25 @@ import android.content.Context;
 import com.flamebase.database.ReferenceUtils;
 import com.flamebase.database.interfaces.ObjectBlower;
 import com.google.common.reflect.TypeToken;
-import com.google.firebase.messaging.RemoteMessage;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by efraespada on 29/06/2017.
  */
 
-public abstract class ObjectReference<T> extends Reference {
+public abstract class ObjectReference<T> extends Reference<ObjectBlower<T>> {
 
-    public ObjectBlower<T> blower;
     public Class<T> clazz;
 
-    public ObjectReference(Context context, String path, ObjectBlower<T> blower, Class<T> clazz) {
+    public ObjectReference(Context context, String path, long blowerCreation, ObjectBlower<T> blower, Class<T> clazz) {
         super(context, path);
-        this.blower = blower;
-        this.clazz = clazz;
-    }
-
-    public ObjectReference(Context context, String path, ObjectBlower<T> blower, Class<T> clazz, RemoteMessage remoteMessage) {
-        super(context, path, remoteMessage);
-        this.blower = blower;
+        blowerMap = new HashMap<>();
+        blowerMap.put(blowerCreation, blower);
         this.clazz = clazz;
     }
 
@@ -38,15 +33,22 @@ public abstract class ObjectReference<T> extends Reference {
      *
      * @return T object
      */
-    public abstract T updateObject();
+    @Override
+    public void addBlower(long creation, ObjectBlower<T> blower) {
+        blowerMap.put(creation, blower);
+    }
 
     @Override
     public String getStringReference() {
         String val;
-        if (updateObject() == null) {
-            val = stringReference;
+        if (getLastest().updateObject() == null) {
+            if (stringReference != null && stringReference.length() > EMPTY_OBJECT.length()) {
+                val = stringReference;
+            } else {
+                val = EMPTY_OBJECT;
+            }
         } else {
-            val = gson.toJson(updateObject(), TypeToken.of(clazz).getType());
+            val = gson.toJson(getLastest().updateObject(), TypeToken.of(clazz).getType());
         }
 
         return val;
@@ -54,20 +56,33 @@ public abstract class ObjectReference<T> extends Reference {
 
     @Override
     public void blowerResult(String value) {
-        if (!isSynchronized) {
-            isSynchronized = true;
+        for (Map.Entry<Long, ObjectBlower<T>> entry : blowerMap.entrySet()) {
+            entry.getValue().onObjectChanged((T) gson.fromJson(value, TypeToken.of(clazz).getType()));
         }
-        blower.onObjectChanged((T) gson.fromJson(value, TypeToken.of(clazz).getType()));
     }
 
     @Override
     public void loadCachedReference() {
         stringReference = ReferenceUtils.getElement(path);
         if (stringReference != null && stringReference.length() > EMPTY_OBJECT.length()) {
-            blower.onObjectChanged((T) gson.fromJson(stringReference, TypeToken.of(clazz).getType()));
+            for (Map.Entry<Long, ObjectBlower<T>> entry : blowerMap.entrySet()) {
+                entry.getValue().onObjectChanged((T) gson.fromJson(stringReference, TypeToken.of(clazz).getType()));
+            }
         } else {
-            blower.onObjectChanged(null);
+            // blower.onObjectChanged(null);
         }
+    }
+
+    private ObjectBlower<T> getLastest() {
+        long lastest = 0;
+        ObjectBlower<T> blower = null;
+        for (Map.Entry<Long, ObjectBlower<T>> entry : blowerMap.entrySet()) {
+            if (lastest < entry.getKey()) {
+                lastest = entry.getKey();
+                blower = entry.getValue();
+            }
+        }
+        return blower;
     }
 
 /*
