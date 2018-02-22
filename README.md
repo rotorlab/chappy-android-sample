@@ -24,6 +24,7 @@ implementation 'com.flamebase:database:1.4.0'
 ```
 - Initialize library:
 ```java
+// redis ips starts with redis://, port is not included
 FlamebaseDatabase.initialize(Context context, String cluster_ip, String redis_ip, new StatusListener() {
  
     @Override
