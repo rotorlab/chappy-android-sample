@@ -23,9 +23,7 @@ Check out [flamebase-database-server-cluster repo](https://github.com/flamebase/
 android {
  
     defaultConfig {
-    
         multiDexEnabled true
-        
     }
     
 }
