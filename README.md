@@ -10,43 +10,41 @@ In this repo you can find the proper lib for android client.
 For now it still developing, so please be patient with errors.
 
 ### Requirements
-Before use this lib you must initialize a **flamebase-database-server-cluster** which will be our server cluster for storing json objects.
-The server cluster is run with **node** framework. Check out the [repository](https://github.com/flamebase/flamebase-database-server-cluster) for more information.
+**1º redis-server:** Amazing Pub/Sub for real-time changes. Simply install and start it.
+
+**2º flamebase-database-server-cluster:** It will be our server cluster for storing json objects. Server cluster is run with **node** framework.
+
+Check out [flamebase-database-server-cluster repo](https://github.com/flamebase/flamebase-database-server-cluster) for more information.
 
 ### Usage
 - Import library:
 
 ```groovy
-repositories {
-    jcenter()
-}
-
-dependencies {
-    compile 'com.flamebase:database:1.3.0'
-}
+implementation 'com.flamebase:database:1.4.0'
 ```
 - Initialize library:
 ```java
-FlamebaseDatabase.initialize(Context context, String cluster_ip, String token);
-```
-- Database synchronization works through Firebase Cloud Messaging 
-
-```java
-public class FMService extends FirebaseMessagingService {
-
+// redis ips starts with redis://, port is not included
+FlamebaseDatabase.initialize(Context context, String cluster_ip, String redis_ip, new StatusListener() {
+ 
     @Override
-    public void onMessageReceived(RemoteMessage remoteMessage) {
-        super.onMessageReceived(remoteMessage);
-        FlamebaseDatabase.onMessageReceived(remoteMessage);
+    public void ready() {
+        /* only called when flamebase service starts and connects with cluster
+        *  it won't be fired if service is already started
+        */
     }
-}
+ 
+});
+ 
+// debug logs
+FlamebaseDatabase.setDebug(true);
 ```
 - Listener for objects:
 ```java
 ObjectA objectA = null;
-
+ 
 FlamebaseDatabase.createListener(path, new ObjectBlower<ObjectA>() {
-
+ 
     /**
     * object is gonna be synchronized with server
     */
@@ -54,7 +52,7 @@ FlamebaseDatabase.createListener(path, new ObjectBlower<ObjectA>() {
     public ObjectA updateObject() {
         return objectA;
     }
-
+ 
     /**
     * called after reference is synchronized with server
     * or is ready to be used (1st sync).
@@ -63,51 +61,78 @@ FlamebaseDatabase.createListener(path, new ObjectBlower<ObjectA>() {
     */
     @Override
     public void onObjectChanged(ObjectA ref) {
-        if (ref == null) {                          // there is nothing saved on server
+        if (ref == null) {                          
             objectA = new ObjectA();
             objectA.setColor("blue");
-            FlamebaseDatabase.syncReference(path);  // synchronize changes
-        } else if (objectA == null) {
-            objectA = ref;
-        } else if (objectA != null) {
-            objectA.setColor(ref.getColor());       // get updated value
+            FlamebaseDatabase.syncReference(path);
+        } else {                                    
+            objectA = ref;                          
         }
     }
-
+ 
     /**
-    * long server updates
+    * long server updates, from 0 to 100
     */
     @Override
     public void progress(int value) {
         Log.e(TAG, "loading " + path + " : " + value + " %");
     }
-
+ 
 }, ObjectA.class);
 ```
 - Listener for maps:
 ```java
 Map<String, Member> contacts = null;
-
+ 
 FlamebaseDatabase.createListener(path, new MapBlower<Member>() {
-
+ 
     @Override
     public Map<String, Member> updateMap() {
         return contacts;
     }
-
+ 
     @Override
     public void onMapChanged(Map<String, Member> ref) {
         // the same for maps
     }
-
+ 
     @Override
     public void progress(int value) {
         // percent
     }
-
+ 
 }, Member.class);
 ```
 - Remove listener in server by calling:
 ```java
 FlamebaseDatabase.removeListener(path);
 ```
+
+Background updates (not optional)
+------------------
+Flamebase Database library works in background in order to receive updates when application is on background or foreground. You must add FlamebaseService to your `AndroidManifest.xml` file:
+```xml
+<application>
+ 
+    <service
+        android:name="com.flamebase.database.FlamebaseService"
+        android:enabled="true"
+        android:exported="true" />
+ 
+</application>
+```
+This service is controlled when the application is present and must be `bind` or `unbind`. Add in activities:
+```java
+@Override
+protected void onResume() {
+    super.onResume();
+    FlamebaseDatabase.onResume();
+}
+ 
+@Override
+protected void onPause() {
+    FlamebaseDatabase.onPause();
+    super.onPause();
+}
+```
+In the sample app chats still receiving updates on background, when the application is reopened there is no need to ask for updates.

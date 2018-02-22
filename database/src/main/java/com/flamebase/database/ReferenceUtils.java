@@ -6,8 +6,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 
-import com.efraespada.stringcarelibrary.SC;
 import com.flamebase.database.interfaces.FlamebaseService;
+import com.stringcare.library.SC;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
