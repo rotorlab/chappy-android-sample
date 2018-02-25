@@ -1,15 +1,16 @@
 package com.flamebase.chat.services;
 
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
-import com.flamebase.chat.model.GChat;
+import com.flamebase.chat.model.Chat;
 import com.flamebase.chat.model.Member;
 import com.flamebase.database.FlamebaseDatabase;
 import com.flamebase.database.interfaces.MapBlower;
 import com.flamebase.database.interfaces.ObjectBlower;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -19,17 +20,21 @@ import java.util.Map;
 public class ChatManager {
 
     private static final String TAG = ChatManager.class.getSimpleName();
-    public static final Map<String, GChat> map = new HashMap<>();
+    public static final Map<String, Chat> map = new HashMap<>();
     public static final Map<String, FlamebaseDatabase> mapFDB = new HashMap<>();
     public static final Map<String, Member> contacts = new HashMap<>();
-    public static RecyclerView.Adapter adapter;
+    public static Listener listener;
+
+    public interface Listener {
+        void update(List<Chat> chats);
+    }
 
     private ChatManager() {
         // nothing to do here ..
     }
 
-    public static void init(RecyclerView.Adapter adapter) {
-        ChatManager.adapter = adapter;
+    public static void init(Listener listener) {
+        ChatManager.listener = listener;
     }
 
     public static void syncGChat(final String path) {
@@ -40,10 +45,10 @@ public class ChatManager {
 
     public static void addGChat(final String path) {
         if (!mapFDB.containsKey(path)) {
-            FlamebaseDatabase fdb = FlamebaseDatabase.getInstance().createListener(path, new ObjectBlower<GChat>() {
+            FlamebaseDatabase fdb = FlamebaseDatabase.getInstance().createListener(path, new ObjectBlower<Chat>() {
 
                 @Override
-                public GChat updateObject() {
+                public Chat updateObject() {
                     if (map.containsKey(path)) {
                         return map.get(path);
                     } else {
@@ -52,7 +57,7 @@ public class ChatManager {
                 }
 
                 @Override
-                public void onObjectChanged(GChat ref) {
+                public void onObjectChanged(Chat ref) {
                     if (ref == null) {
 
                     } else if (map.containsKey(path)) {
@@ -64,7 +69,11 @@ public class ChatManager {
                     }
                     Log.e(TAG, "chats: " + map.size());
 
-                    ChatManager.adapter.notifyDataSetChanged();
+                    List<Chat> chats = new ArrayList<>();
+                    for (Map.Entry<String, Chat> entry : ChatManager.getChats().entrySet()) {
+                        chats.add(entry.getValue());
+                    }
+                    ChatManager.listener.update(chats);
                 }
 
                 @Override
@@ -72,7 +81,7 @@ public class ChatManager {
                     Log.e(TAG, "loading percent for " + path + " : " + value + " %");
                 }
 
-            }, GChat.class);
+            }, Chat.class);
             mapFDB.put(path, fdb);
             LocalData.addPath(path);
         }
@@ -119,7 +128,7 @@ public class ChatManager {
         return contacts;
     }
 
-    public static Map<String, GChat> getChats() {
+    public static Map<String, Chat> getChats() {
         return map;
     }
 }

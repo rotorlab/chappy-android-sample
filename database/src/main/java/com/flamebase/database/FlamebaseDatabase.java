@@ -228,7 +228,6 @@ public class FlamebaseDatabase {
         CreateListener createListener = new CreateListener("create_listener", this.path, FlamebaseDatabase.id, OS, sha1, content.length());
 
         Call<SyncResponse> call = ReferenceUtils.service(FlamebaseDatabase.urlServer).createReference(createListener);
-
         call.enqueue(new Callback<SyncResponse>() {
 
             @Override
@@ -245,7 +244,8 @@ public class FlamebaseDatabase {
             @Override
             public void onFailure(Call<SyncResponse> call, Throwable t) {
                 if (t.getStackTrace() != null) {
-                    Log.e(TAG, t.getStackTrace().toString());
+                    Log.e(TAG, "error");
+                    t.printStackTrace();
                 } else {
                     Log.e(TAG, "create listener response error");
                 }
@@ -279,7 +279,8 @@ public class FlamebaseDatabase {
                     @Override
                     public void onFailure(Call<SyncResponse> call, Throwable t) {
                         if (t.getStackTrace() != null) {
-                            Log.e(TAG, t.getStackTrace().toString());
+                            Log.e(TAG, "error");
+                            t.printStackTrace();
                         } else {
                             Log.e(TAG, "remove listener response error");
                         }
@@ -325,7 +326,8 @@ public class FlamebaseDatabase {
             @Override
             public void onFailure(Call<SyncResponse> call, Throwable t) {
                 if (t.getStackTrace() != null) {
-                    Log.e(TAG, t.getStackTrace().toString());
+                    Log.e(TAG, "error");
+                    t.printStackTrace();
                 } else {
                     Log.e(TAG, "update to server response error");
                 }
@@ -410,7 +412,7 @@ public class FlamebaseDatabase {
             @Override
             public void onFailure(Call<SyncResponse> call, Throwable t) {
                 if (t.getStackTrace() != null) {
-                    Log.e(TAG, t.getStackTrace().toString());
+                    t.printStackTrace();
                 } else {
                     Log.e(TAG, "update from server response error");
                 }

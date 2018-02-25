@@ -43,12 +43,18 @@ public class FlamebaseService extends Service {
         connection = client.connectPubSub();
         connection.addListener(new RedisPubSubListener<String, String>() {
             @Override
-            public void message(String s, String s2) {
-                try {
-                    FlamebaseDatabase.onMessageReceived(new JSONObject(s2));
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+            public void message(String s, final String s2) {
+                Runnable task = new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            FlamebaseDatabase.onMessageReceived(new JSONObject(s2));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                };
+                new Handler(getApplicationContext().getMainLooper()).post(task);
             }
 
             @Override
@@ -65,7 +71,7 @@ public class FlamebaseService extends Service {
                         FlamebaseDatabase.statusListener.ready();
                     }
                 };
-                new Handler(Looper.getMainLooper()).post(task);
+                new Handler(getApplicationContext().getMainLooper()).post(task);
             }
 
             @Override

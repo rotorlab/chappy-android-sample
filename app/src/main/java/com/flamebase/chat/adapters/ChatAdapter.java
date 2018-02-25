@@ -6,16 +6,15 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.flamebase.chat.ChatActivity;
 import com.flamebase.chat.R;
-import com.flamebase.chat.model.GChat;
-import com.flamebase.chat.services.ChatManager;
+import com.flamebase.chat.model.Chat;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by efraespada on 17/06/2017.
@@ -24,6 +23,7 @@ import java.util.Map;
 public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
 
     public Context context;
+    public static final List<Chat> chats = new ArrayList<>();
 
     public ChatAdapter(Context context) {
         this.context = context;
@@ -37,34 +37,23 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
 
     @Override
     public void onBindViewHolder(ChatAdapter.ViewHolder holder, int position) {
-        int i = 0;
-        String key = "";
+        Chat chat = chats.get(position);
 
-        GChat gChat = null;
-        for (Map.Entry<String, GChat> entry : ChatManager.getChats().entrySet()) {
-            if (i == position) {
-                key = entry.getKey();
-                gChat = entry.getValue();
-                break;
-            }
-            i++;
-        }
-
-        final String k = key;
+        final String key = chat.getName();
         holder.content.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(context, ChatActivity.class);
-                intent.putExtra("path", k);
+                intent.putExtra("path", key);
                 context.startActivity(intent);
             }
         });
-        holder.name.setText(gChat.getName());
+        holder.name.setText(chat.getName());
     }
 
     @Override
     public int getItemCount() {
-        return ChatManager.getChats().size();
+        return chats.size();
     }
 
 
@@ -75,8 +64,8 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
 
         public ViewHolder(View itemView) {
             super(itemView);
-            content = (RelativeLayout) itemView.findViewById(R.id.chat_content);
-            name = (TextView) itemView.findViewById(R.id.group_name);
+            content = itemView.findViewById(R.id.chat_content);
+            name = itemView.findViewById(R.id.group_name);
         }
     }
 }

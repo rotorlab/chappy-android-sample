@@ -19,7 +19,7 @@ import android.widget.EditText;
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.flamebase.chat.adapters.ChatAdapter;
-import com.flamebase.chat.model.GChat;
+import com.flamebase.chat.model.Chat;
 import com.flamebase.chat.model.Member;
 import com.flamebase.chat.model.Message;
 import com.flamebase.chat.services.ChatManager;
@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         LocalData.init(this);
 
-        chatsList = (RecyclerView) findViewById(R.id.chats_list);
+        chatsList = findViewById(R.id.chats_list);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
         chatsList.setLayoutManager(mLayoutManager);
 
@@ -59,7 +59,14 @@ public class MainActivity extends AppCompatActivity {
                 ChatManager.syncContacts();
 
                 chatsList.setAdapter(new ChatAdapter(MainActivity.this));
-                ChatManager.init(chatsList.getAdapter());
+                ChatManager.init(new ChatManager.Listener() {
+                    @Override
+                    public void update(List<Chat> chats) {
+                        ((ChatAdapter) chatsList.getAdapter()).chats.clear();
+                        ((ChatAdapter) chatsList.getAdapter()).chats.addAll(chats);
+                        chatsList.getAdapter().notifyDataSetChanged();
+                    }
+                });
 
 
                 JSONArray array = LocalData.getLocalPaths();
@@ -77,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
         });
         FlamebaseDatabase.setDebug(true);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -177,8 +184,8 @@ public class MainActivity extends AppCompatActivity {
                                 List<String> members = new ArrayList<>();
                                 members.add(id);
                                 Map<String, Message> messageMap = new HashMap<>();
-                                GChat gChat = new GChat(name.getText().toString(), members, messageMap);
-                                ChatManager.map.put(groupPath, gChat);
+                                Chat chat = new Chat(name.getText().toString(), members, messageMap);
+                                ChatManager.map.put(groupPath, chat);
                                 ChatManager.addGChat(groupPath);
                                 ChatManager.syncGChat(groupPath);
 

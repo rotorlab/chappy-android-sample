@@ -10,7 +10,7 @@ import java.util.Map;
  * Created by efraespada on 04/06/2017.
  */
 
-public class GChat {
+public class Chat {
 
     @SerializedName("name")
     @Expose
@@ -24,7 +24,7 @@ public class GChat {
     @Expose
     Map<String, Message> messages;
 
-    public GChat(String name, List<String> members, Map<String, Message> messages) {
+    public Chat(String name, List<String> members, Map<String, Message> messages) {
         this.name = name;
         this.members = members;
         this.messages = messages;

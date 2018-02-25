@@ -12,5 +12,5 @@
     <string name="var_id">id</string>
     <string name="var_name">name</string>
     <string name="var_os">android</string>
-    <string name="server_url">http://192.168.0.192:3003/</string>
+    <string name="search_hint">Say something</string>
 </resources>
