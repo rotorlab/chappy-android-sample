@@ -114,11 +114,6 @@ public class FlamebaseDatabase {
         return id;
     }
 
-    private static void print(Object... args) {
-        JSONObject o = (JSONObject) args[0];
-        Log.e(FlamebaseDatabase.class.getSimpleName(), "lerelele: " + o.toString());
-    }
-
     /**
      * debug logs
      * @param debug

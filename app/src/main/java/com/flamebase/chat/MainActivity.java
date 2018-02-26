@@ -192,9 +192,9 @@ public class MainActivity extends AppCompatActivity {
                                 Chat chat = new Chat(name.getText().toString(), members, messageMap);
                                 ChatManager.map.put(groupPath, chat);
                                 ChatManager.addGChat(groupPath);
-                                //ChatManager.syncGChat(groupPath);
 
-                                //FlamebaseDatabase.syncReference(groupPath, false);
+                                // ChatManager.syncGChat(groupPath);
+                                // FlamebaseDatabase.syncReference(groupPath, false);
 
                                 dialog.dismiss();
                                 materialDialog = null;
