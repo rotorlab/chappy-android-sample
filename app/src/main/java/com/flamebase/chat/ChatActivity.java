@@ -229,7 +229,7 @@ public class ChatActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        flamebaseDatabase.removeListener();
+        //flamebaseDatabase.removeListener();
         super.onDestroy();
     }
 
