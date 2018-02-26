@@ -50,6 +50,7 @@ public abstract class Reference<T> {
 
     protected String path;
     protected String stringReference;
+    protected Long moment;
 
     public static final String ACTION_SIMPLE_UPDATE     = "simple_update";
     public static final String ACTION_SLICE_UPDATE      = "slice_update";
@@ -58,7 +59,7 @@ public abstract class Reference<T> {
     public static final String ACTION_SLICE_CONTENT     = "slice_content";
     public static final String ACTION_NO_CONTENT        = "no_content";
 
-    public Reference(Context context, String path) {
+    public Reference(Context context, String path, Long moment) {
         this.context = context;
         this.path = path;
         this.gson = getGsonBuilder();
@@ -76,7 +77,7 @@ public abstract class Reference<T> {
         try {
             String tag = json.getString(STAG);
             String action = json.getString(ACTION);
-            String data = json.getString(REFERENCE);
+            String data = json.has(REFERENCE) ? json.getString(REFERENCE) : null;
             String path = json.getString(PATH);
             String rData = data == null ? "{}" : ReferenceUtils.hex2String(data);
 
@@ -374,6 +375,10 @@ public abstract class Reference<T> {
         }
 
         return objects;
+    }
+
+    public Long getMoment() {
+        return moment;
     }
 
     private Gson getGsonBuilder() {

@@ -18,6 +18,8 @@ import com.lambdaworks.redis.pubsub.RedisPubSubListener;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Date;
+
 
 /**
  * Created by efrainespada on 20/02/2018.
@@ -29,6 +31,7 @@ public class FlamebaseService extends Service {
     private final IBinder binder = new FlamebaseService.FBinder();
     private static boolean initialized;
     private static RedisClient client;
+    private static Long moment;
     private static RedisPubSubConnection<String, String> connection;
     private ServiceConnection sc;
     private boolean connectedToRedis;
@@ -64,6 +67,7 @@ public class FlamebaseService extends Service {
 
             @Override
             public void subscribed(String s, long l) {
+                moment = new Date().getTime();
                 connectedToRedis = true;
                 Runnable task = new Runnable() {
                     @Override
@@ -81,7 +85,15 @@ public class FlamebaseService extends Service {
 
             @Override
             public void unsubscribed(String s, long l) {
+                moment = null;
                 connectedToRedis = false;
+                Runnable task = new Runnable() {
+                    @Override
+                    public void run() {
+                        FlamebaseDatabase.statusListener.notConnected();
+                    }
+                };
+                new Handler(getApplicationContext().getMainLooper()).post(task);
             }
 
             @Override
@@ -123,6 +135,14 @@ public class FlamebaseService extends Service {
             if (client != null && connection != null) {
                 connection.subscribe(FlamebaseDatabase.id);
             }
+        } else if (connectedToRedis) {
+            Runnable task = new Runnable() {
+                @Override
+                public void run() {
+                    FlamebaseDatabase.statusListener.ready();
+                }
+            };
+            new Handler(getApplicationContext().getMainLooper()).post(task);
         }
     }
 
@@ -138,6 +158,10 @@ public class FlamebaseService extends Service {
     public void setServiceConnection(ServiceConnection sc) {
         Log.d(TAG, "serviceConnection set");
         this.sc = sc;
+    }
+
+    public Long getMoment() {
+        return moment;
     }
 
     public ServiceConnection getServiceConnection() {

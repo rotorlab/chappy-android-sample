@@ -20,8 +20,8 @@ public abstract class ObjectReference<T> extends Reference<ObjectBlower<T>> {
 
     public Class<T> clazz;
 
-    public ObjectReference(Context context, String path, long blowerCreation, ObjectBlower<T> blower, Class<T> clazz) {
-        super(context, path);
+    public ObjectReference(Context context, String path, long blowerCreation, ObjectBlower<T> blower, Class<T> clazz, Long moment) {
+        super(context, path, moment);
         blowerMap = new HashMap<>();
         blowerMap.put(blowerCreation, blower);
         this.clazz = clazz;

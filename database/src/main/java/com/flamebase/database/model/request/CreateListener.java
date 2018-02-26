@@ -11,18 +11,20 @@ public class CreateListener {
     private String token;
     private String os;
     private String sha1;
+    private String content;
     private int len;
 
     public CreateListener() {
         // nothing to do here
     }
 
-    public CreateListener(String method, String path, String token, String os, String sha1, int len) {
+    public CreateListener(String method, String path, String token, String os, String sha1, String content, int len) {
         this.method = method;
         this.path = path;
         this.token = token;
         this.os = os;
         this.sha1 = sha1;
+        this.content = content;
         this.len = len;
     }
 
@@ -72,5 +74,13 @@ public class CreateListener {
 
     public void setLen(int len) {
         this.len = len;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
     }
 }

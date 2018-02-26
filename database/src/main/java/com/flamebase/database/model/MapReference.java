@@ -22,8 +22,8 @@ public abstract class MapReference<T> extends Reference<MapBlower<T>> {
 
     public Class<T> clazz;
 
-    public MapReference(Context context, String path, long blowerCreation, MapBlower<T> blower, Class<T> clazz) {
-        super(context, path);
+    public MapReference(Context context, String path, long blowerCreation, MapBlower<T> blower, Class<T> clazz, Long moment) {
+        super(context, path, moment);
         blowerMap = new HashMap<>();
         blowerMap.put(blowerCreation, blower);
         this.clazz = clazz;

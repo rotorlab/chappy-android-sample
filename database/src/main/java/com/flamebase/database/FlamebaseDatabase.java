@@ -52,7 +52,6 @@ public class FlamebaseDatabase {
     private static final String KEY = "database";
     private static final String OS = "android";
     private static Context context;
-    private static TokenListener listener;
     public static String id;
     private static String urlServer;
     public static String urlRedis;
@@ -142,7 +141,7 @@ public class FlamebaseDatabase {
      */
     public <T> FlamebaseDatabase createListener(final String path, Blower<T> blower, Class<T> clazz) {
         if (FlamebaseDatabase.pathMap == null) {
-            Log.e(TAG, "Use FlamebaseDatabase.initialize(Context context, String urlServer, String token) before create real time references");
+            Log.e(TAG, "Use FlamebaseDatabase.initialize(Context context, String urlServer, String token, StatusListener) before create real time references");
             return null;
         }
 
@@ -150,7 +149,13 @@ public class FlamebaseDatabase {
 
         blowerCreation = new Date().getTime();
 
-        if (FlamebaseDatabase.pathMap.containsKey(this.path)) {
+        if (flamebaseService == null || flamebaseService.getMoment() == null) {
+            statusListener.notConnected();
+            return null;
+        }
+
+        if (FlamebaseDatabase.pathMap.containsKey(this.path) && flamebaseService.getMoment().equals(FlamebaseDatabase.pathMap.get(this.path).getMoment())) {
+
             if (FlamebaseDatabase.debug) {
                 Log.d(TAG, "Listener already added for: " + this.path);
             }
@@ -174,7 +179,7 @@ public class FlamebaseDatabase {
 
                 final MapBlower<T> mapBlower = (MapBlower<T>) blower;
 
-                final MapReference mapReference = new MapReference<T>(context, this.path, blowerCreation, mapBlower, clazz) {
+                final MapReference mapReference = new MapReference<T>(context, this.path, blowerCreation, mapBlower, clazz, flamebaseService.getMoment()) {
 
                     @Override
                     public void progress(int value) {
@@ -195,7 +200,7 @@ public class FlamebaseDatabase {
 
                 final ObjectBlower<T> objectBlower = (ObjectBlower<T>) blower;
 
-                final ObjectReference objectReference = new ObjectReference<T>(context, this.path, blowerCreation, objectBlower, clazz) {
+                final ObjectReference objectReference = new ObjectReference<T>(context, this.path, blowerCreation, objectBlower, clazz, flamebaseService.getMoment()) {
 
                     @Override
                     public void progress(int value) {
@@ -223,9 +228,10 @@ public class FlamebaseDatabase {
         if (content == null) {
             content = EMPTY_OBJECT;
         }
+
         String sha1 = ReferenceUtils.SHA1(content);
 
-        CreateListener createListener = new CreateListener("create_listener", this.path, FlamebaseDatabase.id, OS, sha1, content.length());
+        CreateListener createListener = new CreateListener("create_listener", this.path, FlamebaseDatabase.id, OS, sha1, content, content.length());
 
         Call<SyncResponse> call = ReferenceUtils.service(FlamebaseDatabase.urlServer).createReference(createListener);
         call.enqueue(new Callback<SyncResponse>() {
@@ -460,6 +466,8 @@ public class FlamebaseDatabase {
             isServiceBound = false;
         }
     }
+
+
 
     private static ServiceConnection getServiceConnection(Object obj) {
         if (obj instanceof FlamebaseService) return new ServiceConnection() {

@@ -8,4 +8,6 @@ public interface StatusListener {
 
     void ready();
 
+    void notConnected();
+
 }
