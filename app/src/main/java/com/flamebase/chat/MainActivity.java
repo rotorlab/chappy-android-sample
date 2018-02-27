@@ -3,6 +3,7 @@ package com.flamebase.chat;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -184,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
                             if (!TextUtils.isEmpty(name.getText())) {
                                 SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
                                 String id = prefs.getString(getString(R.string.var_name), null);
-                                String groupPath = "/chats/" + name.getText().toString().trim().replace(" ", "_");
+                                final String groupPath = "/chats/" + name.getText().toString().trim().replace(" ", "_");
 
                                 List<String> members = new ArrayList<>();
                                 members.add(id);
@@ -192,9 +193,6 @@ public class MainActivity extends AppCompatActivity {
                                 Chat chat = new Chat(name.getText().toString(), members, messageMap);
                                 ChatManager.map.put(groupPath, chat);
                                 ChatManager.addGChat(groupPath);
-
-                                // ChatManager.syncGChat(groupPath);
-                                // FlamebaseDatabase.syncReference(groupPath, false);
 
                                 dialog.dismiss();
                                 materialDialog = null;

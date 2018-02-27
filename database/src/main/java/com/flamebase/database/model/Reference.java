@@ -51,6 +51,7 @@ public abstract class Reference<T> {
     protected String path;
     protected String stringReference;
     protected Long moment;
+    protected FlamebaseDatabase parent;
 
     public static final String ACTION_SIMPLE_UPDATE     = "simple_update";
     public static final String ACTION_SLICE_UPDATE      = "slice_update";
@@ -58,10 +59,12 @@ public abstract class Reference<T> {
     public static final String ACTION_SIMPLE_CONTENT    = "simple_content";
     public static final String ACTION_SLICE_CONTENT     = "slice_content";
     public static final String ACTION_NO_CONTENT        = "no_content";
+    public static final String ACTION_NEW_OBJECT        = "new_object";
 
-    public Reference(Context context, String path, Long moment) {
+    public Reference(Context context, String path, Long moment, FlamebaseDatabase parent) {
         this.context = context;
         this.path = path;
+        this.parent = parent;
         this.gson = getGsonBuilder();
         this.serverLen = 0;
         SC.init(this.context);
@@ -80,6 +83,7 @@ public abstract class Reference<T> {
             String data = json.has(REFERENCE) ? json.getString(REFERENCE) : null;
             String path = json.getString(PATH);
             String rData = data == null ? "{}" : ReferenceUtils.hex2String(data);
+
 
             if (!tag.equalsIgnoreCase(getTag())) {
                 return;
@@ -383,5 +387,9 @@ public abstract class Reference<T> {
 
     private Gson getGsonBuilder() {
         return new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+    }
+
+    public void parentSync() {
+        parent.sync();
     }
 }

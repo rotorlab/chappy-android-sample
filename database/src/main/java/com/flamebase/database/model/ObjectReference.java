@@ -2,6 +2,7 @@ package com.flamebase.database.model;
 
 import android.content.Context;
 
+import com.flamebase.database.FlamebaseDatabase;
 import com.flamebase.database.ReferenceUtils;
 import com.flamebase.database.interfaces.ObjectBlower;
 import com.google.common.reflect.TypeToken;
@@ -20,8 +21,8 @@ public abstract class ObjectReference<T> extends Reference<ObjectBlower<T>> {
 
     public Class<T> clazz;
 
-    public ObjectReference(Context context, String path, long blowerCreation, ObjectBlower<T> blower, Class<T> clazz, Long moment) {
-        super(context, path, moment);
+    public ObjectReference(Context context, String path, long blowerCreation, ObjectBlower<T> blower, Class<T> clazz, Long moment, FlamebaseDatabase parent) {
+        super(context, path, moment, parent);
         blowerMap = new HashMap<>();
         blowerMap.put(blowerCreation, blower);
         this.clazz = clazz;

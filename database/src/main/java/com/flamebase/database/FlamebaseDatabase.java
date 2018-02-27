@@ -40,6 +40,7 @@ import retrofit2.Response;
 import static android.content.Context.MODE_PRIVATE;
 import static com.flamebase.database.model.Reference.EMPTY_OBJECT;
 import static com.flamebase.database.model.Reference.PATH;
+import static com.flamebase.database.model.Reference.ACTION_NEW_OBJECT;
 
 /**
  * Created by efraespada on 10/06/2017.
@@ -174,7 +175,7 @@ public class FlamebaseDatabase {
 
                 final MapBlower<T> mapBlower = (MapBlower<T>) blower;
 
-                final MapReference mapReference = new MapReference<T>(context, this.path, blowerCreation, mapBlower, clazz, flamebaseService.getMoment()) {
+                final MapReference mapReference = new MapReference<T>(context, this.path, blowerCreation, mapBlower, clazz, flamebaseService.getMoment(), this) {
 
                     @Override
                     public void progress(int value) {
@@ -195,7 +196,7 @@ public class FlamebaseDatabase {
 
                 final ObjectBlower<T> objectBlower = (ObjectBlower<T>) blower;
 
-                final ObjectReference objectReference = new ObjectReference<T>(context, this.path, blowerCreation, objectBlower, clazz, flamebaseService.getMoment()) {
+                final ObjectReference objectReference = new ObjectReference<T>(context, this.path, blowerCreation, objectBlower, clazz, flamebaseService.getMoment(), this) {
 
                     @Override
                     public void progress(int value) {
@@ -226,7 +227,7 @@ public class FlamebaseDatabase {
 
         String sha1 = ReferenceUtils.SHA1(content);
 
-        CreateListener createListener = new CreateListener("create_listener", this.path, FlamebaseDatabase.id, OS, sha1, content, content.length());
+        CreateListener createListener = new CreateListener("create_listener", this.path, FlamebaseDatabase.id, OS, sha1, content.length());
 
         Call<SyncResponse> call = ReferenceUtils.service(FlamebaseDatabase.urlServer).createReference(createListener);
         call.enqueue(new Callback<SyncResponse>() {
@@ -340,13 +341,18 @@ public class FlamebaseDatabase {
         try {
             if (jsonObject.has("data")) {
                 JSONObject data = (JSONObject) jsonObject.get("data");
-                if (data.has(PATH)) {
+                if (data.has("info") && data.has(PATH)) {
+                    String info = data.getString("info");
+                    String path = data.getString(PATH);
+                    if (ACTION_NEW_OBJECT.equals(info)) {
+                        if (pathMap.containsKey(path)) {
+                            pathMap.get(path).parentSync();
+                        }
+                    }
+                } else if (data.has(PATH)) {
                     String path = data.getString(PATH);
                     if (pathMap.containsKey(path)) {
-                        //Log.d(FlamebaseDatabase.class.getSimpleName(), data.toString());
                         pathMap.get(path).onMessageReceived(data);
-                    } else {
-
                     }
                 }
             }
