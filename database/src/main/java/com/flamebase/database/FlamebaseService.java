@@ -6,7 +6,6 @@ import android.content.ServiceConnection;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.os.StrictMode;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -34,6 +33,7 @@ public class FlamebaseService extends Service {
     private static Long moment;
     private static RedisPubSubConnection<String, String> connection;
     private ServiceConnection sc;
+    private FlamebaseDatabase.InternalServiceListener listener;
     private boolean connectedToRedis;
 
     @Override
@@ -69,13 +69,15 @@ public class FlamebaseService extends Service {
             public void subscribed(String s, long l) {
                 moment = new Date().getTime();
                 connectedToRedis = true;
-                Runnable task = new Runnable() {
-                    @Override
-                    public void run() {
-                        FlamebaseDatabase.statusListener.ready();
-                    }
-                };
-                new Handler(getApplicationContext().getMainLooper()).post(task);
+                if (listener != null) {
+                    Runnable task = new Runnable() {
+                        @Override
+                        public void run() {
+                            listener.connected();
+                        }
+                    };
+                    new Handler(getApplicationContext().getMainLooper()).post(task);
+                }
             }
 
             @Override
@@ -87,13 +89,15 @@ public class FlamebaseService extends Service {
             public void unsubscribed(String s, long l) {
                 moment = null;
                 connectedToRedis = false;
-                Runnable task = new Runnable() {
-                    @Override
-                    public void run() {
-                        FlamebaseDatabase.statusListener.notConnected();
-                    }
-                };
-                new Handler(getApplicationContext().getMainLooper()).post(task);
+                if (listener != null) {
+                    Runnable task = new Runnable() {
+                        @Override
+                        public void run() {
+                            listener.connected();
+                        }
+                    };
+                    new Handler(getApplicationContext().getMainLooper()).post(task);
+                }
             }
 
             @Override
@@ -136,13 +140,16 @@ public class FlamebaseService extends Service {
                 connection.subscribe(FlamebaseDatabase.id);
             }
         } else if (connectedToRedis) {
-            Runnable task = new Runnable() {
-                @Override
-                public void run() {
-                    FlamebaseDatabase.statusListener.ready();
-                }
-            };
-            new Handler(getApplicationContext().getMainLooper()).post(task);
+            if (listener != null) {
+                Runnable task = new Runnable() {
+                    @Override
+                    public void run() {
+                        listener.connected();
+                    }
+                };
+                new Handler(getApplicationContext().getMainLooper()).post(task);
+            }
+
         }
     }
 
@@ -158,6 +165,13 @@ public class FlamebaseService extends Service {
     public void setServiceConnection(ServiceConnection sc) {
         Log.d(TAG, "serviceConnection set");
         this.sc = sc;
+    }
+
+    public void setListener(FlamebaseDatabase.InternalServiceListener listener) {
+        this.listener = listener;
+        if (initialized) {
+            this.listener.connected();
+        }
     }
 
     public Long getMoment() {

@@ -21,7 +21,6 @@ public class ChatManager {
 
     private static final String TAG = ChatManager.class.getSimpleName();
     public static final Map<String, Chat> map = new HashMap<>();
-    public static final Map<String, FlamebaseDatabase> mapFDB = new HashMap<>();
     public static final Map<String, Member> contacts = new HashMap<>();
     public static Listener listener;
 
@@ -33,67 +32,61 @@ public class ChatManager {
         // nothing to do here ..
     }
 
-    public static void init(Listener listener) {
+    public static void setListener(Listener listener) {
         ChatManager.listener = listener;
     }
 
-    public static void syncGChat(final String path) {
-        if (mapFDB.containsKey(path)) {
-            mapFDB.get(path).sync();
-        }
-    }
-
     public static void addGChat(final String path) {
-        if (!mapFDB.containsKey(path)) {
-            FlamebaseDatabase fdb = FlamebaseDatabase.getInstance().createListener(path, new ObjectBlower<Chat>() {
+        FlamebaseDatabase.createListener(path, new ObjectBlower<Chat>() {
 
-                @Override
-                public Chat updateObject() {
-                    if (map.containsKey(path)) {
-                        return map.get(path);
-                    } else {
-                        return null;
-                    }
+            @Override
+            public Chat updateObject() {
+                if (map.containsKey(path)) {
+                    return map.get(path);
+                } else {
+                    return null;
+                }
+            }
+
+            @Override
+            public void onObjectChanged(Chat ref) {
+                if (ref == null) {
+
+                } else if (map.containsKey(path)) {
+                    map.get(path).setMembers(ref.getMembers());
+                    map.get(path).setMessages(ref.getMessages());
+                    map.get(path).setName(ref.getName());
+                } else {
+                    map.put(path, ref);
+                }
+                Log.e(TAG, "chats: " + map.size());
+
+                List<Chat> chats = new ArrayList<>();
+                for (Map.Entry<String, Chat> entry : ChatManager.getChats().entrySet()) {
+                    chats.add(entry.getValue());
                 }
 
-                @Override
-                public void onObjectChanged(Chat ref) {
-                    if (ref == null) {
-
-                    } else if (map.containsKey(path)) {
-                        map.get(path).setMembers(ref.getMembers());
-                        map.get(path).setMessages(ref.getMessages());
-                        map.get(path).setName(ref.getName());
-                    } else {
-                        map.put(path, ref);
-                    }
-                    Log.e(TAG, "chats: " + map.size());
-
-                    List<Chat> chats = new ArrayList<>();
-                    for (Map.Entry<String, Chat> entry : ChatManager.getChats().entrySet()) {
-                        chats.add(entry.getValue());
-                    }
+                if (listener != null) {
                     ChatManager.listener.update(chats);
                 }
+            }
 
-                @Override
-                public void progress(int value) {
-                    Log.e(TAG, "loading percent for " + path + " : " + value + " %");
-                }
+            @Override
+            public void progress(int value) {
+                Log.e(TAG, "loading percent for " + path + " : " + value + " %");
+            }
 
-            }, Chat.class);
-            mapFDB.put(path, fdb);
-            LocalData.addPath(path);
-        }
+        }, Chat.class);
+        LocalData.addPath(path);
     }
 
     /**
      * creates a listener for given path
      */
     public static void syncContacts() {
-
+        // TODO correct this
         final String path = "/contacts";
-        FlamebaseDatabase.getInstance().createListener(path, new MapBlower<Member>() {
+        FlamebaseDatabase.createListener(path, new MapBlower<Member>() {
 
             @Override
             public Map<String, Member> updateMap() {
@@ -122,6 +115,17 @@ public class ChatManager {
             }
 
         }, Member.class);
+    }
+
+    public static void refreshChatsList() {
+        List<Chat> chats = new ArrayList<>();
+        for (Map.Entry<String, Chat> entry : ChatManager.getChats().entrySet()) {
+            chats.add(entry.getValue());
+        }
+
+        if (listener != null) {
+            ChatManager.listener.update(chats);
+        }
     }
 
     public static Map<String, Member> getContacts() {

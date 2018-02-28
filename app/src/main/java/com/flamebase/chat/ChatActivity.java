@@ -45,7 +45,6 @@ public class ChatActivity extends AppCompatActivity {
     private Chat chat;
     private Button sendButton;
     private EditText messageText;
-    private FlamebaseDatabase flamebaseDatabase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,9 +56,6 @@ public class ChatActivity extends AppCompatActivity {
         Intent intent = getIntent();
 
         final String path = "/chats/" + intent.getStringExtra("path");
-
-        LocalData.init(this);
-
 
         messageList = (RecyclerView) findViewById(R.id.messages_list);
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
@@ -92,7 +88,7 @@ public class ChatActivity extends AppCompatActivity {
                     Message message = new Message(name, messageText.getText().toString());
                     chat.getMessages().put(String.valueOf(new Date().getTime()), message);
 
-                    flamebaseDatabase.sync();
+                    FlamebaseDatabase.sync(path);
 
                     Handler handler = new Handler();
                     handler.postDelayed(new Runnable() {
@@ -137,7 +133,7 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
 
-        flamebaseDatabase = FlamebaseDatabase.getInstance().createListener(path, new ObjectBlower<Chat>() {
+        FlamebaseDatabase.createListener(path, new ObjectBlower<Chat>() {
 
             @Override
             public Chat updateObject() {

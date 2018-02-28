@@ -20,14 +20,15 @@ import java.util.List;
  * Created by efraespada on 17/06/2017.
  */
 
-public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
+public abstract class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
 
-    public Context context;
     public static final List<Chat> chats = new ArrayList<>();
 
-    public ChatAdapter(Context context) {
-        this.context = context;
+    public ChatAdapter() {
+        // nothing to do here
     }
+
+    public abstract void onChatClicked(Chat chat);
 
     @Override
     public ChatAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -37,15 +38,12 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
 
     @Override
     public void onBindViewHolder(ChatAdapter.ViewHolder holder, int position) {
-        Chat chat = chats.get(position);
+        final Chat chat = chats.get(position);
 
-        final String key = chat.getName();
         holder.content.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(context, ChatActivity.class);
-                intent.putExtra("path", key);
-                context.startActivity(intent);
+                onChatClicked(chat);
             }
         });
         holder.name.setText(chat.getName());

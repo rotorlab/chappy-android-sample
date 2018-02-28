@@ -38,7 +38,7 @@ dependencies {
 FlamebaseDatabase.initialize(Context context, String cluster_ip, String redis_ip, new StatusListener() {
  
     @Override
-    public void ready() {
+    public void connected() {
         /* only called when flamebase service starts and connects with cluster
         *  it won't be fired if service is already started
         */
@@ -65,7 +65,7 @@ FlamebaseDatabase.createListener(path, new ObjectBlower<ObjectA>() {
  
     /**
     * called after reference is synchronized with server
-    * or is ready to be used (1st sync).
+    * or is connected to be used (1st sync).
     * 
     * null param means there is nothing stored on db
     */

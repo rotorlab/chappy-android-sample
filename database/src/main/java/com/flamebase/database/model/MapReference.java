@@ -23,8 +23,8 @@ public abstract class MapReference<T> extends Reference<MapBlower<T>> {
 
     public Class<T> clazz;
 
-    public MapReference(Context context, String path, long blowerCreation, MapBlower<T> blower, Class<T> clazz, Long moment, FlamebaseDatabase parent) {
-        super(context, path, moment, parent);
+    public MapReference(Context context, String path, long blowerCreation, MapBlower<T> blower, Class<T> clazz, Long moment) {
+        super(context, path, moment);
         blowerMap = new HashMap<>();
         blowerMap.put(blowerCreation, blower);
         this.clazz = clazz;
@@ -75,19 +75,16 @@ public abstract class MapReference<T> extends Reference<MapBlower<T>> {
     @Override
     public void loadCachedReference() {
         stringReference = ReferenceUtils.getElement(path);
-        if (stringReference == null) {
-            stringReference = getStringReference();
-            ReferenceUtils.addElement(path, stringReference);
-        }
+        if (stringReference != null && stringReference.length() > EMPTY_OBJECT.length()) {
+            Map<String, T> map = new HashMap<>();
+            LinkedTreeMap<String, T> mapTemp = gson.fromJson(stringReference, getType(clazz));
+            for (LinkedTreeMap.Entry<String, T> entry : mapTemp.entrySet()) {
+                map.put(entry.getKey(), entry.getValue());
+            }
 
-        Map<String, T> map = new HashMap<>();
-        LinkedTreeMap<String, T> mapTemp = gson.fromJson(stringReference, getType(clazz));
-        for (LinkedTreeMap.Entry<String, T> entry : mapTemp.entrySet()) {
-            map.put(entry.getKey(), entry.getValue());
-        }
-
-        for (Map.Entry<Long, MapBlower<T>> entry : blowerMap.entrySet()) {
-            entry.getValue().onMapChanged(map);
+            for (Map.Entry<Long, MapBlower<T>> entry : blowerMap.entrySet()) {
+                entry.getValue().onMapChanged(map);
+            }
         }
     }
 

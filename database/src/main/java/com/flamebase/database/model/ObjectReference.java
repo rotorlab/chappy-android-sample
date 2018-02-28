@@ -21,8 +21,8 @@ public abstract class ObjectReference<T> extends Reference<ObjectBlower<T>> {
 
     public Class<T> clazz;
 
-    public ObjectReference(Context context, String path, long blowerCreation, ObjectBlower<T> blower, Class<T> clazz, Long moment, FlamebaseDatabase parent) {
-        super(context, path, moment, parent);
+    public ObjectReference(Context context, String path, long blowerCreation, ObjectBlower<T> blower, Class<T> clazz, Long moment) {
+        super(context, path, moment);
         blowerMap = new HashMap<>();
         blowerMap.put(blowerCreation, blower);
         this.clazz = clazz;
@@ -67,14 +67,13 @@ public abstract class ObjectReference<T> extends Reference<ObjectBlower<T>> {
             for (Map.Entry<Long, ObjectBlower<T>> entry : blowerMap.entrySet()) {
                 entry.getValue().onObjectChanged((T) gson.fromJson(stringReference, TypeToken.of(clazz).getType()));
             }
-        } else {
-            // blower.onObjectChanged(null);
         }
     }
 
     private ObjectBlower<T> getLastest() {
         long lastest = 0;
         ObjectBlower<T> blower = null;
+        // TODO limit list of blowers
         for (Map.Entry<Long, ObjectBlower<T>> entry : blowerMap.entrySet()) {
             if (lastest < entry.getKey()) {
                 lastest = entry.getKey();

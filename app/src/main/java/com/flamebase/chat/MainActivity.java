@@ -1,6 +1,7 @@
 package com.flamebase.chat;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -48,47 +49,32 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        LocalData.init(this);
 
         chatsList = findViewById(R.id.chats_list);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
         chatsList.setLayoutManager(mLayoutManager);
 
-        FlamebaseDatabase.initialize(this, BuildConfig.database_url, BuildConfig.redis_url, new StatusListener() {
+        chatsList.setAdapter(new ChatAdapter() {
             @Override
-            public void ready() {
-                ChatManager.syncContacts();
-
-                chatsList.setAdapter(new ChatAdapter(MainActivity.this));
-                ChatManager.init(new ChatManager.Listener() {
-                    @Override
-                    public void update(List<Chat> chats) {
-                        ((ChatAdapter) chatsList.getAdapter()).chats.clear();
-                        ((ChatAdapter) chatsList.getAdapter()).chats.addAll(chats);
-                        chatsList.getAdapter().notifyDataSetChanged();
-                    }
-                });
-
-
-                JSONArray array = LocalData.getLocalPaths();
-                for (int i = 0; i < array.length(); i++) {
-                    try {
-                        String path = array.getString(i);
-                        ChatManager.addGChat(path);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                askForEmail();
-            }
-
-            @Override
-            public void notConnected() {
-
+            public void onChatClicked(Chat chat) {
+                Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+                intent.putExtra("path", chat.getName());
+                MainActivity.this.startActivity(intent);
             }
         });
-        FlamebaseDatabase.setDebug(true);
+
+        ChatManager.setListener(new ChatManager.Listener() {
+            @Override
+            public void update(List<Chat> chats) {
+                ((ChatAdapter) chatsList.getAdapter()).chats.clear();
+                ((ChatAdapter) chatsList.getAdapter()).chats.addAll(chats);
+                chatsList.getAdapter().notifyDataSetChanged();
+            }
+        });
+
+        ChatManager.refreshChatsList();
+
+        askForEmail();
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -104,6 +90,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         FlamebaseDatabase.onResume();
+        if (chatsList != null) {
+            chatsList.getAdapter().notifyDataSetChanged();
+        }
     }
 
     @Override

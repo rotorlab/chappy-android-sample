@@ -17,7 +17,6 @@ import com.flamebase.database.interfaces.StatusListener;
 import com.flamebase.database.model.MapReference;
 import com.flamebase.database.model.ObjectReference;
 import com.flamebase.database.model.Reference;
-import com.flamebase.database.model.TokenListener;
 import com.flamebase.database.model.request.CreateListener;
 import com.flamebase.database.model.request.RemoveListener;
 import com.flamebase.database.model.request.UpdateFromServer;
@@ -61,12 +60,41 @@ public class FlamebaseDatabase {
     private static FlamebaseService flamebaseService;
     private static Boolean isServiceBound;
 
-    private Long blowerCreation;
-    private String path;
-    private int requestToClose;
-
     private static Gson gson;
-    public static Boolean debug = false;
+    public static Boolean debug;
+    public static Boolean initialized;
+
+    public static final ServiceConnection serviceConnection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            if (service instanceof FlamebaseService.FBinder) {
+                flamebaseService = ((FlamebaseService.FBinder) service).getService();
+                flamebaseService.setServiceConnection(this);
+                flamebaseService.setListener(new InternalServiceListener() {
+                    @Override
+                    public void connected() {
+                        if (initialized) {
+                            initialized = false;
+                            statusListener.connected();
+                        }
+                    }
+
+                    @Override
+                    public void reconnecting() {
+                        statusListener.reconnecting();
+                    }
+                });
+                if (debug) Log.e(TAG, "instanced service");
+            }
+        }
+
+        public void onServiceDisconnected(ComponentName className) {
+            if (className.getClassName().equals(FlamebaseService.class.getName())) {
+                flamebaseService.setListener(null);
+                flamebaseService = null;
+            }
+            if (debug) Log.e(TAG, "disconnected");
+        }
+    };
 
     private static HashMap<String, Reference> pathMap;
 
@@ -76,8 +104,16 @@ public class FlamebaseDatabase {
         MAP
     }
 
+    interface InternalServiceListener {
+
+        void connected();
+
+        void reconnecting();
+
+    }
+
     private FlamebaseDatabase() {
-        requestToClose = 0;
+        // nothing to do here
     }
 
     /**
@@ -102,6 +138,8 @@ public class FlamebaseDatabase {
             FlamebaseDatabase.pathMap = new HashMap<>();
         }
 
+        initialized = true;
+
         SC.init(context);
         ReferenceUtils.initialize(context);
         start();
@@ -123,10 +161,6 @@ public class FlamebaseDatabase {
         FlamebaseDatabase.debug = debug;
     }
 
-    public static FlamebaseDatabase getInstance() {
-        return new FlamebaseDatabase();
-    }
-
     /**
      * creates a listener for given path
      *
@@ -135,29 +169,27 @@ public class FlamebaseDatabase {
      * @param clazz
      * @param <T>
      */
-    public <T> FlamebaseDatabase createListener(final String path, Blower<T> blower, Class<T> clazz) {
+    public static <T> void createListener(final String path, Blower<T> blower, Class<T> clazz) {
         if (FlamebaseDatabase.pathMap == null) {
             Log.e(TAG, "Use FlamebaseDatabase.initialize(Context context, String urlServer, String token, StatusListener) before create real time references");
-            return null;
+            return;
         }
-
-        this.path = path;
-
-        blowerCreation = new Date().getTime();
 
         if (flamebaseService == null || flamebaseService.getMoment() == null) {
-            statusListener.notConnected();
-            return null;
+            statusListener.reconnecting();
+            return;
         }
 
-        if (FlamebaseDatabase.pathMap.containsKey(this.path) && flamebaseService.getMoment().equals(FlamebaseDatabase.pathMap.get(this.path).getMoment())) {
+        long blowerCreation = new Date().getTime();
+
+        if (FlamebaseDatabase.pathMap.containsKey(path) && flamebaseService.getMoment().equals(FlamebaseDatabase.pathMap.get(path).getMoment())) {
 
             if (FlamebaseDatabase.debug) {
-                Log.d(TAG, "Listener already added for: " + this.path);
+                Log.d(TAG, "Listener already added for: " + path);
             }
-            pathMap.get(this.path).addBlower(blowerCreation, blower);
-            pathMap.get(this.path).loadCachedReference();
-            return this;
+            pathMap.get(path).addBlower(blowerCreation, blower);
+            pathMap.get(path).loadCachedReference();
+            return;
         }
 
         Type type;
@@ -175,7 +207,7 @@ public class FlamebaseDatabase {
 
                 final MapBlower<T> mapBlower = (MapBlower<T>) blower;
 
-                final MapReference mapReference = new MapReference<T>(context, this.path, blowerCreation, mapBlower, clazz, flamebaseService.getMoment(), this) {
+                final MapReference mapReference = new MapReference<T>(context, path, blowerCreation, mapBlower, clazz, flamebaseService.getMoment()) {
 
                     @Override
                     public void progress(int value) {
@@ -184,11 +216,11 @@ public class FlamebaseDatabase {
 
                 };
 
-                pathMap.put(this.path, mapReference);
+                pathMap.put(path, mapReference);
 
-                //mapReference.loadCachedReference();
+                mapReference.loadCachedReference();
 
-                syncWithServer();
+                syncWithServer(path);
 
                 break;
 
@@ -196,7 +228,7 @@ public class FlamebaseDatabase {
 
                 final ObjectBlower<T> objectBlower = (ObjectBlower<T>) blower;
 
-                final ObjectReference objectReference = new ObjectReference<T>(context, this.path, blowerCreation, objectBlower, clazz, flamebaseService.getMoment(), this) {
+                final ObjectReference objectReference = new ObjectReference<T>(context, path, blowerCreation, objectBlower, clazz, flamebaseService.getMoment()) {
 
                     @Override
                     public void progress(int value) {
@@ -205,29 +237,26 @@ public class FlamebaseDatabase {
 
                 };
 
-                pathMap.put(this.path, objectReference);
+                pathMap.put(path, objectReference);
 
-                //objectReference.loadCachedReference();
+                objectReference.loadCachedReference();
 
-                syncWithServer();
+                syncWithServer(path);
 
                 break;
         }
 
-        // syncReference(this.path, true);
-
-        return this;
     }
 
-    private void syncWithServer() {
-        String content = ReferenceUtils.getElement(this.path);
+    private static void syncWithServer(String path) {
+        String content = ReferenceUtils.getElement(path);
         if (content == null) {
             content = EMPTY_OBJECT;
         }
 
         String sha1 = ReferenceUtils.SHA1(content);
 
-        CreateListener createListener = new CreateListener("create_listener", this.path, FlamebaseDatabase.id, OS, sha1, content.length());
+        CreateListener createListener = new CreateListener("create_listener", path, FlamebaseDatabase.id, OS, sha1, content.length());
 
         Call<SyncResponse> call = ReferenceUtils.service(FlamebaseDatabase.urlServer).createReference(createListener);
         call.enqueue(new Callback<SyncResponse>() {
@@ -255,46 +284,37 @@ public class FlamebaseDatabase {
         });
     }
 
-    public void removeListener() {
-        removeListener(this.path);
-    }
-
-    public void removeListener(final String path) {
+    public static void removeListener(final String path) {
         if (pathMap.containsKey(path)) {
-            Reference reference = pathMap.get(path);
-            if (reference.blowerMap.size() <= 1 || (reference.blowerMap.size() > 1 && reference.blowerMap.size() == requestToClose)) {
-                RemoveListener removeListener = new RemoveListener("remove_listener", path, FlamebaseDatabase.id);
-                Call<SyncResponse> call = ReferenceUtils.service(FlamebaseDatabase.urlServer).removeListener(removeListener);
-                call.enqueue(new Callback<SyncResponse>() {
+            RemoveListener removeListener = new RemoveListener("remove_listener", path, FlamebaseDatabase.id);
+            Call<SyncResponse> call = ReferenceUtils.service(FlamebaseDatabase.urlServer).removeListener(removeListener);
+            call.enqueue(new Callback<SyncResponse>() {
 
-                    @Override
-                    public void onResponse(Call<SyncResponse> call, Response<SyncResponse> response) {
-                        if (response.errorBody() != null && !response.isSuccessful()) {
-                            try {
-                                Log.e(TAG, response.errorBody().string());
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
+                @Override
+                public void onResponse(Call<SyncResponse> call, Response<SyncResponse> response) {
+                    if (response.errorBody() != null && !response.isSuccessful()) {
+                        try {
+                            Log.e(TAG, response.errorBody().string());
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
                     }
+                }
 
-                    @Override
-                    public void onFailure(Call<SyncResponse> call, Throwable t) {
-                        if (t.getStackTrace() != null) {
-                            Log.e(TAG, "error");
-                            t.printStackTrace();
-                        } else {
-                            Log.e(TAG, "remove listener response error");
-                        }
+                @Override
+                public void onFailure(Call<SyncResponse> call, Throwable t) {
+                    if (t.getStackTrace() != null) {
+                        Log.e(TAG, "error");
+                        t.printStackTrace();
+                    } else {
+                        Log.e(TAG, "remove listener response error");
                     }
-                });
-            } else {
-                requestToClose++;
-            }
+                }
+            });
         }
     }
 
-    private void refreshToServer(final String path, @NonNull String differences, @NonNull Integer len, boolean clean) {
+    private static void refreshToServer(final String path, @NonNull String differences, @NonNull Integer len, boolean clean) {
         String content = ReferenceUtils.getElement(path);
 
         if (differences.equals(EMPTY_OBJECT)) {
@@ -346,7 +366,7 @@ public class FlamebaseDatabase {
                     String path = data.getString(PATH);
                     if (ACTION_NEW_OBJECT.equals(info)) {
                         if (pathMap.containsKey(path)) {
-                            pathMap.get(path).parentSync();
+                            sync(path);
                         }
                     }
                 } else if (data.has(PATH)) {
@@ -361,8 +381,8 @@ public class FlamebaseDatabase {
         }
     }
 
-    public void sync() {
-        sync(false);
+    public static void sync(String path) {
+        sync(path, false);
     }
 
     /**
@@ -370,12 +390,14 @@ public class FlamebaseDatabase {
      *
      * @param clean
      */
-    public void sync(boolean clean) {
-        if (pathMap.containsKey(this.path)) {
-            Object[] result = pathMap.get(this.path).syncReference(clean);
+    public static void sync(String path, boolean clean) {
+        if (pathMap.containsKey(path)) {
+            Object[] result = pathMap.get(path).syncReference(clean);
             String diff = (String) result[1];
             Integer len = (Integer) result[0];
-            refreshToServer(this.path, diff, len, clean);
+            if (!EMPTY_OBJECT.equals(diff)) {
+                refreshToServer(path, diff, len, clean);
+            }
         }
     }
 
@@ -388,7 +410,7 @@ public class FlamebaseDatabase {
             Object[] result = pathMap.get(path).syncReference(clean);
             String diff = (String) result[1];
             Integer len = (Integer) result[0];
-            new FlamebaseDatabase().refreshToServer(path, diff, len, clean);
+            refreshToServer(path, diff, len, clean);
         }
     }
 
@@ -449,12 +471,6 @@ public class FlamebaseDatabase {
             context.bindService(i, getServiceConnection(new FlamebaseService()), Context.BIND_AUTO_CREATE);
             isServiceBound = true;
         }
-        /*
-          else {
-            flamebaseService.stopService();
-            flamebaseService.startService();
-        }
-        */
     }
 
     public static void onResume() {
@@ -471,20 +487,10 @@ public class FlamebaseDatabase {
 
 
     private static ServiceConnection getServiceConnection(Object obj) {
-        if (obj instanceof FlamebaseService) return new ServiceConnection() {
-            public void onServiceConnected(ComponentName className, IBinder service) {
-                if (service instanceof FlamebaseService.FBinder) {
-                    flamebaseService = ((FlamebaseService.FBinder) service).getService();
-                    flamebaseService.setServiceConnection(this);
-                    if (debug) Log.e(TAG, "instanced service");
-                }
-            }
-
-            public void onServiceDisconnected(ComponentName className) {
-                if (className.getClassName().equals(FlamebaseService.class.getName())) flamebaseService = null;
-                if (debug) Log.e(TAG, "disconnected");
-            }
-        };
-        return null;
+        if (obj instanceof FlamebaseService) {
+            return serviceConnection;
+        } else {
+            return null;
+        }
     }
 }
