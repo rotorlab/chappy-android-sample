@@ -55,7 +55,7 @@ public class ChatActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
 
-        final String path = "/chats/" + intent.getStringExtra("path");
+        final String path = "/chats/" + intent.getStringExtra("path").replaceAll(" ", "_");
 
         messageList = (RecyclerView) findViewById(R.id.messages_list);
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());

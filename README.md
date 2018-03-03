@@ -151,11 +151,15 @@ In the sample app chats still receiving updates on background, when the applicat
 
 Limitations 
 -----------
-**List objects aren't supported:** List objects gives problems when differences are being generated. If you plan to store iterations you can dispose a basic map object:
+**List objects aren't supported:** List objects gives problems when differences are being generated. If you plan to store iterations you can dispose a map object with the object types you want:
 ```json
 {
-    "0": "item1",
+    "0": 1,
     "1": "item2",
-    "2": "item3"
+    "2": {
+        "title": "title 3",
+        "body": "body 3",
+        "delay": 3
+    }
 }
 ```
