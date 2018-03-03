@@ -218,29 +218,28 @@ Define a chat listener and add messages:
             // update screent title
             if (chat != null) {
                 ChatActivity.this.setTitle(chat.getName());
-            }
-    
-            // order messages
-            Map<String, Message> messageMap = new TreeMap<>(new Comparator<String>() {
-                @Override
-                public int compare(String o1, String o2) {
-                    Long a = Long.valueOf(o1);
-                    Long b = Long.valueOf(o2);
-                    if (a > b) {
-                        return 1;
-                    } else if (a < b) {
-                        return -1;
-                    } else {
-                        return 0;
+                
+                // order messages
+                Map<String, Message> messageMap = new TreeMap<>(new Comparator<String>() {
+                    @Override public int compare(String o1, String o2) {
+                        Long a = Long.valueOf(o1);
+                        Long b = Long.valueOf(o2);
+                        if (a > b) {
+                            return 1;
+                        } else if (a < b) {
+                            return -1;
+                        } else {
+                            return 0;
+                        }
                     }
-                }
-            });
-            messageMap.putAll(chat.getMessages());
-            chat.setMessages(messageMap);
-    
-            // update list
-            messageList.getAdapter().notifyDataSetChanged();
-            messageList.smoothScrollToPosition(0);
+                });
+                messageMap.putAll(chat.getMessages());
+                chat.setMessages(messageMap);
+        
+                // update list
+                messageList.getAdapter().notifyDataSetChanged();
+                messageList.smoothScrollToPosition(0);
+            }
         }
     
         @Override public void progress(int value) {
