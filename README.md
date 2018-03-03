@@ -3,15 +3,28 @@
 <img width="30%" vspace="20" src="https://github.com/flamebase/flamebase-database-android/raw/develop/sample1.png">    
 
 ```java
-class Test {
+public class Chat {
 
+    @SerializedName("name")
+    @Expose
+    String name;
+
+    @SerializedName("members")
+    @Expose
+    Map<String, Member> members;
+
+    @SerializedName("messages")
+    @Expose
+    Map<String, Message> messages;
+
+    public Chat(String name, Map<String, Member> members, Map<String, Message> messages) {
+        this.name = name;
+        this.members = members;
+        this.messages = messages;
+    }
+    
 }
 ```
-
-test                        |  Test
-:--------------------------:|:-------------------------:
-![](https://github.com/flamebase/flamebase-database-android/raw/develop/sample1.png)  |  ![](https://github.com/flamebase/flamebase-database-android/blob/develop/app/src/main/java/com/flamebase/chat/model/Chat.java)
-
 # :fire: flamebase-database-android
 
 Real time JSON database (android client). Work with synchronized java objects stored as JSON objects.
