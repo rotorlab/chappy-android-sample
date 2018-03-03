@@ -1,5 +1,7 @@
 <p align="center"><img width="10%" vspace="20" src="https://github.com/flamebase/flamebase-database-android/raw/develop/app/src/main/res/mipmap-xxxhdpi/ic_launcher_rounded.png"></p>
+ 
 Imagine define some simple objects and share it between other devices by paths:
+ 
 ```java
 public class Chat {
 
@@ -21,7 +23,8 @@ public class Chat {
         this.messages = messages;
     }
     
-}```
+}
+```
 <p align="center"><img width="30%" vspace="20" src="https://github.com/flamebase/flamebase-database-android/raw/develop/sample1.png"></p>
 
 # :fire: flamebase-database-android
