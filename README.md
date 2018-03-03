@@ -206,14 +206,17 @@ FlamebaseDatabase.createListener(path, new ObjectBlower<Chat>() {
 
     @Override
     public void onObjectChanged(Chat ref) {
+        // update reference
         if (ref != null) {
             chat = ref;
         }
 
+        // update screent title
         if (chat != null) {
             ChatActivity.this.setTitle(chat.getName());
         }
 
+        // order messages
         Map<String, Message> messageMap = new TreeMap<>(new Comparator<String>() {
             @Override
             public int compare(String o1, String o2) {
@@ -228,13 +231,11 @@ FlamebaseDatabase.createListener(path, new ObjectBlower<Chat>() {
                 }
             }
         });
-
         messageMap.putAll(chat.getMessages());
-
         chat.setMessages(messageMap);
 
+        // update list
         messageList.getAdapter().notifyDataSetChanged();
-
         messageList.smoothScrollToPosition(0);
 
     }
