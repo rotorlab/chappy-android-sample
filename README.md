@@ -1,11 +1,12 @@
 <p align="center"><img width="10%" vspace="20" src="https://github.com/flamebase/flamebase-database-android/raw/develop/app/src/main/res/mipmap-xxxhdpi/ic_launcher_rounded.png"></p>
 <table>
-<img width="10%" vspace="20" src="https://github.com/flamebase/flamebase-database-android/raw/develop/sample1.png">|
+<img width="30%" vspace="20" src="https://github.com/flamebase/flamebase-database-android/raw/develop/sample1.png">    
+
 ```java
 class Test {
 
 }
-``
+```
 
 # :fire: flamebase-database-android
 
