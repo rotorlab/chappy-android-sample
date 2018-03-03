@@ -1,8 +1,12 @@
 package com.flamebase.database;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
@@ -27,14 +31,95 @@ import java.util.Date;
 public class FlamebaseService extends Service {
 
     private static final String TAG = FlamebaseService.class.getSimpleName();
+    private static final String PREF_KEY = "flamebase_url";
+    private static final String PREF_CONFIG_KEY = "flamebase_config";
+    private static final String EXCEPTION_NO_SERVER_URL = "No URL was defined for Flamebase Server";
     private final IBinder binder = new FlamebaseService.FBinder();
-    private static boolean initialized;
-    private static RedisClient client;
-    private static Long moment;
-    private static RedisPubSubConnection<String, String> connection;
+    private boolean initialized;
+    private RedisClient client;
+    private Long moment;
+    private RedisPubSubConnection<String, String> connection;
     private ServiceConnection sc;
     private FlamebaseDatabase.InternalServiceListener listener;
     private boolean connectedToRedis;
+    private RedisPubSubListener redisPubSubListener = new RedisPubSubListener<String, String>() {
+        @Override
+        public void message(String s, final String s2) {
+            Runnable task = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        FlamebaseDatabase.onMessageReceived(new JSONObject(s2));
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+            new Handler(getApplicationContext().getMainLooper()).post(task);
+        }
+
+        @Override
+        public void message(String s, String k1, String s2) {
+            // nothing to do here
+        }
+
+        @Override
+        public void subscribed(String s, long l) {
+            moment = new Date().getTime();
+            connectedToRedis = true;
+            if (listener != null) {
+                Runnable task = new Runnable() {
+                    @Override
+                    public void run() {
+                        listener.connected();
+                    }
+                };
+                new Handler(getApplicationContext().getMainLooper()).post(task);
+            }
+        }
+
+        @Override
+        public void psubscribed(String s, long l) {
+            // nothing to do here
+        }
+
+        @Override
+        public void unsubscribed(String s, long l) {
+            moment = null;
+            connectedToRedis = false;
+            if (listener != null) {
+                Runnable task = new Runnable() {
+                    @Override
+                    public void run() {
+                        listener.connected();
+                    }
+                };
+                new Handler(getApplicationContext().getMainLooper()).post(task);
+            }
+        }
+
+        @Override
+        public void punsubscribed(String s, long l) {
+            // nothing to do here
+        }
+    };
+
+    private final BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            int status = NetworkUtil.getConnectivityStatusString(context);
+            Log.e(TAG, "network changed");
+            if (!"android.net.conn.CONNECTIVITY_CHANGE".equals(intent.getAction())) {
+                if (status != NetworkUtil.NETWORK_STATUS_NOT_CONNECTED) {
+                    resetConnection();
+                } else {
+                    if (connection != null) {
+                        connection.removeListener(redisPubSubListener);
+                    }
+                }
+            }
+        }
+    };
 
     @Override
     public void onCreate() {
@@ -42,69 +127,43 @@ public class FlamebaseService extends Service {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
-        client = RedisClient.create(FlamebaseDatabase.urlRedis);
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("android.net.conn.CONNECTIVITY_CHANGE");
+        filter.addAction("android.net.wifi.WIFI_STATE_CHANGED");
+        registerReceiver(receiver, filter);
+
+        resetConnection();
+    }
+
+    private void resetConnection() {
+        if (listener != null) {
+            listener.reconnecting();
+        }
+        if (client == null) {
+
+            String url = FlamebaseDatabase.urlRedis;
+            if (url == null || url.length() == 0) {
+                SharedPreferences shared = getApplicationContext().getSharedPreferences(PREF_CONFIG_KEY, MODE_PRIVATE);
+                url = shared.getString(PREF_KEY, null);
+            } else {
+                SharedPreferences.Editor shared = getApplicationContext().getSharedPreferences(PREF_CONFIG_KEY, MODE_PRIVATE).edit();
+                shared.putString(PREF_KEY, url);
+                shared.apply();
+            }
+
+            if (url == null) {
+                throw new FlamebaseConnectionException(EXCEPTION_NO_SERVER_URL);
+            } else if (NetworkUtil.getConnectivityStatusString(getApplicationContext()) == NetworkUtil.NETWORK_STATUS_NOT_CONNECTED) {
+                return;
+            }
+
+            client = RedisClient.create(url);
+        } else {
+            client.shutdown();
+        }
+
         connection = client.connectPubSub();
-        connection.addListener(new RedisPubSubListener<String, String>() {
-            @Override
-            public void message(String s, final String s2) {
-                Runnable task = new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            FlamebaseDatabase.onMessageReceived(new JSONObject(s2));
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                };
-                new Handler(getApplicationContext().getMainLooper()).post(task);
-            }
-
-            @Override
-            public void message(String s, String k1, String s2) {
-                // nothing to do here
-            }
-
-            @Override
-            public void subscribed(String s, long l) {
-                moment = new Date().getTime();
-                connectedToRedis = true;
-                if (listener != null) {
-                    Runnable task = new Runnable() {
-                        @Override
-                        public void run() {
-                            listener.connected();
-                        }
-                    };
-                    new Handler(getApplicationContext().getMainLooper()).post(task);
-                }
-            }
-
-            @Override
-            public void psubscribed(String s, long l) {
-                // nothing to do here
-            }
-
-            @Override
-            public void unsubscribed(String s, long l) {
-                moment = null;
-                connectedToRedis = false;
-                if (listener != null) {
-                    Runnable task = new Runnable() {
-                        @Override
-                        public void run() {
-                            listener.connected();
-                        }
-                    };
-                    new Handler(getApplicationContext().getMainLooper()).post(task);
-                }
-            }
-
-            @Override
-            public void punsubscribed(String s, long l) {
-                // nothing to do here
-            }
-        });
+        connection.addListener(redisPubSubListener);
     }
 
     @Override
@@ -130,16 +189,17 @@ public class FlamebaseService extends Service {
     @Override
     public void onDestroy() {
         Log.d(TAG, "service destroyed");
+        unregisterReceiver(receiver);
         super.onDestroy();
     }
 
     public void startService() {
-        if (!initialized) {
+        if (!connectedToRedis && NetworkUtil.getConnectivityStatusString(getApplicationContext()) != NetworkUtil.NETWORK_STATUS_NOT_CONNECTED) {
             initialized = true;
             if (client != null && connection != null) {
                 connection.subscribe(FlamebaseDatabase.id);
             }
-        } else if (connectedToRedis) {
+        } else if (connectedToRedis && NetworkUtil.getConnectivityStatusString(getApplicationContext()) != NetworkUtil.NETWORK_STATUS_NOT_CONNECTED) {
             if (listener != null) {
                 Runnable task = new Runnable() {
                     @Override
@@ -154,8 +214,7 @@ public class FlamebaseService extends Service {
     }
 
     public void stopService() {
-        if (initialized) {
-            initialized = false;
+        if (connectedToRedis && NetworkUtil.getConnectivityStatusString(getApplicationContext()) != NetworkUtil.NETWORK_STATUS_NOT_CONNECTED) {
             if (client != null && connection != null) {
                 connection.unsubscribe(FlamebaseDatabase.id);
             }

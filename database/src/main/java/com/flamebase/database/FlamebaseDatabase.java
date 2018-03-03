@@ -7,11 +7,11 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.IBinder;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.flamebase.database.interfaces.Blower;
-import com.flamebase.database.interfaces.ListBlower;
 import com.flamebase.database.interfaces.MapBlower;
 import com.flamebase.database.interfaces.ObjectBlower;
 import com.flamebase.database.interfaces.StatusListener;
@@ -31,7 +31,6 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.UUID;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -147,7 +146,7 @@ public class FlamebaseDatabase {
     }
 
     private static String generateNewId() {
-        String id = UUID.randomUUID().toString();
+        String id = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);;
         SharedPreferences.Editor shared = context.getSharedPreferences("flamebase_config", MODE_PRIVATE).edit();
         shared.putString("flamebase_id", id);
         shared.apply();
@@ -196,8 +195,6 @@ public class FlamebaseDatabase {
         Type type;
         if (blower instanceof MapBlower) {
             type = Type.MAP;
-        } else if (blower instanceof ListBlower) {
-            type = Type.LIST;
         } else {
             type = Type.OBJECT;
         }

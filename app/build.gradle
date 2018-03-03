@@ -37,7 +37,7 @@ android {
             applicationId "com.flamebase.chat"
             versionNameSuffix "-device"
             buildConfigField "String", "database_url", "\"http://192.168.1.137:1507/\""
-            buildConfigField "String", "redis_url", "\"redis://192.168.1.137\""
+            buildConfigField "String", "redis_url", "\"redis://192.168.1.137redis-server\""
             dimension "origin"
         }
     }

@@ -10,7 +10,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.stringcare.library.SC;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 

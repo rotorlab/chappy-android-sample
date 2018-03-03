@@ -3,18 +3,15 @@
 Real time JSON database (android client). Work with synchronized java objects stored as JSON objects.
 
 ### What is this?
-Flamebase is an open source project that tries to emulate Firebase Database features as much as possible. I like Firebase but it's expensive for what it currently offers.
-If you are doing an altruist project with Firebase, pray not to became successful, because the monthly amount will increase considerably.
-
-In this repo you can find the proper lib for android client.
+Flamebase is an open source project that tries to emulate Firebase Database features as much as possible. In this repo you can find the proper lib for android client.
 For now it still developing, so please be patient with errors.
 
 ### Requirements
-**1º redis-server:** Amazing Pub/Sub for real-time changes. Simply install and start it.
+**1º redis-server:** Amazing Pub/Sub engine for real-time changes. Simply install and start it.
 
 **2º flamebase-database-server-cluster:** It will be our server cluster for storing json objects. Server cluster is run with **node** framework.
 
-Check out [flamebase-database-server-cluster repo](https://github.com/flamebase/flamebase-database-server-cluster) for more information.
+Check out [flamebase-server repo](https://github.com/flamebase/flamebase-server) for more information.
 
 ### Usage
 - Import library:
@@ -35,13 +32,16 @@ dependencies {
 - Initialize library:
 ```java
 // redis ips starts with redis://, port is not included
-FlamebaseDatabase.initialize(Context context, String cluster_ip, String redis_ip, new StatusListener() {
+FlamebaseDatabase.initialize(getApplicationContext(), "http://10.0.2.2:1507/", "redis://10.0.2.2", new StatusListener() {
  
     @Override
     public void connected() {
-        /* only called when flamebase service starts and connects with cluster
-        *  it won't be fired if service is already started
-        */
+        /* fired only when initialized method is called and library is connected to redis */
+    }
+    
+    @Override
+    public void reconnecting() {
+        /* library is trying to connect to redis */
     }
  
 });
@@ -56,7 +56,7 @@ ObjectA objectA = null;
 FlamebaseDatabase.createListener(path, new ObjectBlower<ObjectA>() {
  
     /**
-    * object is gonna be synchronized with server
+    * gets new differences from local object
     */
     @Override
     public ObjectA updateObject() {
@@ -65,7 +65,7 @@ FlamebaseDatabase.createListener(path, new ObjectBlower<ObjectA>() {
  
     /**
     * called after reference is synchronized with server
-    * or is connected to be used (1st sync).
+    * or is ready to be used.
     * 
     * null param means there is nothing stored on db
     */
@@ -146,3 +146,6 @@ protected void onPause() {
 }
 ```
 In the sample app chats still receiving updates on background, when the application is reopened there is no need to ask for updates.
+
+Limitations
+-----------
