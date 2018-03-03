@@ -1,13 +1,13 @@
 <p align="center"><img width="10%" vspace="20" src="https://github.com/flamebase/flamebase-database-android/raw/develop/app/src/main/res/mipmap-xxxhdpi/ic_launcher_rounded.png"></p>
  
-Imagine define some simple objects and share it between other devices by paths:
+Imagine define some simple objects and share it between other devices by paths (`/chats/welcome_chat`):
  
 ```java
 public class Chat {
 
     @SerializedName("name")
     @Expose
-    Strng name;
+    String name;
 
     @SerializedName("members")
     @Expose
@@ -25,6 +25,9 @@ public class Chat {
     
 }
 ```
+ 
+Define listeners for those objects and work with them. You can do changes or wait for them. All devices listening the same object will receive this changes to stay up to date:
+ 
 <p align="center"><img width="30%" vspace="20" src="https://github.com/flamebase/flamebase-database-android/raw/develop/sample1.png"></p>
 
 # :fire: flamebase-database-android
