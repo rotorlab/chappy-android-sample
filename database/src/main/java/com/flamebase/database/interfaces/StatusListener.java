@@ -6,6 +6,8 @@ package com.flamebase.database.interfaces;
 
 public interface StatusListener {
 
-    void ready();
+    void connected();
+
+    void reconnecting();
 
 }

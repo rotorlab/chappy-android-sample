@@ -1,8 +1,10 @@
 package com.flamebase.chat;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -19,7 +21,8 @@ import android.widget.EditText;
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.flamebase.chat.adapters.ChatAdapter;
-import com.flamebase.chat.model.GChat;
+import com.flamebase.chat.model.Chat;
+import com.flamebase.chat.model.GContacts;
 import com.flamebase.chat.model.Member;
 import com.flamebase.chat.model.Message;
 import com.flamebase.chat.services.ChatManager;
@@ -47,37 +50,34 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        LocalData.init(this);
 
-        chatsList = (RecyclerView) findViewById(R.id.chats_list);
+        chatsList = findViewById(R.id.chats_list);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
         chatsList.setLayoutManager(mLayoutManager);
 
-        FlamebaseDatabase.initialize(this, BuildConfig.database_url, BuildConfig.redis_url, new StatusListener() {
+        chatsList.setAdapter(new ChatAdapter() {
             @Override
-            public void ready() {
-                ChatManager.syncContacts();
-
-                chatsList.setAdapter(new ChatAdapter(MainActivity.this));
-                ChatManager.init(chatsList.getAdapter());
-
-
-                JSONArray array = LocalData.getLocalPaths();
-                for (int i = 0; i < array.length(); i++) {
-                    try {
-                        String path = array.getString(i);
-                        ChatManager.addGChat(path);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                askForEmail();
+            public void onChatClicked(Chat chat) {
+                Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+                intent.putExtra("path", chat.getName());
+                MainActivity.this.startActivity(intent);
             }
         });
-        FlamebaseDatabase.setDebug(true);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        ChatManager.setListener(new ChatManager.Listener() {
+            @Override
+            public void update(List<Chat> chats) {
+                ((ChatAdapter) chatsList.getAdapter()).chats.clear();
+                ((ChatAdapter) chatsList.getAdapter()).chats.addAll(chats);
+                chatsList.getAdapter().notifyDataSetChanged();
+            }
+        });
+
+        ChatManager.refreshChatsList();
+
+        askForEmail();
+
+        FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -91,6 +91,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         FlamebaseDatabase.onResume();
+        if (chatsList != null) {
+            chatsList.getAdapter().notifyDataSetChanged();
+        }
     }
 
     @Override
@@ -172,17 +175,15 @@ public class MainActivity extends AppCompatActivity {
                             if (!TextUtils.isEmpty(name.getText())) {
                                 SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
                                 String id = prefs.getString(getString(R.string.var_name), null);
-                                String groupPath = "/chats/" + name.getText().toString().trim().replace(" ", "_");
+                                final String groupPath = "/chats/" + name.getText().toString().trim().replace(" ", "_");
 
-                                List<String> members = new ArrayList<>();
-                                members.add(id);
+                                Map<String, Member> members = new HashMap<>();
+                                members.put(id, ChatManager.getContacts().get(id));
+
                                 Map<String, Message> messageMap = new HashMap<>();
-                                GChat gChat = new GChat(name.getText().toString(), members, messageMap);
-                                ChatManager.map.put(groupPath, gChat);
+                                Chat chat = new Chat(name.getText().toString(), members, messageMap);
+                                ChatManager.map.put(groupPath, chat);
                                 ChatManager.addGChat(groupPath);
-                                ChatManager.syncGChat(groupPath);
-
-                                //FlamebaseDatabase.syncReference(groupPath, false);
 
                                 dialog.dismiss();
                                 materialDialog = null;

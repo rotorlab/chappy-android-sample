@@ -1,5 +1,8 @@
 package com.flamebase.database.interfaces;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import java.util.Map;
 
 /**
@@ -8,7 +11,8 @@ import java.util.Map;
 
 public interface MapBlower<T> extends Blower<T> {
 
-    Map<String, T> updateMap();
-    void onMapChanged(Map<String, T> ref);
+    @Nullable Map<String, T> updateMap();
+
+    void onMapChanged(@NonNull Map<String, T> ref);
 
 }

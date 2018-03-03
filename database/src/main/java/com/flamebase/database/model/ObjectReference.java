@@ -2,14 +2,12 @@ package com.flamebase.database.model;
 
 import android.content.Context;
 
+import com.flamebase.database.FlamebaseDatabase;
 import com.flamebase.database.ReferenceUtils;
 import com.flamebase.database.interfaces.ObjectBlower;
 import com.google.common.reflect.TypeToken;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -20,8 +18,8 @@ public abstract class ObjectReference<T> extends Reference<ObjectBlower<T>> {
 
     public Class<T> clazz;
 
-    public ObjectReference(Context context, String path, long blowerCreation, ObjectBlower<T> blower, Class<T> clazz) {
-        super(context, path);
+    public ObjectReference(Context context, String path, long blowerCreation, ObjectBlower<T> blower, Class<T> clazz, Long moment) {
+        super(context, path, moment);
         blowerMap = new HashMap<>();
         blowerMap.put(blowerCreation, blower);
         this.clazz = clazz;
@@ -63,17 +61,14 @@ public abstract class ObjectReference<T> extends Reference<ObjectBlower<T>> {
     public void loadCachedReference() {
         stringReference = ReferenceUtils.getElement(path);
         if (stringReference != null && stringReference.length() > EMPTY_OBJECT.length()) {
-            for (Map.Entry<Long, ObjectBlower<T>> entry : blowerMap.entrySet()) {
-                entry.getValue().onObjectChanged((T) gson.fromJson(stringReference, TypeToken.of(clazz).getType()));
-            }
-        } else {
-            // blower.onObjectChanged(null);
+            blowerResult(stringReference);
         }
     }
 
     private ObjectBlower<T> getLastest() {
         long lastest = 0;
         ObjectBlower<T> blower = null;
+        // TODO limit list of blowers
         for (Map.Entry<Long, ObjectBlower<T>> entry : blowerMap.entrySet()) {
             if (lastest < entry.getKey()) {
                 lastest = entry.getKey();
@@ -81,40 +76,6 @@ public abstract class ObjectReference<T> extends Reference<ObjectBlower<T>> {
             }
         }
         return blower;
-    }
-
-/*
-    public <V> void loadChachedReference(ListBlower<V> blower, Class<V> clazz) {
-        Gson gson = new Gson();
-        stringReference = getElement(path);
-
-        if (stringReference != null) {
-            List<V> list = gson.fromJson(stringReference, new ListOf<>(clazz));
-            blower.onListChanged(list);
-        }
-    }
-*/
-
-    class ListOf<X> implements ParameterizedType {
-
-        private Class<?> wrapped;
-
-        public ListOf(Class<X> wrapped) {
-            this.wrapped = wrapped;
-        }
-
-        public Type[] getActualTypeArguments() {
-            return new Type[]{wrapped};
-        }
-
-        public Type getRawType() {
-            return List.class;
-        }
-
-        public Type getOwnerType() {
-            return null;
-        }
-
     }
 
 }

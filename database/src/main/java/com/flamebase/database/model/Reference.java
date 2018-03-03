@@ -50,6 +50,7 @@ public abstract class Reference<T> {
 
     protected String path;
     protected String stringReference;
+    protected Long moment;
 
     public static final String ACTION_SIMPLE_UPDATE     = "simple_update";
     public static final String ACTION_SLICE_UPDATE      = "slice_update";
@@ -57,8 +58,9 @@ public abstract class Reference<T> {
     public static final String ACTION_SIMPLE_CONTENT    = "simple_content";
     public static final String ACTION_SLICE_CONTENT     = "slice_content";
     public static final String ACTION_NO_CONTENT        = "no_content";
+    public static final String ACTION_NEW_OBJECT        = "new_object";
 
-    public Reference(Context context, String path) {
+    public Reference(Context context, String path, Long moment) {
         this.context = context;
         this.path = path;
         this.gson = getGsonBuilder();
@@ -76,9 +78,10 @@ public abstract class Reference<T> {
         try {
             String tag = json.getString(STAG);
             String action = json.getString(ACTION);
-            String data = json.getString(REFERENCE);
+            String data = json.has(REFERENCE) ? json.getString(REFERENCE) : null;
             String path = json.getString(PATH);
             String rData = data == null ? "{}" : ReferenceUtils.hex2String(data);
+
 
             if (!tag.equalsIgnoreCase(getTag())) {
                 return;
@@ -274,7 +277,6 @@ public abstract class Reference<T> {
                     String key = keys.next();
                     String[] p = key.split("\\.");
                     JSONObject aux = jsonObject;
-
                     for (int w = 0; w < p.length; w++) {
                         String currentIndex = p[w];
                         if (aux.has(currentIndex) && w != p.length - 1) {
@@ -286,15 +288,19 @@ public abstract class Reference<T> {
 
                         if (w == p.length - 1) {
                             if (aux.has(currentIndex)) {
-                                try {
-                                    aux = aux.getJSONObject(currentIndex);
-                                    JSONObject toExport = set.getJSONObject(key);
-                                    Iterator<String> y = toExport.keys();
-                                    while (y.hasNext()) {
-                                        String k = y.next();
-                                        aux.put(k, toExport.get(k));
+                                if (aux.get(currentIndex) instanceof JSONObject) {
+                                    try {
+                                        aux = aux.getJSONObject(currentIndex);
+                                        JSONObject toExport = set.getJSONObject(key);
+                                        Iterator<String> y = toExport.keys();
+                                        while (y.hasNext()) {
+                                            String k = y.next();
+                                            aux.put(k, toExport.get(k));
+                                        }
+                                    } catch (Exception e) {
+                                        aux.put(currentIndex, set.get(key));
                                     }
-                                } catch (Exception e) {
+                                } else {
                                     aux.put(currentIndex, set.get(key));
                                 }
                             } else {
@@ -376,7 +382,12 @@ public abstract class Reference<T> {
         return objects;
     }
 
+    public Long getMoment() {
+        return moment;
+    }
+
     private Gson getGsonBuilder() {
         return new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
     }
+
 }

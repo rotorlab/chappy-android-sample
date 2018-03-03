@@ -8,10 +8,8 @@ import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.internal.LinkedTreeMap;
 
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -22,8 +20,8 @@ public abstract class MapReference<T> extends Reference<MapBlower<T>> {
 
     public Class<T> clazz;
 
-    public MapReference(Context context, String path, long blowerCreation, MapBlower<T> blower, Class<T> clazz) {
-        super(context, path);
+    public MapReference(Context context, String path, long blowerCreation, MapBlower<T> blower, Class<T> clazz, Long moment) {
+        super(context, path, moment);
         blowerMap = new HashMap<>();
         blowerMap.put(blowerCreation, blower);
         this.clazz = clazz;
@@ -58,35 +56,14 @@ public abstract class MapReference<T> extends Reference<MapBlower<T>> {
         } else {
             val = gson.toJson(getLastest().updateMap(), getType(clazz));
         }
-
-        /*
-        Map<String, T> map = new HashMap<>();
-        LinkedTreeMap<String, T> mapTemp = gson.fromJson(val, getType(clazz));
-        for (LinkedTreeMap.Entry<String, T> entry : mapTemp.entrySet()) {
-            map.put(entry.getKey(), entry.getValue());
-        }
-        for (MapBlower<T> blower : blowerList) {
-            blower.onMapChanged(map);
-        }*/
         return val;
     }
 
     @Override
     public void loadCachedReference() {
         stringReference = ReferenceUtils.getElement(path);
-        if (stringReference == null) {
-            stringReference = getStringReference();
-            ReferenceUtils.addElement(path, stringReference);
-        }
-
-        Map<String, T> map = new HashMap<>();
-        LinkedTreeMap<String, T> mapTemp = gson.fromJson(stringReference, getType(clazz));
-        for (LinkedTreeMap.Entry<String, T> entry : mapTemp.entrySet()) {
-            map.put(entry.getKey(), entry.getValue());
-        }
-
-        for (Map.Entry<Long, MapBlower<T>> entry : blowerMap.entrySet()) {
-            entry.getValue().onMapChanged(map);
+        if (stringReference != null && stringReference.length() > EMPTY_OBJECT.length()) {
+            blowerResult(stringReference);
         }
     }
 
@@ -100,40 +77,6 @@ public abstract class MapReference<T> extends Reference<MapBlower<T>> {
             }
         }
         return blower;
-    }
-
-/*
-    public <V> void loadChachedReference(ListBlower<V> blower, Class<V> clazz) {
-        Gson gson = new Gson();
-        stringReference = getElement(path);
-
-        if (stringReference != null) {
-            List<V> list = gson.fromJson(stringReference, new ListOf<>(clazz));
-            blower.onListChanged(list);
-        }
-    }
-*/
-
-    class ListOf<X> implements ParameterizedType {
-
-        private Class<?> wrapped;
-
-        public ListOf(Class<X> wrapped) {
-            this.wrapped = wrapped;
-        }
-
-        public Type[] getActualTypeArguments() {
-            return new Type[] {wrapped};
-        }
-
-        public Type getRawType() {
-            return List.class;
-        }
-
-        public Type getOwnerType() {
-            return null;
-        }
-
     }
 
     private static <T> Type getType(Class<T> type) {
