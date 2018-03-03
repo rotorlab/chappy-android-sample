@@ -164,7 +164,7 @@ Limitations
 ```
 
 
-Chappy: a quick sample of real-time changes
+Chappy: quick sample of real-time changes
 -------------------------------------------
 <p align="center"><img width="10%" vspace="20" src="https://github.com/flamebase/flamebase-database-android/raw/develop/app/src/main/res/mipmap-xxxhdpi/ic_launcher_rounded.png"></p>
  
@@ -199,7 +199,8 @@ Add messages to chat
 ```java
 @Override
 protected void onCreate(Bundle savedInstanceState) {
-    String path = "/chats/welcome_chat";
+    
+    final String path = "/chats/welcome_chat";
     
     /* object instances, list adapter, etc.. */
     
@@ -269,8 +270,23 @@ protected void onCreate(Bundle savedInstanceState) {
     });
 }
 ```
-Define listeners for those objects and work with them. You can do changes or wait for them. All devices listening the same object will receive this changes to stay up to date:
+You can do changes or wait for them. All devices listening the same object will receive this changes to stay up to date:
  
 <p align="center"><img width="30%" vspace="20" src="https://github.com/flamebase/flamebase-database-android/raw/develop/sample1.png"></p>
 
 
+License
+-------
+    Copyright 2018 Efraín Espada
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
