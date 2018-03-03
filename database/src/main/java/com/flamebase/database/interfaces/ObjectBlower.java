@@ -1,13 +1,16 @@
 package com.flamebase.database.interfaces;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 /**
  * Created by efraespada on 29/06/2017.
  */
 
 public interface ObjectBlower <T> extends Blower<T> {
 
-    T updateObject();
+    @Nullable T updateObject();
 
-    void onObjectChanged(T ref);
+    void onObjectChanged(@NonNull T ref);
 
 }

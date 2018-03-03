@@ -67,18 +67,10 @@ FlamebaseDatabase.createListener(path, new ObjectBlower<ObjectA>() {
     /**
     * called after reference is synchronized with server
     * or is ready to be used.
-    * 
-    * null param means there is nothing stored on db
     */
     @Override
     public void onObjectChanged(ObjectA ref) {
-        if (ref == null) {                          
-            objectA = new ObjectA();
-            objectA.setColor("blue");
-            FlamebaseDatabase.syncReference(path);
-        } else {                                    
-            objectA = ref;                          
-        }
+        objectA = ref;  
     }
  
     /**
@@ -212,36 +204,31 @@ private Chat chat;
         }
     
         @Override public void onObjectChanged(Chat ref) {
-            // update reference
-            if (ref != null) {
-                chat = ref;
-            }
-    
-            if (chat != null) {
-                // update screent title
-                ChatActivity.this.setTitle(chat.getName());
-                
-                // order messages
-                Map<String, Message> messageMap = new TreeMap<>(new Comparator<String>() {
-                    @Override public int compare(String o1, String o2) {
-                        Long a = Long.valueOf(o1);
-                        Long b = Long.valueOf(o2);
-                        if (a > b) {
-                            return 1;
-                        } else if (a < b) {
-                            return -1;
-                        } else {
-                            return 0;
-                        }
+            chat = ref;
+            
+            // update screent title
+            ChatActivity.this.setTitle(chat.getName());
+            
+            // order messages
+            Map<String, Message> messageMap = new TreeMap<>(new Comparator<String>() {
+                @Override public int compare(String o1, String o2) {
+                    Long a = Long.valueOf(o1);
+                    Long b = Long.valueOf(o2);
+                    if (a > b) {
+                        return 1;
+                    } else if (a < b) {
+                        return -1;
+                    } else {
+                        return 0;
                     }
-                });
-                messageMap.putAll(chat.getMessages());
-                chat.setMessages(messageMap);
-        
-                // update list
-                messageList.getAdapter().notifyDataSetChanged();
-                messageList.smoothScrollToPosition(0);
-            }
+                }
+            });
+            messageMap.putAll(chat.getMessages());
+            chat.setMessages(messageMap);
+    
+            // update list
+            messageList.getAdapter().notifyDataSetChanged();
+            messageList.smoothScrollToPosition(0);
         }
     
         @Override public void progress(int value) {
