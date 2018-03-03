@@ -10,14 +10,7 @@ class Test {
 
 test                        |  Test
 :--------------------------:|:-------------------------:
-![](https://github.com/flamebase/flamebase-database-android/raw/develop/sample1.png)  | <p>
-Test
- 
- Test 5
- 
-test C
-
-</p>
+![](https://github.com/flamebase/flamebase-database-android/raw/develop/sample1.png)  |  ![](https://codebeautify.org/javaviewer/cb282d75)
 
 # :fire: flamebase-database-android
 
