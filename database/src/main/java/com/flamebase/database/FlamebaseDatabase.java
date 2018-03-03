@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -363,10 +364,16 @@ public class FlamebaseDatabase {
                 JSONObject data = (JSONObject) jsonObject.get("data");
                 if (data.has("info") && data.has(PATH)) {
                     String info = data.getString("info");
-                    String path = data.getString(PATH);
+                    final String path = data.getString(PATH);
                     if (ACTION_NEW_OBJECT.equals(info)) {
                         if (pathMap.containsKey(path)) {
-                            sync(path);
+                            Handler handler = new Handler();
+                            handler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    sync(path);
+                                }
+                            }, 200);
                         }
                     }
                 } else if (data.has(PATH)) {

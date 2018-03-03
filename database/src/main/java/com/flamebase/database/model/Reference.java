@@ -10,6 +10,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.stringcare.library.SC;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -277,7 +278,6 @@ public abstract class Reference<T> {
                     String key = keys.next();
                     String[] p = key.split("\\.");
                     JSONObject aux = jsonObject;
-
                     for (int w = 0; w < p.length; w++) {
                         String currentIndex = p[w];
                         if (aux.has(currentIndex) && w != p.length - 1) {
@@ -289,15 +289,19 @@ public abstract class Reference<T> {
 
                         if (w == p.length - 1) {
                             if (aux.has(currentIndex)) {
-                                try {
-                                    aux = aux.getJSONObject(currentIndex);
-                                    JSONObject toExport = set.getJSONObject(key);
-                                    Iterator<String> y = toExport.keys();
-                                    while (y.hasNext()) {
-                                        String k = y.next();
-                                        aux.put(k, toExport.get(k));
+                                if (aux.get(currentIndex) instanceof JSONObject) {
+                                    try {
+                                        aux = aux.getJSONObject(currentIndex);
+                                        JSONObject toExport = set.getJSONObject(key);
+                                        Iterator<String> y = toExport.keys();
+                                        while (y.hasNext()) {
+                                            String k = y.next();
+                                            aux.put(k, toExport.get(k));
+                                        }
+                                    } catch (Exception e) {
+                                        aux.put(currentIndex, set.get(key));
                                     }
-                                } catch (Exception e) {
+                                } else {
                                     aux.put(currentIndex, set.get(key));
                                 }
                             } else {

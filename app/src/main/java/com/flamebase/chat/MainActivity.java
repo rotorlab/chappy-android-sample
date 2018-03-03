@@ -22,6 +22,7 @@ import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.flamebase.chat.adapters.ChatAdapter;
 import com.flamebase.chat.model.Chat;
+import com.flamebase.chat.model.GContacts;
 import com.flamebase.chat.model.Member;
 import com.flamebase.chat.model.Message;
 import com.flamebase.chat.services.ChatManager;
@@ -176,8 +177,9 @@ public class MainActivity extends AppCompatActivity {
                                 String id = prefs.getString(getString(R.string.var_name), null);
                                 final String groupPath = "/chats/" + name.getText().toString().trim().replace(" ", "_");
 
-                                List<String> members = new ArrayList<>();
-                                members.add(id);
+                                Map<String, Member> members = new HashMap<>();
+                                members.put(id, ChatManager.getContacts().get(id));
+
                                 Map<String, Message> messageMap = new HashMap<>();
                                 Chat chat = new Chat(name.getText().toString(), members, messageMap);
                                 ChatManager.map.put(groupPath, chat);

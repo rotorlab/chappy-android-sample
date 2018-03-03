@@ -18,23 +18,23 @@ public class Chat {
 
     @SerializedName("members")
     @Expose
-    List<String> members;
+    Map<String, Member> members;
 
     @SerializedName("messages")
     @Expose
     Map<String, Message> messages;
 
-    public Chat(String name, List<String> members, Map<String, Message> messages) {
+    public Chat(String name, Map<String, Member> members, Map<String, Message> messages) {
         this.name = name;
         this.members = members;
         this.messages = messages;
     }
 
-    public List<String> getMembers() {
+    public Map<String, Member> getMembers() {
         return members;
     }
 
-    public void setMembers(List<String> members) {
+    public void setMembers(Map<String, Member> members) {
         this.members = members;
     }
 
