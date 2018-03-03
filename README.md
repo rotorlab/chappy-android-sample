@@ -191,9 +191,77 @@ public class Chat {
         this.messages = messages;
     }
     
+    /* getter and setter methods */
+    
 }
 ```
+Add messages to chat
+```java
+FlamebaseDatabase.createListener(path, new ObjectBlower<Chat>() {
+
+    @Override
+    public Chat updateObject() {
+        return chat;
+    }
+
+    @Override
+    public void onObjectChanged(Chat ref) {
+        if (ref != null) {
+            chat = ref;
+        }
+
+        if (chat != null) {
+            ChatActivity.this.setTitle(chat.getName());
+        }
+
+        Map<String, Message> messageMap = new TreeMap<>(new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+                Long a = Long.valueOf(o1);
+                Long b = Long.valueOf(o2);
+                if (a > b) {
+                    return 1;
+                } else if (a < b) {
+                    return -1;
+                } else {
+                    return 0;
+                }
+            }
+        });
+
+        messageMap.putAll(chat.getMessages());
+
+        chat.setMessages(messageMap);
+
+        messageList.getAdapter().notifyDataSetChanged();
+
+        messageList.smoothScrollToPosition(0);
+
+    }
+
+    @Override
+    public void progress(int value) {
+        // print progress
+    }
+
+}, Chat.class);
  
+sendButton.setOnClickListener(new View.OnClickListener() {
+    @Override
+    public void onClick(View v) {
+        SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+        String username = prefs.getString("username", null);
+        if (name != null) {
+            Message message = new Message(username, messageText.getText().toString());
+            chat.getMessages().put(String.valueOf(new Date().getTime()), message);
+    
+            FlamebaseDatabase.sync(path);
+    
+            messageText.setText("");
+        }
+    }
+});
+```
 Define listeners for those objects and work with them. You can do changes or wait for them. All devices listening the same object will receive this changes to stay up to date:
  
 <p align="center"><img width="30%" vspace="20" src="https://github.com/flamebase/flamebase-database-android/raw/develop/sample1.png"></p>
