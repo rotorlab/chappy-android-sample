@@ -1,7 +1,7 @@
 
 # :fire: flamebase-database-android
 
-Real time JSON database (android client). Work with synchronized java objects stored as JSON objects.
+Work with synchronized java objects stored as JSON objects. Check a sample above (Chappy app).
 
 ### What is this?
 Flamebase is an open source project that tries to emulate Firebase Database features as much as possible. In this repo you can find the proper lib for android client.
@@ -195,10 +195,9 @@ public class Chat {
     
 }
 ```
-Add messages to chat
+Define a chat listener and add messages:
 ```java
-@Override
-protected void onCreate(Bundle savedInstanceState) {
+@Override protected void onCreate(Bundle savedInstanceState) {
     
     final String path = "/chats/welcome_chat";
     
@@ -206,13 +205,11 @@ protected void onCreate(Bundle savedInstanceState) {
     
     FlamebaseDatabase.createListener(path, new ObjectBlower<Chat>() {
     
-        @Override
-        public Chat updateObject() {
+        @Override public Chat updateObject() {
             return chat;
         }
     
-        @Override
-        public void onObjectChanged(Chat ref) {
+        @Override public void onObjectChanged(Chat ref) {
             // update reference
             if (ref != null) {
                 chat = ref;
@@ -246,8 +243,7 @@ protected void onCreate(Bundle savedInstanceState) {
             messageList.smoothScrollToPosition(0);
         }
     
-        @Override
-        public void progress(int value) {
+        @Override public void progress(int value) {
             // print progress
         }
     
