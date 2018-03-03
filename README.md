@@ -1,3 +1,5 @@
+<p align="center"><img width="10%" vspace="20" src="https://github.com/flamebase/flamebase-database-android/raw/develop/app/src/main/res/mipmap-xxxhdpi/ic_launcher_rounded.png"></p>
+
 # :fire: flamebase-database-android
 
 Real time JSON database (android client). Work with synchronized java objects stored as JSON objects.
@@ -9,7 +11,7 @@ For now it still developing, so please be patient with errors.
 ### Requirements
 **1º redis-server:** Amazing Pub/Sub engine for real-time changes. Simply install and start it.
 
-**2º flamebase-database-server-cluster:** It will be our server cluster for storing json objects. Server cluster is run with **node** framework.
+**2º flamebase-server:** It will be our server cluster for storing json objects. Server cluster is run with **node** framework.
 
 Check out [flamebase-server repo](https://github.com/flamebase/flamebase-server) for more information.
 
@@ -26,7 +28,7 @@ android {
 }
  
 dependencies {
-    implementation 'com.flamebase:database:1.4.0'
+    implementation 'com.flamebase:database:1.5.0'
 }
 ```
 - Initialize library:
@@ -147,5 +149,13 @@ protected void onPause() {
 ```
 In the sample app chats still receiving updates on background, when the application is reopened there is no need to ask for updates.
 
-Limitations
+Limitations 
 -----------
+**List objects aren't supported:** List objects gives problems when differences are being generated. If you plan to store iterations you can dispose a basic map object:
+```json
+{
+    "0": "item1",
+    "1": "item2",
+    "2": "item3"
+}
+```
