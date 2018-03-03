@@ -197,6 +197,8 @@ public class Chat {
 ```
 Define a chat listener and add messages:
 ```java
+private Chat chat;
+
 @Override protected void onCreate(Bundle savedInstanceState) {
     
     final String path = "/chats/welcome_chat";
@@ -215,8 +217,8 @@ Define a chat listener and add messages:
                 chat = ref;
             }
     
-            // update screent title
             if (chat != null) {
+                // update screent title
                 ChatActivity.this.setTitle(chat.getName());
                 
                 // order messages
