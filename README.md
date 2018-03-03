@@ -2,6 +2,8 @@
 <table>
 <img width="30%" vspace="20" src="https://github.com/flamebase/flamebase-database-android/raw/develop/sample1.png">    
 
+![](https://github.com/flamebase/flamebase-database-android/raw/develop/sample1.png)  |  ![](https://github.com/flamebase/flamebase-database-android/raw/develop/app/src/main/res/mipmap-xxxhdpi/ic_launcher_rounded.png)
+
 ```java
 public class Chat {
 
