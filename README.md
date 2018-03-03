@@ -251,8 +251,7 @@ private Chat chat;
     }, Chat.class);
      
     sendButton.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
+        @Override public void onClick(View v) {
             SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
             String username = prefs.getString("username", null);
             if (name != null) {
