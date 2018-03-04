@@ -126,6 +126,7 @@ public class FlamebaseDatabase {
         FlamebaseDatabase.urlServer = urlServer;
         FlamebaseDatabase.urlRedis = redisServer;
         FlamebaseDatabase.statusListener = statusListener;
+        FlamebaseDatabase.debug = false;
         FlamebaseDatabase.gson = new Gson();
         SharedPreferences shared = context.getSharedPreferences("flamebase_config", MODE_PRIVATE);
         FlamebaseDatabase.id = shared.getString("flamebase_id", null);
