@@ -36,7 +36,11 @@ public abstract class MapReference<T> extends Reference<MapBlower<T>> {
             map.put(entry.getKey(), entry.getValue());
         }
         for (Map.Entry<Long, MapBlower<T>> entry : blowerMap.entrySet()) {
-            entry.getValue().onMapChanged(map);
+            if (entry.getValue() instanceof KotlinMapBlower) {
+                ((KotlinMapBlower) entry.getValue()).source(value);
+            } else {
+                entry.getValue().onMapChanged(map);
+            }
         }
     }
 

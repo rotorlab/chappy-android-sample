@@ -30,6 +30,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -174,6 +175,9 @@ public class FlamebaseDatabase {
             Log.e(TAG, "Use FlamebaseDatabase.initialize(Context context, String urlServer, String token, StatusListener) before create real time references");
             return;
         }
+
+        Map<String, String> map = new HashMap<>();
+        map.put("je", "je");
 
         if (flamebaseService == null || flamebaseService.getMoment() == null) {
             statusListener.reconnecting();

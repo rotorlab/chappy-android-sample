@@ -65,7 +65,11 @@ public abstract class ObjectReference<T> extends Reference<ObjectBlower<T>> {
     @Override
     public void blowerResult(String value) {
         for (Map.Entry<Long, ObjectBlower<T>> entry : blowerMap.entrySet()) {
-            entry.getValue().onObjectChanged((T) gson.fromJson(value, TypeToken.of(clazz).getType()));
+            if (entry.getValue() instanceof KotlinObjectBlower) {
+                ((KotlinObjectBlower) entry.getValue()).source(value);
+            } else {
+                entry.getValue().onObjectChanged((T) gson.fromJson(value, TypeToken.of(clazz).getType()));
+            }
         }
     }
 
