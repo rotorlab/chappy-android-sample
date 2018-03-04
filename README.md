@@ -169,15 +169,16 @@ data class Chat(@SerializedName("id") val id: String,
                 @SerializedName("name") val name: String,
                 @SerializedName("creationDate") val creationDate: Long,
                 @SerializedName("members") val members: Map<String, Member>)
-                 
+ 
 FlamebaseDatabase.createListener(path, object : KotlinObjectBlower<Chat>() {
  
     override fun progress(value: Int) {
         /* */
     }
  
-    override fun onObjectChanged(ref: Chat) {
-        /* */
+    override fun source(value: String?) {
+        val gson = Gson()
+        profile = gson.fromJson(value, Data.Profile::class.java)
     }
  
     override fun string(): String? {
@@ -191,7 +192,6 @@ FlamebaseDatabase.createListener(path, object : KotlinObjectBlower<Chat>() {
  
 }, Chat::class.java)
 ```
-
 
 Chappy: quick sample of real-time changes
 -------------------------------------------
