@@ -2,9 +2,9 @@ package com.flamebase.database.model;
 
 import android.content.Context;
 
-import com.flamebase.database.FlamebaseDatabase;
 import com.flamebase.database.ReferenceUtils;
 import com.flamebase.database.interfaces.ObjectBlower;
+import com.flamebase.database.interfaces.mods.KotlinObjectBlower;
 import com.google.common.reflect.TypeToken;
 
 import java.util.HashMap;
@@ -37,14 +37,26 @@ public abstract class ObjectReference<T> extends Reference<ObjectBlower<T>> {
     @Override
     public String getStringReference() {
         String val;
-        if (getLastest().updateObject() == null) {
-            if (stringReference != null && stringReference.length() > EMPTY_OBJECT.length()) {
-                val = stringReference;
+        if (getLastest() instanceof KotlinObjectBlower) {
+            if (((KotlinObjectBlower) getLastest()).string() == null) {
+                if (stringReference != null && stringReference.length() > EMPTY_OBJECT.length()) {
+                    val = stringReference;
+                } else {
+                    val = EMPTY_OBJECT;
+                }
             } else {
-                val = EMPTY_OBJECT;
+                val = ((KotlinObjectBlower) getLastest()).string();
             }
         } else {
-            val = gson.toJson(getLastest().updateObject(), TypeToken.of(clazz).getType());
+            if (getLastest().updateObject() == null) {
+                if (stringReference != null && stringReference.length() > EMPTY_OBJECT.length()) {
+                    val = stringReference;
+                } else {
+                    val = EMPTY_OBJECT;
+                }
+            } else {
+                val = gson.toJson(getLastest().updateObject(), TypeToken.of(clazz).getType());
+            }
         }
 
         return val;

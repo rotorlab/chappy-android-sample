@@ -387,7 +387,8 @@ public abstract class Reference<T> {
     }
 
     private Gson getGsonBuilder() {
-        return new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+        return new GsonBuilder()
+                .excludeFieldsWithoutExposeAnnotation().create();
     }
 
 }
