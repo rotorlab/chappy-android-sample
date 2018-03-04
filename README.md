@@ -1,5 +1,5 @@
 
-# :fire: flamebase-database-android
+# :fire: flamebase-database-android (supports Kotlin)
 
 Work with synchronized java objects stored as JSON objects. Check a sample above (Chappy app).
 
@@ -27,7 +27,13 @@ android {
 }
  
 dependencies {
-    implementation 'com.flamebase:database:1.5.1'
+    implementation 'com.flamebase:database:1.5.7'
+    implementation 'com.efraespada:jsondiff:1.1.0'
+    implementation 'com.squareup.retrofit2:retrofit:2.3.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.3.0'
+    implementation 'com.google.code.findbugs:jsr305:2.0.1'
+    implementation 'com.google.guava:guava:22.0-android'
+    implementation 'com.google.code.gson:gson:2.8.2'
 }
 ```
 - Initialize library:
@@ -155,6 +161,37 @@ Limitations
 }
 ```
 
+Kotlin support
+--------------
+Flamebase Database works with Kotlin applications too. You must use `KotlinBlowers` to solve Gson deserialization problem:
+```kotlin
+data class Chat(@SerializedName("id") val id: String,
+                @SerializedName("name") val name: String,
+                @SerializedName("creationDate") val creationDate: Long,
+                @SerializedName("members") val members: Map<String, Member>)
+ 
+FlamebaseDatabase.createListener(path, object : KotlinObjectBlower<Chat>() {
+ 
+    override fun progress(value: Int) {
+        /* */
+    }
+ 
+    override fun source(value: String?) {
+        val gson = Gson()
+        profile = gson.fromJson(value, Data.Profile::class.java)
+    }
+ 
+    override fun string(): String? {
+        if (profile == null) {
+            return null
+        } else {
+            val gson = Gson()
+            gson.toJson(profile)
+        }
+    }
+ 
+}, Chat::class.java)
+```
 
 Chappy: quick sample of real-time changes
 -------------------------------------------

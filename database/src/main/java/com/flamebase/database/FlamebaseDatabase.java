@@ -24,13 +24,13 @@ import com.flamebase.database.model.request.UpdateFromServer;
 import com.flamebase.database.model.request.UpdateToServer;
 import com.flamebase.database.model.service.SyncResponse;
 import com.google.gson.Gson;
-import com.stringcare.library.SC;
 
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -127,6 +127,7 @@ public class FlamebaseDatabase {
         FlamebaseDatabase.urlServer = urlServer;
         FlamebaseDatabase.urlRedis = redisServer;
         FlamebaseDatabase.statusListener = statusListener;
+        FlamebaseDatabase.debug = false;
         FlamebaseDatabase.gson = new Gson();
         SharedPreferences shared = context.getSharedPreferences("flamebase_config", MODE_PRIVATE);
         FlamebaseDatabase.id = shared.getString("flamebase_id", null);
@@ -174,6 +175,9 @@ public class FlamebaseDatabase {
             Log.e(TAG, "Use FlamebaseDatabase.initialize(Context context, String urlServer, String token, StatusListener) before create real time references");
             return;
         }
+
+        Map<String, String> map = new HashMap<>();
+        map.put("je", "je");
 
         if (flamebaseService == null || flamebaseService.getMoment() == null) {
             statusListener.reconnecting();

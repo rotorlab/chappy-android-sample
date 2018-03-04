@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.flamebase.database.ReferenceUtils;
 import com.flamebase.database.interfaces.MapBlower;
+import com.flamebase.database.interfaces.mods.KotlinMapBlower;
 import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.internal.LinkedTreeMap;
@@ -35,7 +36,11 @@ public abstract class MapReference<T> extends Reference<MapBlower<T>> {
             map.put(entry.getKey(), entry.getValue());
         }
         for (Map.Entry<Long, MapBlower<T>> entry : blowerMap.entrySet()) {
-            entry.getValue().onMapChanged(map);
+            if (entry.getValue() instanceof KotlinMapBlower) {
+                ((KotlinMapBlower) entry.getValue()).source(value);
+            } else {
+                entry.getValue().onMapChanged(map);
+            }
         }
     }
 
@@ -47,14 +52,26 @@ public abstract class MapReference<T> extends Reference<MapBlower<T>> {
     @Override
     public String getStringReference() {
         String val;
-        if (getLastest().updateMap() == null) {
-            if (stringReference != null && stringReference.length() > EMPTY_OBJECT.length()) {
-                val = stringReference;
+        if (getLastest() instanceof KotlinMapBlower) {
+            if (((KotlinMapBlower) getLastest()).string() == null) {
+                if (stringReference != null && stringReference.length() > EMPTY_OBJECT.length()) {
+                    val = stringReference;
+                } else {
+                    val = EMPTY_OBJECT;
+                }
             } else {
-                val = EMPTY_OBJECT;
+                val = ((KotlinMapBlower) getLastest()).string();
             }
         } else {
-            val = gson.toJson(getLastest().updateMap(), getType(clazz));
+            if (getLastest().updateMap() == null) {
+                if (stringReference != null && stringReference.length() > EMPTY_OBJECT.length()) {
+                    val = stringReference;
+                } else {
+                    val = EMPTY_OBJECT;
+                }
+            } else {
+                val = gson.toJson(getLastest().updateMap(), getType(clazz));
+            }
         }
         return val;
     }

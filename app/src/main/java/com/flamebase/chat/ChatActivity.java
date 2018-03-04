@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -27,12 +28,10 @@ import android.widget.TextView;
 
 import com.flamebase.chat.model.Chat;
 import com.flamebase.chat.model.Message;
-import com.flamebase.chat.services.LocalData;
 import com.flamebase.database.FlamebaseDatabase;
-import com.flamebase.database.interfaces.ObjectBlower;
+import com.flamebase.database.interfaces.mods.KotlinObjectBlower;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -133,7 +132,13 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
 
-        FlamebaseDatabase.createListener(path, new ObjectBlower<Chat>() {
+        FlamebaseDatabase.createListener(path, new KotlinObjectBlower<Chat>() {
+
+            @Nullable
+            @Override
+            public String string() {
+                return null;
+            }
 
             @Override
             public Chat updateObject() {

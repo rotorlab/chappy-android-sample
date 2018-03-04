@@ -104,38 +104,15 @@ public class FlamebaseService extends Service {
         }
     };
 
-    private final BroadcastReceiver receiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            int status = NetworkUtil.getConnectivityStatusString(context);
-            Log.e(TAG, "network changed");
-            if (!"android.net.conn.CONNECTIVITY_CHANGE".equals(intent.getAction())) {
-                if (status != NetworkUtil.NETWORK_STATUS_NOT_CONNECTED) {
-                    resetConnection();
-                } else {
-                    if (connection != null) {
-                        connection.removeListener(redisPubSubListener);
-                    }
-                }
-            }
-        }
-    };
-
     @Override
     public void onCreate() {
         super.onCreate();
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
-
-        IntentFilter filter = new IntentFilter();
-        filter.addAction("android.net.conn.CONNECTIVITY_CHANGE");
-        filter.addAction("android.net.wifi.WIFI_STATE_CHANGED");
-        registerReceiver(receiver, filter);
-
-        resetConnection();
+        startConnection();
     }
 
-    private void resetConnection() {
+    private void startConnection() {
         if (listener != null) {
             listener.reconnecting();
         }
@@ -158,12 +135,9 @@ public class FlamebaseService extends Service {
             }
 
             client = RedisClient.create(url);
-        } else {
-            client.shutdown();
+            connection = client.connectPubSub();
+            connection.addListener(redisPubSubListener);
         }
-
-        connection = client.connectPubSub();
-        connection.addListener(redisPubSubListener);
     }
 
     @Override
@@ -189,7 +163,9 @@ public class FlamebaseService extends Service {
     @Override
     public void onDestroy() {
         Log.d(TAG, "service destroyed");
-        unregisterReceiver(receiver);
+        if (connection != null) {
+            connection.removeListener(redisPubSubListener);
+        }
         super.onDestroy();
     }
 
