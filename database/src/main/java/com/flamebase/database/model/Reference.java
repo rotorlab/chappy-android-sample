@@ -6,9 +6,9 @@ import com.efraespada.jsondiff.JSONDiff;
 import com.flamebase.database.Database;
 import com.flamebase.database.FlamebaseDatabase;
 import com.flamebase.database.ReferenceUtils;
+import com.flamebase.database.SC;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.stringcare.library.SC;
 
 import org.json.JSONException;
 import org.json.JSONObject;

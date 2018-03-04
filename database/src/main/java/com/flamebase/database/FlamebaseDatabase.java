@@ -24,7 +24,6 @@ import com.flamebase.database.model.request.UpdateFromServer;
 import com.flamebase.database.model.request.UpdateToServer;
 import com.flamebase.database.model.service.SyncResponse;
 import com.google.gson.Gson;
-import com.stringcare.library.SC;
 
 import org.json.JSONObject;
 

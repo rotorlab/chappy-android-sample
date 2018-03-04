@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 
-version = "1.5.1"
+version = "1.5.4"
 
 android {
 
@@ -28,11 +28,11 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(dir: 'libs', include: ['*.jar','*.aar'])
     androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    implementation 'com.android.support:appcompat-v7:27.0.2'
+    implementation 'com.android.support:appcompat-v7:27.1.0'
     testImplementation 'junit:junit:4.12'
     implementation 'com.google.code.gson:gson:2.8.2'
     implementation 'com.efraespada:jsondiff:1.1.0'
@@ -42,8 +42,6 @@ dependencies {
     implementation 'com.google.code.findbugs:jsr305:2.0.1'
     //noinspection GradleDependency
     implementation 'com.google.guava:guava:22.0-android'
-    //noinspection GradleDependency
-    implementation "com.stringcare:library:$stringcare_version"
 }
 
 def siteUrl = 'https://github.com/flamebase/flamebase-database-android'

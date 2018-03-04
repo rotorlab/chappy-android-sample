@@ -27,7 +27,8 @@ android {
 }
  
 dependencies {
-    implementation 'com.flamebase:database:1.5.1'
+    implementation 'com.flamebase:database:1.5.4'
+    implementation 'com.google.code.gson:gson:2.8.2'
 }
 ```
 - Initialize library:
