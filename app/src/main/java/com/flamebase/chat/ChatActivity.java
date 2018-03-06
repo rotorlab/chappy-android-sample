@@ -29,6 +29,7 @@ import android.widget.TextView;
 import com.flamebase.chat.model.Chat;
 import com.flamebase.chat.model.Message;
 import com.flamebase.database.FlamebaseDatabase;
+import com.flamebase.database.interfaces.ObjectBlower;
 import com.flamebase.database.interfaces.mods.KotlinObjectBlower;
 
 import java.util.ArrayList;
@@ -132,13 +133,7 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
 
-        FlamebaseDatabase.createListener(path, new KotlinObjectBlower<Chat>() {
-
-            @Nullable
-            @Override
-            public String string() {
-                return null;
-            }
+        FlamebaseDatabase.createListener(path, new ObjectBlower<Chat>() {
 
             @Override
             public Chat updateObject() {

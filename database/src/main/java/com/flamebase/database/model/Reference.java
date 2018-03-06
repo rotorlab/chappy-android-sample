@@ -24,12 +24,11 @@ import java.util.Map;
 
 public abstract class Reference<T> {
 
-    private int VERSION = 1;
     private static Map<String, String[]> mapParts;
     public Database database;
     private Context context;
     protected Gson gson;
-    public Map<Long, T> blowerMap;
+    final protected Map<Long, T> blowerMap = new HashMap<>();
 
     public boolean isSynchronized;
 
@@ -389,6 +388,10 @@ public abstract class Reference<T> {
     private Gson getGsonBuilder() {
         return new GsonBuilder()
                 .excludeFieldsWithoutExposeAnnotation().create();
+    }
+
+    protected Map<Long, T> blowers() {
+        return blowerMap;
     }
 
 }

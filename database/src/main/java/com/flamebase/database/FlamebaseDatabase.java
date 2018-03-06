@@ -100,7 +100,6 @@ public class FlamebaseDatabase {
 
     public enum Type {
         OBJECT,
-        LIST,
         MAP
     }
 
