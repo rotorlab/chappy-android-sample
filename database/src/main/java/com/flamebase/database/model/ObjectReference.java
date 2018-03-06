@@ -20,7 +20,6 @@ public abstract class ObjectReference<T> extends Reference<ObjectBlower<T>> {
 
     public ObjectReference(Context context, String path, long blowerCreation, ObjectBlower<T> blower, Class<T> clazz, Long moment) {
         super(context, path, moment);
-        blowerMap = new HashMap<>();
         blowerMap.put(blowerCreation, blower);
         this.clazz = clazz;
     }
@@ -64,7 +63,7 @@ public abstract class ObjectReference<T> extends Reference<ObjectBlower<T>> {
 
     @Override
     public void blowerResult(String value) {
-        for (Map.Entry<Long, ObjectBlower<T>> entry : blowerMap.entrySet()) {
+        for (Map.Entry<Long, ObjectBlower<T>> entry : blowers().entrySet()) {
             if (entry.getValue() instanceof KotlinObjectBlower) {
                 ((KotlinObjectBlower) entry.getValue()).source(value);
             } else {
@@ -85,7 +84,7 @@ public abstract class ObjectReference<T> extends Reference<ObjectBlower<T>> {
         long lastest = 0;
         ObjectBlower<T> blower = null;
         // TODO limit list of blowers
-        for (Map.Entry<Long, ObjectBlower<T>> entry : blowerMap.entrySet()) {
+        for (Map.Entry<Long, ObjectBlower<T>> entry : blowers().entrySet()) {
             if (lastest < entry.getKey()) {
                 lastest = entry.getKey();
                 blower = entry.getValue();

@@ -23,7 +23,6 @@ public abstract class MapReference<T> extends Reference<MapBlower<T>> {
 
     public MapReference(Context context, String path, long blowerCreation, MapBlower<T> blower, Class<T> clazz, Long moment) {
         super(context, path, moment);
-        blowerMap = new HashMap<>();
         blowerMap.put(blowerCreation, blower);
         this.clazz = clazz;
     }
@@ -35,7 +34,7 @@ public abstract class MapReference<T> extends Reference<MapBlower<T>> {
         for (LinkedTreeMap.Entry<String, T> entry : mapTemp.entrySet()) {
             map.put(entry.getKey(), entry.getValue());
         }
-        for (Map.Entry<Long, MapBlower<T>> entry : blowerMap.entrySet()) {
+        for (Map.Entry<Long, MapBlower<T>> entry : blowers().entrySet()) {
             if (entry.getValue() instanceof KotlinMapBlower) {
                 ((KotlinMapBlower) entry.getValue()).source(value);
             } else {
@@ -87,7 +86,7 @@ public abstract class MapReference<T> extends Reference<MapBlower<T>> {
     private MapBlower<T> getLastest() {
         long lastest = 0;
         MapBlower<T> blower = null;
-        for (Map.Entry<Long, MapBlower<T>> entry : blowerMap.entrySet()) {
+        for (Map.Entry<Long, MapBlower<T>> entry : blowers().entrySet()) {
             if (lastest < entry.getKey()) {
                 lastest = entry.getKey();
                 blower = entry.getValue();
