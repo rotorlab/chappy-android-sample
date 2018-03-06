@@ -27,7 +27,7 @@ android {
 }
  
 dependencies {
-    implementation 'com.flamebase:database:1.5.7'
+    implementation 'com.flamebase:database:1.6.0'
     implementation 'com.efraespada:jsondiff:1.1.0'
     implementation 'com.squareup.retrofit2:retrofit:2.3.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.3.0'
