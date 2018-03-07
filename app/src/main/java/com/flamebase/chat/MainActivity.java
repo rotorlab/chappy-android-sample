@@ -232,7 +232,7 @@ public class MainActivity extends AppCompatActivity {
         Member member = new Member(name, UUID.randomUUID().toString(), getString(R.string.var_os), id);
         ChatManager.contacts.put(name, member);
 
-        FlamebaseDatabase.syncReference(getString(R.string.contact_path), false);
+        FlamebaseDatabase.sync(getString(R.string.contact_path), false);
     }
 
     /**
@@ -248,6 +248,6 @@ public class MainActivity extends AppCompatActivity {
         Member member = new Member(name, FlamebaseDatabase.id, getString(R.string.var_os), id);
         ChatManager.contacts.put(name, member);
 
-        FlamebaseDatabase.syncReference(getString(R.string.contact_path), false);
+        FlamebaseDatabase.sync(getString(R.string.contact_path), false);
     }
 }

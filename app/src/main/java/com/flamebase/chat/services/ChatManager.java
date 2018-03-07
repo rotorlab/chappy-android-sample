@@ -121,7 +121,7 @@ public class ChatManager {
 
             @Override
             public void onCreate() {
-
+                FlamebaseDatabase.sync(path);
             }
 
             @Override

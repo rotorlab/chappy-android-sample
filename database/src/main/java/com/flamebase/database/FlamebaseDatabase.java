@@ -393,11 +393,6 @@ public class FlamebaseDatabase {
         sync(path, false);
     }
 
-    /**
-     * Updates {@code Map<String, Reference> pathMap} invoking {@code syncReference()} on Reference object.
-     *
-     * @param clean
-     */
     public static <T> void sync(String path, boolean clean) {
         if (pathMap.containsKey(path)) {
             Object[] result = pathMap.get(path).syncReference(clean);
@@ -412,19 +407,6 @@ public class FlamebaseDatabase {
                     blower.onCreate();
                 }
             }
-        }
-    }
-
-    public static void syncReference(String path) {
-        syncReference(path, false);
-    }
-
-    public static void syncReference(String path, boolean clean) {
-        if (pathMap.containsKey(path)) {
-            Object[] result = pathMap.get(path).syncReference(clean);
-            String diff = (String) result[1];
-            Integer len = (Integer) result[0];
-            refreshToServer(path, diff, len, clean);
         }
     }
 
