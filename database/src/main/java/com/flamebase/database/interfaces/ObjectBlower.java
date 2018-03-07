@@ -9,8 +9,8 @@ import android.support.annotation.Nullable;
 
 public interface ObjectBlower <T> extends Blower<T> {
 
-    @Nullable T updateObject();
+    @Nullable T onUpdate();
 
-    void onObjectChanged(@NonNull T ref);
+    void onChanged(@NonNull T ref);
 
 }

@@ -15,8 +15,6 @@ import com.flamebase.database.interfaces.Blower;
 import com.flamebase.database.interfaces.MapBlower;
 import com.flamebase.database.interfaces.ObjectBlower;
 import com.flamebase.database.interfaces.StatusListener;
-import com.flamebase.database.interfaces.mods.KotlinMapBlower;
-import com.flamebase.database.interfaces.mods.KotlinObjectBlower;
 import com.flamebase.database.model.MapReference;
 import com.flamebase.database.model.ObjectReference;
 import com.flamebase.database.model.Reference;
@@ -172,7 +170,7 @@ public class FlamebaseDatabase {
      * @param clazz
      * @param <T>
      */
-    public static <T> void createListener(final String path, Blower<T> blower, Class<T> clazz) {
+    public static <T> void listener(final String path, Blower<T> blower, Class<T> clazz) {
         if (FlamebaseDatabase.pathMap == null) {
             Log.e(TAG, "Use FlamebaseDatabase.initialize(Context context, String urlServer, String token, StatusListener) before create real time references");
             return;
@@ -411,7 +409,7 @@ public class FlamebaseDatabase {
                 Blower<T> blower = (Blower<T>) pathMap.get(path).getLastest();
                 String value = pathMap.get(path).getStringReference();
                 if (value == null || value.equals(EMPTY_OBJECT) || value.equals(NULL)) {
-                    blower.creatingObject();
+                    blower.onCreate();
                 }
             }
         }

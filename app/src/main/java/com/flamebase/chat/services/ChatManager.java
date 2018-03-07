@@ -1,14 +1,9 @@
 package com.flamebase.chat.services;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.util.Log;
 
-import com.flamebase.chat.App;
-import com.flamebase.chat.R;
 import com.flamebase.chat.model.Chat;
 import com.flamebase.chat.model.Member;
-import com.flamebase.chat.model.Message;
 import com.flamebase.database.FlamebaseDatabase;
 import com.flamebase.database.interfaces.MapBlower;
 import com.flamebase.database.interfaces.ObjectBlower;
@@ -46,10 +41,10 @@ public class ChatManager {
     }
 
     public static void addGChat(final String path, final CreateChatListener createChatListener) {
-        FlamebaseDatabase.createListener(path, new ObjectBlower<Chat>() {
+        FlamebaseDatabase.listener(path, new ObjectBlower<Chat>() {
 
             @Override
-            public Chat updateObject() {
+            public Chat onUpdate() {
                 if (map.containsKey(path)) {
                     return map.get(path);
                 } else {
@@ -58,7 +53,7 @@ public class ChatManager {
             }
 
             @Override
-            public void onObjectChanged(Chat ref) {
+            public void onChanged(Chat ref) {
                 if (ref == null) {
 
                 } else if (map.containsKey(path)) {
@@ -81,7 +76,7 @@ public class ChatManager {
             }
 
             @Override
-            public void creatingObject() {
+            public void onCreate() {
                 createChatListener.newChat();
             }
 
@@ -91,6 +86,7 @@ public class ChatManager {
             }
 
         }, Chat.class);
+
         LocalData.addPath(path);
     }
 
@@ -100,15 +96,15 @@ public class ChatManager {
     public static void syncContacts() {
         // TODO correct this
         final String path = "/contacts";
-        FlamebaseDatabase.createListener(path, new MapBlower<Member>() {
+        FlamebaseDatabase.listener(path, new MapBlower<Member>() {
 
             @Override
-            public Map<String, Member> updateMap() {
+            public Map<String, Member> onUpdate() {
                 return contacts;
             }
 
             @Override
-            public void onMapChanged(Map<String, Member> ref) {
+            public void onChanged(Map<String, Member> ref) {
                 Log.e(TAG, "reference: " + ref.size());
 
                 for (Map.Entry<String, Member> entry : ref.entrySet()) {
@@ -124,7 +120,7 @@ public class ChatManager {
             }
 
             @Override
-            public void creatingObject() {
+            public void onCreate() {
 
             }
 

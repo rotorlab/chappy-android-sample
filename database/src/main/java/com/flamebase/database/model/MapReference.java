@@ -38,7 +38,7 @@ public abstract class MapReference<T> extends Reference<MapBlower<T>> {
             if (entry.getValue() instanceof KotlinMapBlower) {
                 ((KotlinMapBlower) entry.getValue()).source(value);
             } else {
-                entry.getValue().onMapChanged(map);
+                entry.getValue().onChanged(map);
             }
         }
     }
@@ -62,14 +62,14 @@ public abstract class MapReference<T> extends Reference<MapBlower<T>> {
                 val = ((KotlinMapBlower) getLastest()).string();
             }
         } else {
-            if (getLastest().updateMap() == null) {
+            if (getLastest().onUpdate() == null) {
                 if (stringReference != null && stringReference.length() > EMPTY_OBJECT.length()) {
                     val = stringReference;
                 } else {
                     val = EMPTY_OBJECT;
                 }
             } else {
-                val = gson.toJson(getLastest().updateMap(), getType());
+                val = gson.toJson(getLastest().onUpdate(), getType());
             }
         }
         return val;

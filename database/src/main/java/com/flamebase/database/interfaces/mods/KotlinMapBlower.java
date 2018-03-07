@@ -19,12 +19,12 @@ public abstract class KotlinMapBlower<T> implements MapBlower<T> {
 
     @Nullable
     @Override
-    public Map<String, T> updateMap() {
+    public Map<String, T> onUpdate() {
         return null;
     }
 
     @Override
-    public void onMapChanged(@NonNull Map<String, T> ref) {
+    public void onChanged(@NonNull Map<String, T> ref) {
         // nothing to do here
     }
 

@@ -66,7 +66,7 @@ FlamebaseDatabase.createListener(path, new ObjectBlower<ObjectA>() {
     * gets new differences from local object
     */
     @Override
-    public ObjectA updateObject() {
+    public ObjectA onUpdate() {
         return objectA;
     }
  
@@ -75,7 +75,7 @@ FlamebaseDatabase.createListener(path, new ObjectBlower<ObjectA>() {
     * or is ready to be used.
     */
     @Override
-    public void onObjectChanged(ObjectA ref) {
+    public void onChanged(ObjectA ref) {
         objectA = ref;  
     }
  
@@ -89,10 +89,10 @@ FlamebaseDatabase.createListener(path, new ObjectBlower<ObjectA>() {
     
     /**
     * called when listener is created, there is nothing stored on
-    * db on the given path and updateObject() still returning null
+    * db on the given path and onUpdate() still returning null
     */
     @Override
-    public void creatingObject() {
+    public void onCreate() {
         objectA = new ObjectA();
         objectA.setValue("foo");
         FlamebaseDatabase.syncReference(path);
@@ -107,12 +107,12 @@ Map<String, Member> contacts = null;
 FlamebaseDatabase.createListener(path, new MapBlower<Member>() {
     
     @Override
-    public Map<String, Member> updateMap() {
+    public Map<String, Member> onUpdate() {
         return contacts;
     }
  
     @Override
-    public void onMapChanged(Map<String, Member> ref) {
+    public void onChanged(Map<String, Member> ref) {
         // the same for maps
     }
  
@@ -122,7 +122,7 @@ FlamebaseDatabase.createListener(path, new MapBlower<Member>() {
     }
     
     @Override
-    public void creatingObject() {
+    public void onCreate() {
         // new object   
     }
   
@@ -252,11 +252,11 @@ private Chat chat;
     
     FlamebaseDatabase.createListener(path, new ObjectBlower<Chat>() {
     
-        @Override public Chat updateObject() {
+        @Override public Chat onUpdate() {
             return chat;
         }
     
-        @Override public void onObjectChanged(Chat ref) {
+        @Override public void onChanged(Chat ref) {
             chat = ref;
             
             // update screent title

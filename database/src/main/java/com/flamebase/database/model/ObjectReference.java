@@ -8,7 +8,6 @@ import com.flamebase.database.interfaces.mods.KotlinObjectBlower;
 import com.google.common.reflect.TypeToken;
 
 import java.lang.reflect.Type;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -48,14 +47,14 @@ public abstract class ObjectReference<T> extends Reference<ObjectBlower<T>> {
                 val = ((KotlinObjectBlower) getLastest()).string();
             }
         } else {
-            if (getLastest().updateObject() == null) {
+            if (getLastest().onUpdate() == null) {
                 if (stringReference != null && stringReference.length() > EMPTY_OBJECT.length()) {
                     val = stringReference;
                 } else {
                     val = EMPTY_OBJECT;
                 }
             } else {
-                val = gson.toJson(getLastest().updateObject(), TypeToken.of(clazz).getType());
+                val = gson.toJson(getLastest().onUpdate(), TypeToken.of(clazz).getType());
             }
         }
 
@@ -68,7 +67,7 @@ public abstract class ObjectReference<T> extends Reference<ObjectBlower<T>> {
             if (entry.getValue() instanceof KotlinObjectBlower) {
                 ((KotlinObjectBlower) entry.getValue()).source(value);
             } else {
-                entry.getValue().onObjectChanged((T) gson.fromJson(value, getType()));
+                entry.getValue().onChanged((T) gson.fromJson(value, getType()));
             }
         }
     }
