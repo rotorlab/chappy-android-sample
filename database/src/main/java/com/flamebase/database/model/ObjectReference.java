@@ -7,6 +7,7 @@ import com.flamebase.database.interfaces.ObjectBlower;
 import com.flamebase.database.interfaces.mods.KotlinObjectBlower;
 import com.google.common.reflect.TypeToken;
 
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,7 +17,7 @@ import java.util.Map;
 
 public abstract class ObjectReference<T> extends Reference<ObjectBlower<T>> {
 
-    public Class<T> clazz;
+    private Class<T> clazz;
 
     public ObjectReference(Context context, String path, long blowerCreation, ObjectBlower<T> blower, Class<T> clazz, Long moment) {
         super(context, path, moment);
@@ -67,7 +68,7 @@ public abstract class ObjectReference<T> extends Reference<ObjectBlower<T>> {
             if (entry.getValue() instanceof KotlinObjectBlower) {
                 ((KotlinObjectBlower) entry.getValue()).source(value);
             } else {
-                entry.getValue().onObjectChanged((T) gson.fromJson(value, TypeToken.of(clazz).getType()));
+                entry.getValue().onObjectChanged((T) gson.fromJson(value, getType()));
             }
         }
     }
@@ -80,7 +81,8 @@ public abstract class ObjectReference<T> extends Reference<ObjectBlower<T>> {
         }
     }
 
-    private ObjectBlower<T> getLastest() {
+    @Override
+    public ObjectBlower<T> getLastest() {
         long lastest = 0;
         ObjectBlower<T> blower = null;
         // TODO limit list of blowers
@@ -91,6 +93,10 @@ public abstract class ObjectReference<T> extends Reference<ObjectBlower<T>> {
             }
         }
         return blower;
+    }
+
+    public <T> Type getType() {
+        return TypeToken.of((Class<T>) clazz).getType();
     }
 
 }

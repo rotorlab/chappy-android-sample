@@ -46,6 +46,7 @@ public abstract class Reference<T> {
     public static String INDEX = "index";
     public static String ACTION = "action";
     public static String EMPTY_OBJECT = "{}";
+    public static String NULL = "null";
 
     protected String path;
     protected String stringReference;
@@ -191,6 +192,8 @@ public abstract class Reference<T> {
     /**
      * notify update percent
      */
+    public abstract T getLastest();
+
     public abstract void progress(int value);
 
     public abstract void addBlower(long creation, T blower);

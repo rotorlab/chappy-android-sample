@@ -171,19 +171,23 @@ public class MainActivity extends AppCompatActivity {
                     .onPositive(new MaterialDialog.SingleButtonCallback() {
                         @Override
                         public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                            EditText name = (EditText) dialog.getCustomView().findViewById(R.id.etName);
+                            final EditText name = dialog.getCustomView().findViewById(R.id.etName);
                             if (!TextUtils.isEmpty(name.getText())) {
                                 SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
-                                String id = prefs.getString(getString(R.string.var_name), null);
+                                final String id = prefs.getString(getString(R.string.var_name), null);
                                 final String groupPath = "/chats/" + name.getText().toString().trim().replace(" ", "_");
 
-                                Map<String, Member> members = new HashMap<>();
-                                members.put(id, ChatManager.getContacts().get(id));
-
-                                Map<String, Message> messageMap = new HashMap<>();
-                                Chat chat = new Chat(name.getText().toString(), members, messageMap);
-                                ChatManager.map.put(groupPath, chat);
-                                ChatManager.addGChat(groupPath);
+                                ChatManager.addGChat(groupPath, new ChatManager.CreateChatListener() {
+                                    @Override
+                                    public void newChat() {
+                                        Map<String, Member> members = new HashMap<>();
+                                        members.put(id, ChatManager.getContacts().get(id));
+                                        Map<String, Message> messageMap = new HashMap<>();
+                                        Chat chat = new Chat(name.getText().toString(), members, messageMap);
+                                        ChatManager.map.put(groupPath, chat);
+                                        FlamebaseDatabase.sync(groupPath);
+                                    }
+                                });
 
                                 dialog.dismiss();
                                 materialDialog = null;

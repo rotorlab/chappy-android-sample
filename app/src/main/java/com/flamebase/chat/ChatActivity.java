@@ -177,6 +177,11 @@ public class ChatActivity extends AppCompatActivity {
             }
 
             @Override
+            public void creatingObject() {
+
+            }
+
+            @Override
             public void progress(int value) {
 
             }

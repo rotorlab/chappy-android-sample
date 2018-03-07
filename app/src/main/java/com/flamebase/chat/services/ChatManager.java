@@ -1,9 +1,14 @@
 package com.flamebase.chat.services;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
 
+import com.flamebase.chat.App;
+import com.flamebase.chat.R;
 import com.flamebase.chat.model.Chat;
 import com.flamebase.chat.model.Member;
+import com.flamebase.chat.model.Message;
 import com.flamebase.database.FlamebaseDatabase;
 import com.flamebase.database.interfaces.MapBlower;
 import com.flamebase.database.interfaces.ObjectBlower;
@@ -28,6 +33,10 @@ public class ChatManager {
         void update(List<Chat> chats);
     }
 
+    public interface CreateChatListener {
+        void newChat();
+    }
+
     private ChatManager() {
         // nothing to do here ..
     }
@@ -36,7 +45,7 @@ public class ChatManager {
         ChatManager.listener = listener;
     }
 
-    public static void addGChat(final String path) {
+    public static void addGChat(final String path, final CreateChatListener createChatListener) {
         FlamebaseDatabase.createListener(path, new ObjectBlower<Chat>() {
 
             @Override
@@ -69,6 +78,11 @@ public class ChatManager {
                 if (listener != null) {
                     ChatManager.listener.update(chats);
                 }
+            }
+
+            @Override
+            public void creatingObject() {
+                createChatListener.newChat();
             }
 
             @Override
@@ -107,6 +121,11 @@ public class ChatManager {
                         contacts.get(entry.getKey()).setId(entry.getValue().getId());
                     }
                 }
+            }
+
+            @Override
+            public void creatingObject() {
+
             }
 
             @Override

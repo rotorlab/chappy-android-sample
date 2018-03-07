@@ -59,9 +59,9 @@ FlamebaseDatabase.setDebug(true);
 - Listener for objects:
 ```java
 ObjectA objectA = null;
- 
+  
 FlamebaseDatabase.createListener(path, new ObjectBlower<ObjectA>() {
- 
+    
     /**
     * gets new differences from local object
     */
@@ -86,6 +86,17 @@ FlamebaseDatabase.createListener(path, new ObjectBlower<ObjectA>() {
     public void progress(int value) {
         Log.e(TAG, "loading " + path + " : " + value + " %");
     }
+    
+    /**
+    * called when listener is created, there is nothing stored on
+    * db on the given path and updateObject() still returning null
+    */
+    @Override
+    public void creatingObject() {
+        objectA = new ObjectA();
+        objectA.setValue("foo");
+        FlamebaseDatabase.syncReference(path);
+    }
  
 }, ObjectA.class);
 ```
@@ -94,7 +105,7 @@ FlamebaseDatabase.createListener(path, new ObjectBlower<ObjectA>() {
 Map<String, Member> contacts = null;
  
 FlamebaseDatabase.createListener(path, new MapBlower<Member>() {
- 
+    
     @Override
     public Map<String, Member> updateMap() {
         return contacts;
@@ -109,7 +120,12 @@ FlamebaseDatabase.createListener(path, new MapBlower<Member>() {
     public void progress(int value) {
         // percent
     }
- 
+    
+    @Override
+    public void creatingObject() {
+        // new object   
+    }
+  
 }, Member.class);
 ```
 - Remove listener in server by calling:

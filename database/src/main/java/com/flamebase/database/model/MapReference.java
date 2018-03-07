@@ -19,7 +19,7 @@ import java.util.Map;
 
 public abstract class MapReference<T> extends Reference<MapBlower<T>> {
 
-    public Class<T> clazz;
+    private Class<T> clazz;
 
     public MapReference(Context context, String path, long blowerCreation, MapBlower<T> blower, Class<T> clazz, Long moment) {
         super(context, path, moment);
@@ -30,7 +30,7 @@ public abstract class MapReference<T> extends Reference<MapBlower<T>> {
     @Override
     public void blowerResult(String value) {
         Map<String, T> map = new HashMap<>();
-        LinkedTreeMap<String, T> mapTemp = gson.fromJson(value, getType(clazz));
+        LinkedTreeMap<String, T> mapTemp = gson.fromJson(value, getType());
         for (LinkedTreeMap.Entry<String, T> entry : mapTemp.entrySet()) {
             map.put(entry.getKey(), entry.getValue());
         }
@@ -69,7 +69,7 @@ public abstract class MapReference<T> extends Reference<MapBlower<T>> {
                     val = EMPTY_OBJECT;
                 }
             } else {
-                val = gson.toJson(getLastest().updateMap(), getType(clazz));
+                val = gson.toJson(getLastest().updateMap(), getType());
             }
         }
         return val;
@@ -83,7 +83,8 @@ public abstract class MapReference<T> extends Reference<MapBlower<T>> {
         }
     }
 
-    private MapBlower<T> getLastest() {
+    @Override
+    public MapBlower<T> getLastest() {
         long lastest = 0;
         MapBlower<T> blower = null;
         for (Map.Entry<Long, MapBlower<T>> entry : blowers().entrySet()) {
@@ -95,8 +96,8 @@ public abstract class MapReference<T> extends Reference<MapBlower<T>> {
         return blower;
     }
 
-    private static <T> Type getType(Class<T> type) {
-        TypeToken t = new TypeToken<Map<String, T>>() {}.where(new TypeParameter<T>() {}, type);
+    public <T> Type getType() {
+        TypeToken t = new TypeToken<Map<String, T>>() {}.where(new TypeParameter<T>() {}, (Class<T>) clazz);
         return t.getType();
     }
 }
