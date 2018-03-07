@@ -60,7 +60,29 @@ FlamebaseDatabase.setDebug(true);
 ```java
 ObjectA objectA = null;
   
-FlamebaseDatabase.createListener(path, new ObjectBlower<ObjectA>() {
+FlamebaseDatabase.listener(path, new ObjectBlower<ObjectA>() {
+    
+    /**
+    * called when listener is created on server, there is nothing stored
+    * on db on the given path and onUpdate() still returning null
+    */
+    @Override
+    public void onCreate() {
+        objectA = new ObjectA();
+        objectA.setValue("foo");
+        
+        // sync with server
+        FlamebaseDatabase.sync(path);
+    }
+    
+    /**
+    * called after reference is synchronized with server
+    * or is ready to be used.
+    */
+    @Override
+    public void onChanged(ObjectA ref) {
+        objectA = ref;  
+    }
     
     /**
     * gets new differences from local object
@@ -71,31 +93,11 @@ FlamebaseDatabase.createListener(path, new ObjectBlower<ObjectA>() {
     }
  
     /**
-    * called after reference is synchronized with server
-    * or is ready to be used.
-    */
-    @Override
-    public void onChanged(ObjectA ref) {
-        objectA = ref;  
-    }
- 
-    /**
     * long server updates, from 0 to 100
     */
     @Override
     public void progress(int value) {
         Log.e(TAG, "loading " + path + " : " + value + " %");
-    }
-    
-    /**
-    * called when listener is created, there is nothing stored on
-    * db on the given path and onUpdate() still returning null
-    */
-    @Override
-    public void onCreate() {
-        objectA = new ObjectA();
-        objectA.setValue("foo");
-        FlamebaseDatabase.syncReference(path);
     }
  
 }, ObjectA.class);
@@ -105,6 +107,20 @@ FlamebaseDatabase.createListener(path, new ObjectBlower<ObjectA>() {
 Map<String, Member> contacts = null;
  
 FlamebaseDatabase.createListener(path, new MapBlower<Member>() {
+   
+    @Override
+    public void onCreate() {
+        contacts = new HashMap<String, Member>();
+        // add a member
+        
+        // sync with server
+        FlamebaseDatabase.sync(path);
+    }
+    
+    @Override
+    public void onChanged(Map<String, Member> ref) {
+        contacts = ref;
+    }
     
     @Override
     public Map<String, Member> onUpdate() {
@@ -112,18 +128,8 @@ FlamebaseDatabase.createListener(path, new MapBlower<Member>() {
     }
  
     @Override
-    public void onChanged(Map<String, Member> ref) {
-        // the same for maps
-    }
- 
-    @Override
     public void progress(int value) {
-        // percent
-    }
-    
-    @Override
-    public void onCreate() {
-        // new object   
+        
     }
   
 }, Member.class);
