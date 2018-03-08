@@ -27,7 +27,7 @@ android {
 }
  
 dependencies {
-    implementation 'com.flamebase:database:1.6.0'
+    implementation 'com.flamebase:database:1.6.1'
     implementation 'com.efraespada:jsondiff:1.1.0'
     implementation 'com.squareup.retrofit2:retrofit:2.3.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.3.0'
@@ -59,24 +59,37 @@ FlamebaseDatabase.setDebug(true);
 - Listener for objects:
 ```java
 ObjectA objectA = null;
- 
-FlamebaseDatabase.createListener(path, new ObjectBlower<ObjectA>() {
- 
+  
+FlamebaseDatabase.listener(path, new ObjectBlower<ObjectA>() {
+    
     /**
-    * gets new differences from local object
+    * called when listener is created on server, there is nothing stored
+    * on db on the given path and onUpdate() still returning null
     */
     @Override
-    public ObjectA updateObject() {
-        return objectA;
+    public void onCreate() {
+        objectA = new ObjectA();
+        objectA.setValue("foo");
+        
+        // sync with server
+        FlamebaseDatabase.sync(path);
     }
- 
+    
     /**
     * called after reference is synchronized with server
     * or is ready to be used.
     */
     @Override
-    public void onObjectChanged(ObjectA ref) {
+    public void onChanged(ObjectA ref) {
         objectA = ref;  
+    }
+    
+    /**
+    * gets new differences from local object
+    */
+    @Override
+    public ObjectA onUpdate() {
+        return objectA;
     }
  
     /**
@@ -93,23 +106,32 @@ FlamebaseDatabase.createListener(path, new ObjectBlower<ObjectA>() {
 ```java
 Map<String, Member> contacts = null;
  
-FlamebaseDatabase.createListener(path, new MapBlower<Member>() {
- 
+FlamebaseDatabase.listener(path, new MapBlower<Member>() {
+   
     @Override
-    public Map<String, Member> updateMap() {
+    public void onCreate() {
+        contacts = new HashMap<String, Member>();
+        // add a member
+        
+        // sync with server
+        FlamebaseDatabase.sync(path);
+    }
+    
+    @Override
+    public void onChanged(Map<String, Member> ref) {
+        contacts = ref;
+    }
+    
+    @Override
+    public Map<String, Member> onUpdate() {
         return contacts;
     }
  
     @Override
-    public void onMapChanged(Map<String, Member> ref) {
-        // the same for maps
-    }
- 
-    @Override
     public void progress(int value) {
-        // percent
+        
     }
- 
+  
 }, Member.class);
 ```
 - Remove listener in server by calling:
@@ -170,10 +192,10 @@ data class Chat(@SerializedName("id") val id: String,
                 @SerializedName("creationDate") val creationDate: Long,
                 @SerializedName("members") val members: Map<String, Member>)
  
-FlamebaseDatabase.createListener(path, object : KotlinObjectBlower<Chat>() {
+FlamebaseDatabase.listener(path, object : KotlinObjectBlower<Chat>() {
  
-    override fun progress(value: Int) {
-        /* */
+    override fun onCreate() {
+        
     }
  
     override fun source(value: String?) {
@@ -188,6 +210,10 @@ FlamebaseDatabase.createListener(path, object : KotlinObjectBlower<Chat>() {
             val gson = Gson()
             gson.toJson(profile)
         }
+    }
+    
+    override fun progress(value: Int) {
+        /* */
     }
  
 }, Chat::class.java)
@@ -234,13 +260,21 @@ private Chat chat;
     
     /* object instances, list adapter, etc.. */
     
-    FlamebaseDatabase.createListener(path, new ObjectBlower<Chat>() {
+    FlamebaseDatabase.listener(path, new ObjectBlower<Chat>() {
     
-        @Override public Chat updateObject() {
+        @Override public void onCreate() {
+            chat = new Chat();
+            chat.setTitle("Foo Chat");
+            
+            // sync with server
+            FlamebaseDatabase.sync(path);
+        }
+            
+        @Override public Chat onUpdate() {
             return chat;
         }
     
-        @Override public void onObjectChanged(Chat ref) {
+        @Override public void onChanged(Chat ref) {
             chat = ref;
             
             // update screent title

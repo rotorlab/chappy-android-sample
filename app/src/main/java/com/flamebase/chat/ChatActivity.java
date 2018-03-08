@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -30,7 +29,6 @@ import com.flamebase.chat.model.Chat;
 import com.flamebase.chat.model.Message;
 import com.flamebase.database.FlamebaseDatabase;
 import com.flamebase.database.interfaces.ObjectBlower;
-import com.flamebase.database.interfaces.mods.KotlinObjectBlower;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -133,15 +131,15 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
 
-        FlamebaseDatabase.createListener(path, new ObjectBlower<Chat>() {
+        FlamebaseDatabase.listener(path, new ObjectBlower<Chat>() {
 
             @Override
-            public Chat updateObject() {
+            public Chat onUpdate() {
                 return chat;
             }
 
             @Override
-            public void onObjectChanged(Chat ref) {
+            public void onChanged(Chat ref) {
                 sendButton.setEnabled(ref != null);
                 if (ref != null) {
                     chat = ref;
@@ -174,6 +172,11 @@ public class ChatActivity extends AppCompatActivity {
                 }
 
                 sendButton.setEnabled(messageText.toString().length() > 0 && chat != null);
+            }
+
+            @Override
+            public void onCreate() {
+
             }
 
             @Override

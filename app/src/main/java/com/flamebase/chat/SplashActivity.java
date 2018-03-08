@@ -32,8 +32,14 @@ public class SplashActivity extends AppCompatActivity {
                 JSONArray array = LocalData.getLocalPaths();
                 for (int i = 0; i < array.length(); i++) {
                     try {
-                        String path = array.getString(i);
-                        ChatManager.addGChat(path);
+                        final String path = array.getString(i);
+                        ChatManager.addGChat(path, new ChatManager.CreateChatListener() {
+                            @Override
+                            public void newChat() {
+                                FlamebaseDatabase.removeListener(path);
+                                LocalData.removePath(path);
+                            }
+                        });
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }

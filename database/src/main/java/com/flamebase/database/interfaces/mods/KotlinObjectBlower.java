@@ -19,12 +19,12 @@ public abstract class KotlinObjectBlower<T> implements ObjectBlower<T> {
 
     @Nullable
     @Override
-    public T updateObject() {
+    public T onUpdate() {
         return null;
     }
 
     @Override
-    public void onObjectChanged(@NonNull T ref) {
+    public void onChanged(@NonNull T ref) {
         // nothing to do here
     }
 

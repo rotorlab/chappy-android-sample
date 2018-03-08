@@ -11,8 +11,8 @@ import java.util.Map;
 
 public interface MapBlower<T> extends Blower<T> {
 
-    @Nullable Map<String, T> updateMap();
+    @Nullable Map<String, T> onUpdate();
 
-    void onMapChanged(@NonNull Map<String, T> ref);
+    void onChanged(@NonNull Map<String, T> ref);
 
 }

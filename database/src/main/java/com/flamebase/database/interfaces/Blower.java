@@ -6,6 +6,8 @@ package com.flamebase.database.interfaces;
 
 public interface Blower<T> {
 
+    void onCreate();
+
     void progress(int value);
 
 }

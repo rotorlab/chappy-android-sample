@@ -40,6 +40,7 @@ import static android.content.Context.MODE_PRIVATE;
 import static com.flamebase.database.model.Reference.EMPTY_OBJECT;
 import static com.flamebase.database.model.Reference.PATH;
 import static com.flamebase.database.model.Reference.ACTION_NEW_OBJECT;
+import static com.flamebase.database.model.Reference.NULL;
 
 /**
  * Created by efraespada on 10/06/2017.
@@ -169,7 +170,7 @@ public class FlamebaseDatabase {
      * @param clazz
      * @param <T>
      */
-    public static <T> void createListener(final String path, Blower<T> blower, Class<T> clazz) {
+    public static <T> void listener(final String path, Blower<T> blower, Class<T> clazz) {
         if (FlamebaseDatabase.pathMap == null) {
             Log.e(TAG, "Use FlamebaseDatabase.initialize(Context context, String urlServer, String token, StatusListener) before create real time references");
             return;
@@ -392,32 +393,20 @@ public class FlamebaseDatabase {
         sync(path, false);
     }
 
-    /**
-     * Updates {@code Map<String, Reference> pathMap} invoking {@code syncReference()} on Reference object.
-     *
-     * @param clean
-     */
-    public static void sync(String path, boolean clean) {
+    public static <T> void sync(String path, boolean clean) {
         if (pathMap.containsKey(path)) {
             Object[] result = pathMap.get(path).syncReference(clean);
             String diff = (String) result[1];
             Integer len = (Integer) result[0];
             if (!EMPTY_OBJECT.equals(diff)) {
                 refreshToServer(path, diff, len, clean);
+            } else {
+                Blower<T> blower = (Blower<T>) pathMap.get(path).getLastest();
+                String value = pathMap.get(path).getStringReference();
+                if (value == null || value.equals(EMPTY_OBJECT) || value.equals(NULL)) {
+                    blower.onCreate();
+                }
             }
-        }
-    }
-
-    public static void syncReference(String path) {
-        syncReference(path, false);
-    }
-
-    public static void syncReference(String path, boolean clean) {
-        if (pathMap.containsKey(path)) {
-            Object[] result = pathMap.get(path).syncReference(clean);
-            String diff = (String) result[1];
-            Integer len = (Integer) result[0];
-            refreshToServer(path, diff, len, clean);
         }
     }
 
