@@ -27,7 +27,7 @@ android {
 }
  
 dependencies {
-    implementation 'com.flamebase:database:1.6.0'
+    implementation 'com.flamebase:database:1.6.1'
     implementation 'com.efraespada:jsondiff:1.1.0'
     implementation 'com.squareup.retrofit2:retrofit:2.3.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.3.0'
@@ -106,7 +106,7 @@ FlamebaseDatabase.listener(path, new ObjectBlower<ObjectA>() {
 ```java
 Map<String, Member> contacts = null;
  
-FlamebaseDatabase.createListener(path, new MapBlower<Member>() {
+FlamebaseDatabase.listener(path, new MapBlower<Member>() {
    
     @Override
     public void onCreate() {
@@ -192,10 +192,10 @@ data class Chat(@SerializedName("id") val id: String,
                 @SerializedName("creationDate") val creationDate: Long,
                 @SerializedName("members") val members: Map<String, Member>)
  
-FlamebaseDatabase.createListener(path, object : KotlinObjectBlower<Chat>() {
+FlamebaseDatabase.listener(path, object : KotlinObjectBlower<Chat>() {
  
-    override fun progress(value: Int) {
-        /* */
+    override fun onCreate() {
+        
     }
  
     override fun source(value: String?) {
@@ -210,6 +210,10 @@ FlamebaseDatabase.createListener(path, object : KotlinObjectBlower<Chat>() {
             val gson = Gson()
             gson.toJson(profile)
         }
+    }
+    
+    override fun progress(value: Int) {
+        /* */
     }
  
 }, Chat::class.java)
@@ -256,8 +260,16 @@ private Chat chat;
     
     /* object instances, list adapter, etc.. */
     
-    FlamebaseDatabase.createListener(path, new ObjectBlower<Chat>() {
+    FlamebaseDatabase.listener(path, new ObjectBlower<Chat>() {
     
+        @Override public void onCreate() {
+            chat = new Chat();
+            chat.setTitle("Foo Chat");
+            
+            // sync with server
+            FlamebaseDatabase.sync(path);
+        }
+            
         @Override public Chat onUpdate() {
             return chat;
         }
