@@ -37,7 +37,7 @@ class Database  {
         private var pathMap: HashMap<String, KReference<*>> ? = null
 
         @JvmStatic fun initialize() {
-            pathMap?.let {
+            pathMap.let {
                 pathMap = HashMap()
             }
 

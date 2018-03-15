@@ -99,6 +99,12 @@ public class ChatManager {
         Database.listener(path, new Reference<GContacts>() {
 
             @Override
+            public void onCreate() {
+                contacts = new GContacts(new HashMap<String, Member>());
+                Database.sync(path);
+            }
+
+            @Override
             public void onChanged(GContacts gContacts) {
                 ChatManager.contacts = gContacts;
             }
@@ -106,13 +112,6 @@ public class ChatManager {
             @Override
             public GContacts onUpdate() {
                 return contacts;
-            }
-
-
-            @Override
-            public void onCreate() {
-                contacts = new GContacts(new HashMap<String, Member>());
-                Database.sync(path);
             }
 
             @Override

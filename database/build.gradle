@@ -34,7 +34,8 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
     implementation 'com.efraespada:jsondiff:1.1.0'
     implementation 'com.squareup.retrofit2:retrofit:2.3.0'
-    implementation 'com.squareup.retrofit2:converter-gson:2.3.0'
+    implementation "com.squareup.retrofit2:converter-moshi:2.0.0"
+    // implementation 'com.squareup.retrofit2:converter-gson:2.3.0'
     //noinspection GradleDependency
     implementation 'com.google.code.findbugs:jsr305:2.0.1'
     //noinspection GradleDependency
@@ -42,6 +43,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation "com.stringcare:library:0.7"
     implementation 'com.rotor:core:0.0.8'
+    implementation 'com.google.code.gson:gson:2.8.2'
 }
 repositories {
     mavenCentral()

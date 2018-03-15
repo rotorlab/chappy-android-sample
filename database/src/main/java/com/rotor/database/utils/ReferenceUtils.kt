@@ -10,7 +10,7 @@ import com.rotor.database.interfaces.Server
 import com.stringcare.library.SC
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.converter.moshi.MoshiConverterFactory
 import java.math.BigInteger
 import java.util.concurrent.TimeUnit
 
@@ -175,7 +175,7 @@ class ReferenceUtils {
                         chain.proceed(chain.request())
                     }
 
-            val builder = Retrofit.Builder().baseUrl(url).addConverterFactory(GsonConverterFactory.create())
+            val builder = Retrofit.Builder().baseUrl(url).addConverterFactory(MoshiConverterFactory.create())
 
             val retrofit = builder.client(httpClient.build()).build()
 
