@@ -22,18 +22,12 @@ import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.flamebase.chat.adapters.ChatAdapter;
 import com.flamebase.chat.model.Chat;
-import com.flamebase.chat.model.GContacts;
 import com.flamebase.chat.model.Member;
 import com.flamebase.chat.model.Message;
 import com.flamebase.chat.services.ChatManager;
-import com.flamebase.chat.services.LocalData;
-import com.flamebase.database.FlamebaseDatabase;
-import com.flamebase.database.interfaces.StatusListener;
+import com.rotor.core.Rotor;
+import com.rotor.database.Database;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        FlamebaseDatabase.onResume();
+        Rotor.onResume();
         if (chatsList != null) {
             chatsList.getAdapter().notifyDataSetChanged();
         }
@@ -98,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onPause() {
-        FlamebaseDatabase.onPause();
+        Rotor.onPause();
         super.onPause();
     }
 
@@ -181,11 +175,11 @@ public class MainActivity extends AppCompatActivity {
                                     @Override
                                     public void newChat() {
                                         Map<String, Member> members = new HashMap<>();
-                                        members.put(id, ChatManager.getContacts().get(id));
+                                        members.put(id, ChatManager.getContacts().getMembers().get(id));
                                         Map<String, Message> messageMap = new HashMap<>();
                                         Chat chat = new Chat(name.getText().toString(), members, messageMap);
                                         ChatManager.map.put(groupPath, chat);
-                                        FlamebaseDatabase.sync(groupPath);
+                                        Database.sync(groupPath);
                                     }
                                 });
 
@@ -230,9 +224,9 @@ public class MainActivity extends AppCompatActivity {
         String id = prefs.getString(getString(R.string.var_id), null);
 
         Member member = new Member(name, UUID.randomUUID().toString(), getString(R.string.var_os), id);
-        ChatManager.contacts.put(name, member);
+        ChatManager.contacts.getMembers().put(name, member);
 
-        FlamebaseDatabase.sync(getString(R.string.contact_path), false);
+        Database.sync(getString(R.string.contact_path), false);
     }
 
     /**
@@ -245,9 +239,9 @@ public class MainActivity extends AppCompatActivity {
         editor.putString(getString(R.string.var_name), name).apply();
         editor.putString(getString(R.string.var_id), id).apply();
 
-        Member member = new Member(name, FlamebaseDatabase.id, getString(R.string.var_os), id);
-        ChatManager.contacts.put(name, member);
+        Member member = new Member(name, Rotor.getId(), getString(R.string.var_os), id);
+        ChatManager.contacts.getMembers().put(name, member);
 
-        FlamebaseDatabase.sync(getString(R.string.contact_path), false);
+        Database.sync(getString(R.string.contact_path), false);
     }
 }

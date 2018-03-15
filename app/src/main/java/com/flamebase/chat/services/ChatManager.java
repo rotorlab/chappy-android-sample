@@ -3,10 +3,10 @@ package com.flamebase.chat.services;
 import android.util.Log;
 
 import com.flamebase.chat.model.Chat;
+import com.flamebase.chat.model.GContacts;
 import com.flamebase.chat.model.Member;
-import com.flamebase.database.FlamebaseDatabase;
-import com.flamebase.database.interfaces.MapBlower;
-import com.flamebase.database.interfaces.ObjectBlower;
+import com.rotor.database.Database;
+import com.rotor.database.abstr.Reference;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,7 +21,7 @@ public class ChatManager {
 
     private static final String TAG = ChatManager.class.getSimpleName();
     public static final Map<String, Chat> map = new HashMap<>();
-    public static final Map<String, Member> contacts = new HashMap<>();
+    public static GContacts contacts = null;
     public static Listener listener;
 
     public interface Listener {
@@ -41,7 +41,7 @@ public class ChatManager {
     }
 
     public static void addGChat(final String path, final CreateChatListener createChatListener) {
-        FlamebaseDatabase.listener(path, new ObjectBlower<Chat>() {
+        Database.listener(path, new Reference<Chat>() {
 
             @Override
             public Chat onUpdate() {
@@ -85,7 +85,7 @@ public class ChatManager {
                 Log.e(TAG, "loading percent for " + path + " : " + value + " %");
             }
 
-        }, Chat.class);
+        });
 
         LocalData.addPath(path);
     }
@@ -96,32 +96,23 @@ public class ChatManager {
     public static void syncContacts() {
         // TODO correct this
         final String path = "/contacts";
-        FlamebaseDatabase.listener(path, new MapBlower<Member>() {
+        Database.listener(path, new Reference<GContacts>() {
 
             @Override
-            public Map<String, Member> onUpdate() {
+            public void onChanged(GContacts gContacts) {
+                ChatManager.contacts = gContacts;
+            }
+
+            @Override
+            public GContacts onUpdate() {
                 return contacts;
             }
 
-            @Override
-            public void onChanged(Map<String, Member> ref) {
-                Log.e(TAG, "reference: " + ref.size());
-
-                for (Map.Entry<String, Member> entry : ref.entrySet()) {
-                    if (!contacts.containsKey(entry.getKey())) {
-                        contacts.put(entry.getKey(), entry.getValue());
-                    } else {
-                        contacts.get(entry.getKey()).setName(entry.getValue().getName());
-                        contacts.get(entry.getKey()).setOs(entry.getValue().getOs());
-                        contacts.get(entry.getKey()).setToken(entry.getValue().getToken());
-                        contacts.get(entry.getKey()).setId(entry.getValue().getId());
-                    }
-                }
-            }
 
             @Override
             public void onCreate() {
-                FlamebaseDatabase.sync(path);
+                contacts = new GContacts(new HashMap<String, Member>());
+                Database.sync(path);
             }
 
             @Override
@@ -129,7 +120,7 @@ public class ChatManager {
                 Log.e(TAG, "loading percent for " + path + " : " + value + " %");
             }
 
-        }, Member.class);
+        });
     }
 
     public static void refreshChatsList() {
@@ -143,7 +134,7 @@ public class ChatManager {
         }
     }
 
-    public static Map<String, Member> getContacts() {
+    public static GContacts getContacts() {
         return contacts;
     }
 

@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -27,8 +28,9 @@ import android.widget.TextView;
 
 import com.flamebase.chat.model.Chat;
 import com.flamebase.chat.model.Message;
-import com.flamebase.database.FlamebaseDatabase;
-import com.flamebase.database.interfaces.ObjectBlower;
+import com.rotor.core.Rotor;
+import com.rotor.database.Database;
+import com.rotor.database.abstr.Reference;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -86,7 +88,7 @@ public class ChatActivity extends AppCompatActivity {
                     Message message = new Message(name, messageText.getText().toString());
                     chat.getMessages().put(String.valueOf(new Date().getTime()), message);
 
-                    FlamebaseDatabase.sync(path);
+                    Database.sync(path);
 
                     Handler handler = new Handler();
                     handler.postDelayed(new Runnable() {
@@ -131,18 +133,17 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
 
-        FlamebaseDatabase.listener(path, new ObjectBlower<Chat>() {
-
+        Database.listener(path, new Reference<Chat>() {
             @Override
-            public Chat onUpdate() {
-                return chat;
+            public void onCreate() {
+                // shouldn't be called
             }
 
             @Override
-            public void onChanged(Chat ref) {
-                sendButton.setEnabled(ref != null);
-                if (ref != null) {
-                    chat = ref;
+            public void onChanged(Chat chat) {
+                sendButton.setEnabled(chat != null);
+                if (chat != null) {
+                    ChatActivity.this.chat = chat;
                 }
 
                 if (chat != null) {
@@ -174,17 +175,17 @@ public class ChatActivity extends AppCompatActivity {
                 sendButton.setEnabled(messageText.toString().length() > 0 && chat != null);
             }
 
+            @Nullable
             @Override
-            public void onCreate() {
-
+            public Chat onUpdate() {
+                return ChatActivity.this.chat;
             }
 
             @Override
-            public void progress(int value) {
+            public void progress(int i) {
 
             }
-
-        }, Chat.class);
+        });
 
     }
 
@@ -215,13 +216,13 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        FlamebaseDatabase.onResume();
+        Rotor.onResume();
         sendButton.setEnabled(messageText.getText().toString().length() > 0 && chat != null);
     }
 
     @Override
     protected void onPause() {
-        FlamebaseDatabase.onPause();
+        Rotor.onPause();
         super.onPause();
     }
 

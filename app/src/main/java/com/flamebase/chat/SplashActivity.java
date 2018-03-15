@@ -7,8 +7,9 @@ import android.support.v7.app.AppCompatActivity;
 
 import com.flamebase.chat.services.ChatManager;
 import com.flamebase.chat.services.LocalData;
-import com.flamebase.database.FlamebaseDatabase;
-import com.flamebase.database.interfaces.StatusListener;
+import com.rotor.core.Rotor;
+import com.rotor.core.interfaces.StatusListener;
+import com.rotor.database.Database;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -24,9 +25,11 @@ public class SplashActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         LocalData.init(getApplicationContext());
-        FlamebaseDatabase.initialize(getApplicationContext(), BuildConfig.database_url, BuildConfig.redis_url, new StatusListener() {
+
+        Rotor.initialize(getApplicationContext(), BuildConfig.database_url, BuildConfig.redis_url, new StatusListener() {
             @Override
             public void connected() {
+                Database.initialize();
                 ChatManager.syncContacts();
 
                 JSONArray array = LocalData.getLocalPaths();
@@ -36,7 +39,7 @@ public class SplashActivity extends AppCompatActivity {
                         ChatManager.addGChat(path, new ChatManager.CreateChatListener() {
                             @Override
                             public void newChat() {
-                                FlamebaseDatabase.removeListener(path);
+                                Database.removeListener(path);
                                 LocalData.removePath(path);
                             }
                         });
@@ -55,6 +58,6 @@ public class SplashActivity extends AppCompatActivity {
 
             }
         });
-        FlamebaseDatabase.setDebug(true);
+        Rotor.debug(true);
     }
 }

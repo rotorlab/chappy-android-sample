@@ -1,4 +1,6 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
 
 android {
 
@@ -6,7 +8,7 @@ android {
     buildToolsVersion '27.0.3'
     defaultConfig {
         applicationId "com.flamebase.chat"
-        minSdkVersion 14
+        minSdkVersion 19
         targetSdkVersion 27
         versionCode 2
         versionName "1.1"
@@ -50,10 +52,13 @@ dependencies {
     implementation 'com.android.support:design:27.1.0'
     testImplementation 'junit:junit:4.12'
     // implementation 'com.flamebase:database:1.5.0'
-    implementation project(':database')
+    // implementation project(':database')
     implementation 'com.afollestad.material-dialogs:core:0.9.6.0'
     implementation "com.stringcare:library:$stringcare_version"
     implementation 'com.google.code.gson:gson:2.8.2'
+    implementation 'com.rotor:core:0.0.9'
+    implementation 'com.rotor:database:0.0.4'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
 }
 
 apply plugin: 'com.google.gms.google-services'
