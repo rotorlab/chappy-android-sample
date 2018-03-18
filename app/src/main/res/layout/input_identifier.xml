@@ -6,16 +6,9 @@
 
     <EditText
         android:padding="5dp"
-        android:id="@+id/etId"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:hint="lalilulelo@ggg.com"/>
-
-    <EditText
-        android:padding="5dp"
         android:id="@+id/etName"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:hint="dr. scorpio"/>
+        android:hint="@string/name_hint"/>
 
 </LinearLayout>

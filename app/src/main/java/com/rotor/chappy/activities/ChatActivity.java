@@ -131,7 +131,7 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
 
-        Database.listener(path, new Reference<Chat>(Chat.class) {
+        Database.listen(path, new Reference<Chat>(Chat.class) {
             @Override
             public void onCreate() {
                 // shouldn't be called

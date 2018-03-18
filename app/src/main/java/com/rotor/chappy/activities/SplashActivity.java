@@ -40,7 +40,7 @@ public class SplashActivity extends AppCompatActivity {
                         ChatManager.addGChat(path, new ChatManager.CreateChatListener() {
                             @Override
                             public void newChat() {
-                                Database.removeListener(path);
+                                Database.unlisten(path);
                                 LocalData.removePath(path);
                             }
                         });
