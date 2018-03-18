@@ -5,7 +5,7 @@ package com.rotor.notifications.model
  */
 data class Notification( val id: String,
                          val time: Long,
-                         var content: Content,
-                         var data: Data,
+                         var content: Content ?,
+                         var data: Data ?,
                          var sender: Sender,
                          var receivers: HashMap<String, Receiver>)
