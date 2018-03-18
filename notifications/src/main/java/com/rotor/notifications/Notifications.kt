@@ -23,9 +23,18 @@ import android.support.v4.app.NotificationManagerCompat
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
+import android.util.Log
 import com.google.gson.Gson
 import com.rotor.database.utils.ReferenceUtils
 import com.rotor.notifications.data.NotificationDocker
+import com.rotor.notifications.interfaces.Server
+import com.rotor.notifications.request.NotificationSender
+import com.stringcare.library.SC
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
+import retrofit2.Retrofit
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
+import retrofit2.converter.gson.GsonConverterFactory
 
 
 /**
@@ -36,16 +45,21 @@ class Notifications {
     companion object {
 
         val NOTIFICATION = "notifications/"
-        private  var context: Context ? = null
         private  var docker: NotificationDocker? = null
+        private val TAG: String = Notifications::class.java.simpleName!!
 
-        @JvmStatic fun initialize(context: Context) {
-            Notifications.Companion.context = context
+        val api by lazy {
+            service(Rotor.urlServer!!)
+        }
+
+        @JvmStatic fun initialize() {
+            SC.init(Rotor.context)
 
             loadCachedNotifications()
 
-            val config = ImageLoaderConfiguration.Builder(context).build()
+            val config = ImageLoaderConfiguration.Builder(Rotor.context).build()
             ImageLoader.getInstance().init(config)
+
 
             Rotor.prepare(Builder.NOTIFICATION, object: BuilderFace {
                 override fun onMessageReceived(jsonObject: JSONObject) {
@@ -74,6 +88,16 @@ class Notifications {
 
                 }
             })
+        }
+
+        private fun service(url: String): Server {
+            val retrofit = Retrofit.Builder()
+                    .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .baseUrl(url)
+                    .build()
+
+            return retrofit.create(Server::class.java)
         }
 
         @JvmStatic fun builder(content: Content ?, data: Data ?, receivers: List<String>) : Notification {
@@ -148,11 +172,10 @@ class Notifications {
             }
         }
 
-        @SuppressLint("NewApi")
         private fun interShowNotification(id: String, content: Content, bitmap: Bitmap ?) {
             var mBuilder: NotificationCompat.Builder ? = null
             if (bitmap != null) {
-                mBuilder = NotificationCompat.Builder(Notifications.Companion.context!!, id)
+                mBuilder = NotificationCompat.Builder(Rotor.context!!, id)
                         .setSmallIcon(R.mipmap.ic_launcher_round)
                         .setLargeIcon(bitmap)
                         .setContentTitle(content.title)
@@ -160,7 +183,7 @@ class Notifications {
                         .setStyle(NotificationCompat.BigTextStyle().bigText(content.body))
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             } else {
-                mBuilder = NotificationCompat.Builder(Notifications.Companion.context!!, id)
+                mBuilder = NotificationCompat.Builder(Rotor.context!!, id)
                         .setSmallIcon(R.mipmap.ic_launcher_round)
                         .setContentTitle(content.title)
                         .setContentText(content.body)
@@ -168,22 +191,36 @@ class Notifications {
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             }
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && content.channel != null && content.channelDescription != null) {
-                val name = content.channel
-                val description = content.channelDescription
-                val importance = NotificationManager.IMPORTANCE_DEFAULT
-                val channel = NotificationChannel(Rotor.id, name, importance)
-                channel.description = description
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (content.channel != null && content.channelDescription != null) {
+                    val name = content.channel
+                    val description = content.channelDescription
+                    val importance = NotificationManager.IMPORTANCE_DEFAULT
+                    var channel: NotificationChannel ? = null
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        channel = NotificationChannel(Rotor.id, name, importance)
+                    }
+                    channel!!.description = description
 
-                val notificationManager = Notifications.Companion.context!!.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager;
-                if (notificationManager.areNotificationsEnabled()) {
-                    notificationManager.createNotificationChannel(channel)
+                    val notificationManager = Rotor.context!!.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager;
+                    if (notificationManager.areNotificationsEnabled()) {
+                        var found = false
+                        for (channels in notificationManager.notificationChannels) {
+                            if (channels.id.equals(Rotor.id)) {
+                                found = true
+                                break
+                            }
+                        }
+                        if (!found) {
+                            notificationManager.createNotificationChannel(channel!!)
+                        }
+                    }
+                } else {
+                    return
                 }
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                return
             }
 
-            val notificationManager = NotificationManagerCompat.from(Notifications.Companion.context!!)
+            val notificationManager = NotificationManagerCompat.from(Rotor.context!!)
             notificationManager.notify(id.toInt(), mBuilder.build())
         }
 
@@ -205,6 +242,16 @@ class Notifications {
                     }
                 }
             }
+        }
+
+        @JvmStatic private fun sendNotification(id: String, receivers: List<String>) {
+            api.sendNotification(NotificationSender(id, receivers))
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                            { result -> Log.e(TAG, result.status) },
+                            { error -> error.printStackTrace() }
+                    )
         }
 
     }

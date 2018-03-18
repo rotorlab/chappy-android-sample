@@ -11,9 +11,14 @@ import com.rotor.chappy.services.LocalData;
 import com.rotor.core.Rotor;
 import com.rotor.core.interfaces.StatusListener;
 import com.rotor.database.Database;
+import com.rotor.notifications.Notifications;
+import com.rotor.notifications.model.Content;
+import com.rotor.notifications.model.Notification;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+
+import java.util.ArrayList;
 
 /**
  * Created by efraespada on 27/02/2018.
@@ -31,6 +36,13 @@ public class SplashActivity extends AppCompatActivity {
             @Override
             public void connected() {
                 Database.initialize();
+                Notifications.initialize();
+
+                Content content = new Content("Hi :)", "Welcome to notifications!", "myChannel", "Test channel", null);
+                ArrayList<String> ids = new ArrayList<>();
+
+                Notification notification = Notifications.builder(content, null, ids);
+
                 ChatManager.syncContacts();
 
                 JSONArray array = LocalData.getLocalPaths();
