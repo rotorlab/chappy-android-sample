@@ -3,7 +3,10 @@
 Chappy: quick sample of real-time changes
 -------------------------------------------
  
-Define simple objects and share it between other devices by paths (`/chats/welcome_chat`):
+Sample app of the use of Rotor libraries (Core and Database). Clone the repo and open the project in Android Studio:
+```bash
+git clone https://github.com/rotorlab/chappy-android-sample.git
+```
  
 ```java
 public class Chat {
