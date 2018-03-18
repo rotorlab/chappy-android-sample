@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
+apply plugin: 'io.fabric'
+
 
 android {
 
     compileSdkVersion 27
     buildToolsVersion '27.0.3'
     defaultConfig {
-        applicationId "com.flamebase.chat"
+        applicationId "com.rotor.chappy"
         minSdkVersion 19
         targetSdkVersion 27
         versionCode 2
@@ -26,14 +26,14 @@ android {
     }
     productFlavors {
         emulator {
-            applicationId "com.flamebase.chat"
+            applicationId "com.rotor.chappy"
             versionNameSuffix "-emulator"
             buildConfigField "String", "database_url", "\"http://10.0.2.2:1507/\""
             buildConfigField "String", "redis_url", "\"redis://10.0.2.2\""
             dimension "origin"
         }
         device {
-            applicationId "com.flamebase.chat"
+            applicationId "com.rotor.chappy"
             versionNameSuffix "-device"
             buildConfigField "String", "database_url", "\"http://172.20.10.8:1507/\""
             buildConfigField "String", "redis_url", "\"redis://172.20.10.8\""
@@ -54,11 +54,18 @@ dependencies {
     // implementation 'com.flamebase:database:1.5.0'
     // implementation project(':database')
     implementation 'com.afollestad.material-dialogs:core:0.9.6.0'
+
+    implementation 'com.google.firebase:firebase-core:11.8.0'
+    implementation 'com.crashlytics.sdk.android:crashlytics:2.9.1'
+
     implementation "com.stringcare:library:$stringcare_version"
     implementation 'com.google.code.gson:gson:2.8.2'
-    implementation 'com.rotor:core:0.0.9'
-    implementation 'com.rotor:database:0.0.4'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+    implementation ('com.rotor:core:0.0.16@aar') {
+        transitive = true
+    }
+    implementation ('com.rotor:database:0.0.16@aar') {
+        transitive = true
+    }
 }
 
 apply plugin: 'com.google.gms.google-services'
