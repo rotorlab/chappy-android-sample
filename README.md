@@ -78,8 +78,8 @@ class ChatActivity ..
                     }
                 }
             });
-            messageMap.putAll(chat.getMessages());
-            chat.setMessages(messageMap);
+            messageMap.putAll(ChatActivity.this.chat.getMessages());
+            ChatActivity.this.chat.setMessages(messageMap);
     
             // update list
             messageList.getAdapter().notifyDataSetChanged();
@@ -115,7 +115,7 @@ You can do changes or wait for them. All devices listening the same object will 
 
 License
 -------
-    Copyright 2018 Efraín Espada
+    Copyright 2018 RotorLab Organization
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
