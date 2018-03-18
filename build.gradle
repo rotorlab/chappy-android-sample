@@ -3,6 +3,7 @@
 buildscript {
 
     ext.stringcare_version = '0.7'
+    ext.rotor_version = '0.1.0'
 
     repositories {
         jcenter()

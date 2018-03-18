@@ -64,6 +64,7 @@ dependencies {
     implementation ('com.rotor:database:0.1.0@aar') {
         transitive = true
     }
+    implementation project(":notifications")
 }
 
 apply plugin: 'com.google.gms.google-services'
