@@ -1,27 +1,27 @@
 {
   "project_info": {
-    "project_number": "922503272251",
-    "firebase_url": "https://flamebase-samples.firebaseio.com",
-    "project_id": "flamebase-samples",
-    "storage_bucket": "flamebase-samples.appspot.com"
+    "project_number": "105555060150",
+    "firebase_url": "https://rotor-chappy.firebaseio.com",
+    "project_id": "rotor-chappy",
+    "storage_bucket": "rotor-chappy.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:922503272251:android:1e268c82eec0ac40",
+        "mobilesdk_app_id": "1:105555060150:android:6792fc9596673cad",
         "android_client_info": {
-          "package_name": "com.flamebase.chat"
+          "package_name": "com.rotor.chappy"
         }
       },
       "oauth_client": [
         {
-          "client_id": "922503272251-msi53k7k0bi6m1hpug9jngng72k676b9.apps.googleusercontent.com",
+          "client_id": "105555060150-63r93esp6takn1dbuof7i23dbse32e5t.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAPHlFupDd4eoVTLkbqKs7TumKm09YLj4w"
+          "current_key": "AIzaSyDv2y3u8Qkq84cTYFXVvd3jeoq-TfsNtJc"
         }
       ],
       "services": {
