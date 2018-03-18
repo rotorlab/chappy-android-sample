@@ -23,9 +23,9 @@ import android.support.v4.app.NotificationManagerCompat
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
-
-
-
+import com.google.gson.Gson
+import com.rotor.database.utils.ReferenceUtils
+import com.rotor.notifications.data.NotificationDocker
 
 
 /**
@@ -37,13 +37,12 @@ class Notifications {
 
         val NOTIFICATION = "notifications/"
         private  var context: Context ? = null
-        private var notifications: HashMap<String, Notification> ? = null
+        private  var docker: NotificationDocker? = null
 
         @JvmStatic fun initialize(context: Context) {
             Notifications.Companion.context = context
-            notifications.let {
-                notifications = HashMap()
-            }
+
+            loadCachedNotifications()
 
             val config = ImageLoaderConfiguration.Builder(context).build()
             ImageLoader.getInstance().init(config)
@@ -58,11 +57,13 @@ class Notifications {
                                 if (notification.has("method") && notification.has("id")) {
                                     val method = notification.getString("method")
                                     if (Method.ADD.getMethod().equals(method)) {
-                                        if (!notifications!!.containsKey(notification.getString("id"))) {
+                                        if (!docker!!.notifications!!.containsKey(notification.getString("id"))) {
                                             createNotification(NOTIFICATION + notification.getString("id"), null)
                                         }
                                     } else if (Method.REMOVE.getMethod().equals(method)) {
-
+                                        if (docker!!.notifications!!.containsKey(notification.getString("id"))) {
+                                            removeNotification(NOTIFICATION + notification.getString("id"))
+                                        }
                                     }
                                 }
                             }
@@ -75,7 +76,7 @@ class Notifications {
             })
         }
 
-        fun builder(content: Content ?, data: Data ?, receivers: List<String>) : Notification {
+        @JvmStatic fun builder(content: Content ?, data: Data ?, receivers: List<String>) : Notification {
             val id = Date().time
             val map = HashMap<String, Receiver>()
             for (receiver in receivers) {
@@ -84,24 +85,28 @@ class Notifications {
             return Notification(id = id.toString(), time = id, content = content, data = data, receivers = map, sender = Sender(Rotor.id!!, id))
         }
 
-        fun createNotification(id: String, notification: Notification ?) {
-            if (!notifications!!.containsKey(id)) {
+        @JvmStatic fun createNotification(id: String, notification: Notification ?) {
+            if (!docker!!.notifications!!.containsKey(id)) {
                 Database.listen(id, object: Reference<Notification>(Notification::class.java) {
 
                     override fun onCreate() {
                         notification?.let {
-                            Notifications.Companion.notifications!![notification.id] = notification
+                            docker!!.notifications!![notification.id] = notification
                             Database.sync(id)
                         }
                     }
 
                     override fun onChanged(ref: Notification) {
-                        Notifications.Companion.notifications!![ref.id] = ref
+                        docker!!.notifications!![ref.id] = ref
+                        val gson = Gson()
+                        val notificationsAsString = gson.toJson(docker!!)
+                        ReferenceUtils.addElement(NOTIFICATION, notificationsAsString)
+                        showNotification(id)
                     }
 
                     override fun onUpdate(): Notification ? {
-                        if (Notifications.Companion.notifications!!.containsKey(id)) {
-                            return Notifications.Companion.notifications!!.get(id)
+                        if (docker!!.notifications!!.containsKey(id)) {
+                            return docker!!.notifications!!.get(id)
                         } else {
                             return null
                         }
@@ -115,20 +120,18 @@ class Notifications {
             }
         }
 
-        fun removeNotification(id: String) {
-            if (notifications!!.containsKey(id)) {
-
+        @JvmStatic fun removeNotification(id: String) {
+            if (docker!!.notifications!!.containsKey(id)) {
+                docker!!.notifications!!.remove(id)
                 Database.unlisten(id)
             }
         }
 
-        private fun showNotification(id: String) {
-            if (notifications!!.containsKey(id)) {
-                val notification = notifications!![id]
+        @JvmStatic fun showNotification(id: String) {
+            if (docker!!.notifications!!.containsKey(id)) {
+                val notification = docker!!.notifications!![id]
 
                 val content = notification!!.content
-                val data = notification!!.data
-
 
                 content?.let {
                     if (content.photo != null) {
@@ -166,24 +169,44 @@ class Notifications {
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && content.channel != null && content.channelDescription != null) {
-                // Create the NotificationChannel, but only on API 26+ because
-                // the NotificationChannel class is new and not in the support library
                 val name = content.channel
                 val description = content.channelDescription
                 val importance = NotificationManager.IMPORTANCE_DEFAULT
-                val channel = NotificationChannel(id, name, importance)
+                val channel = NotificationChannel(Rotor.id, name, importance)
                 channel.description = description
-                // Register the channel with the system
+
                 val notificationManager = Notifications.Companion.context!!.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager;
                 if (notificationManager.areNotificationsEnabled()) {
                     notificationManager.createNotificationChannel(channel)
                 }
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                return
+            }
+
+            val notificationManager = NotificationManagerCompat.from(Notifications.Companion.context!!)
+            notificationManager.notify(id.toInt(), mBuilder.build())
+        }
+
+        @JvmStatic fun loadCachedNotifications() {
+            val notificationsAsString: String ? = ReferenceUtils.getElement(NOTIFICATION)
+            if (notificationsAsString == null) {
+                docker = NotificationDocker()
             } else {
-                val notificationManager = NotificationManagerCompat.from(Notifications.Companion.context!!)
-                notificationManager.notify(id.toInt(), mBuilder.build())
+                val gson = Gson()
+                docker = gson.fromJson(notificationsAsString, NotificationDocker::class.java) as NotificationDocker
+                val id = Rotor.id
+                for (notification in docker!!.notifications!!.values) {
+                    if (!id.equals(notification.sender.id)) {
+                        for (receiver in notification.receivers.values) {
+                            if (receiver.id.equals(id) && receiver.viewed == null) {
+                                showNotification(notification.id)
+                            }
+                        }
+                    }
+                }
             }
         }
 
-
     }
 }
+
