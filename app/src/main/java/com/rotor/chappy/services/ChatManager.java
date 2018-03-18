@@ -94,7 +94,6 @@ public class ChatManager {
      * creates a listener for given path
      */
     public static void syncContacts() {
-        // TODO correct this
         final String path = "/contacts";
         Database.listener(path, new Reference<Contacts>(Contacts.class) {
 
