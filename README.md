@@ -1,6 +1,7 @@
+<p align="center"><img width="10%" vspace="20" src="https://github.com/rotorlab/chappy-android-sample/raw/develop/app/src/main/res/mipmap-xxxhdpi/ic_launcher_rounded.png"></p>
+
 Chappy: quick sample of real-time changes
 -------------------------------------------
-<p align="center"><img width="10%" vspace="20" src="https://github.com/rotorlab/chappy-android-sample/raw/develop/app/src/main/res/mipmap-xxxhdpi/ic_launcher_rounded.png"></p>
  
 Define simple objects and share it between other devices by paths (`/chats/welcome_chat`):
  
@@ -33,6 +34,8 @@ Define a chat listener and add messages:
 ```java
 private Chat chat;
 
+class ChatActivity ..
+
 @Override protected void onCreate(Bundle savedInstanceState) {
     
     final String path = "/chats/welcome_chat";
@@ -52,7 +55,7 @@ private Chat chat;
         }
     
         @Override public void onChanged(Chat chat) {
-            MainActivity.this.chat = chat;
+            ChatActivity.this.chat = chat;
             
             // update screent title
             ChatActivity.this.setTitle(chat.getName());
