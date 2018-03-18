@@ -1,13 +1,13 @@
 <p align="center"><img width="10%" vspace="20" src="https://github.com/rotorlab/chappy-android-sample/raw/develop/app/src/main/res/mipmap-xxxhdpi/ic_launcher_rounded.png"></p>
 
-Chappy: quick sample of real-time changes
+Chappy: sample of real-time changes
 -------------------------------------------
  
 Sample app of the use of Rotor libraries (Core and Database). Clone the repo and open the project in Android Studio:
 ```bash
 git clone https://github.com/rotorlab/chappy-android-sample.git
 ```
- 
+### Datamodel sample
 ```java
 public class Chat {
 
@@ -33,6 +33,7 @@ public class Chat {
     
 }
 ```
+### Interaction sample
 Define a chat listener and add messages:
 ```java
 private Chat chat;
