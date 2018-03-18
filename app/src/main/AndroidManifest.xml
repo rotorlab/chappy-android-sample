@@ -15,7 +15,7 @@
         android:name="com.rotor.chappy.App">
 
         <activity
-            android:name="com.rotor.chappy.SplashActivity"
+            android:name="com.rotor.chappy.activities.SplashActivity"
             android:screenOrientation="portrait"
             android:theme="@style/SplashTheme">
 
@@ -27,14 +27,14 @@
         </activity>
 
         <activity
-            android:name="com.rotor.chappy.MainActivity"
+            android:name="com.rotor.chappy.activities.MainActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="adjustResize">
         </activity>
 
         <activity
-            android:name="com.rotor.chappy.ChatActivity"
+            android:name="com.rotor.chappy.activities.ChatActivity"
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="adjustResize">
         </activity>

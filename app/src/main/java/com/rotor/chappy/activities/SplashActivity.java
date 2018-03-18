@@ -1,10 +1,11 @@
-package com.rotor.chappy;
+package com.rotor.chappy.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 
+import com.rotor.chappy.BuildConfig;
 import com.rotor.chappy.services.ChatManager;
 import com.rotor.chappy.services.LocalData;
 import com.rotor.core.Rotor;

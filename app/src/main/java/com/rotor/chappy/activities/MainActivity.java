@@ -1,4 +1,4 @@
-package com.rotor.chappy;
+package com.rotor.chappy.activities;
 
 import android.content.Context;
 import android.content.Intent;
@@ -19,6 +19,7 @@ import android.widget.EditText;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.rotor.chappy.R;
 import com.rotor.chappy.adapters.ChatAdapter;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.Contact;

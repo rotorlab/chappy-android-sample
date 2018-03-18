@@ -1,4 +1,4 @@
-package com.rotor.chappy;
+package com.rotor.chappy.activities;
 
 import android.content.Context;
 import android.content.Intent;
