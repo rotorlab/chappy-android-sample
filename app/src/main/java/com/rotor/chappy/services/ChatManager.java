@@ -41,7 +41,7 @@ public class ChatManager {
     }
 
     public static void addGChat(final String path, final CreateChatListener createChatListener) {
-        Database.listener(path, new Reference<Chat>(Chat.class) {
+        Database.listen(path, new Reference<Chat>(Chat.class) {
 
             @Override
             public Chat onUpdate() {
@@ -95,7 +95,7 @@ public class ChatManager {
      */
     public static void syncContacts() {
         final String path = "/contacts";
-        Database.listener(path, new Reference<Contacts>(Contacts.class) {
+        Database.listen(path, new Reference<Contacts>(Contacts.class) {
 
             @Override
             public void onCreate() {
