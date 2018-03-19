@@ -38,12 +38,12 @@ public class SplashActivity extends AppCompatActivity {
                 Database.initialize();
                 Notifications.initialize();
 
-                Content content = new Content("Hi :)", "Welcome to notifications!", "myChannel", "Test channel", null);
+                Content content = new Content("Hi :)", "Welcome to notifications!", "myChannel", "Test channel", null, null);
                 ArrayList<String> ids = new ArrayList<>();
                 ids.add("f33f3642e39650b9");
                 ids.add("48484aad18e02d76");
-                Notification notification = Notifications.builder(content, null, ids);
-                Notifications.createNotification(notification.getId(), notification);
+                Notification notificationn = Notifications.builder(content, null, ids);
+                Notifications.createNotification(notificationn.getId(), notificationn);
 
                 ChatManager.syncContacts();
 
@@ -62,10 +62,9 @@ public class SplashActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
                 }
-
                 Intent intent = new Intent(SplashActivity.this, MainActivity.class);
-                SplashActivity.this.startActivity(intent);
-                SplashActivity.this.finish();
+                startActivity(intent);
+                finish();
             }
 
             @Override

@@ -33,7 +33,6 @@ import io.reactivex.schedulers.Schedulers
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
-import java.sql.Ref
 import kotlin.collections.ArrayList
 
 
@@ -103,18 +102,18 @@ class Notifications {
             for (receiver in receivers) {
                 map[receiver] = Receiver(receiver, null)
             }
-            return Notification(id = id.toString(), time = id, content = content, data = data, receivers = map, sender = Sender(Rotor.id!!, id))
+            return Notification(id.toString(), id, content, data, Sender(Rotor.id!!, id), map)
         }
 
-        @JvmStatic fun createNotification(id: String, notification: Notification ?) {
+        @JvmStatic fun createNotification(id: String, notificationn: Notification ?) {
             var identifier = NOTIFICATION + id
             if (!docker!!.notifications!!.containsKey(identifier)) {
                 Database.listen(identifier, object: Reference<Notification>(Notification::class.java) {
                     var created = false
 
                     override fun onCreate() {
-                        notification?.let {
-                            docker!!.notifications!![identifier] = notification
+                        notificationn?.let {
+                            docker!!.notifications!![identifier] = notificationn
                             Database.sync(identifier)
                             created = true
                         }
@@ -205,7 +204,7 @@ class Notifications {
                     val importance = NotificationManager.IMPORTANCE_DEFAULT
                     var channel: NotificationChannel ? = null
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        channel = NotificationChannel(Rotor.id, name, importance)
+                        channel = NotificationChannel(id, name, importance)
                     }
                     channel!!.description = description
 
@@ -213,7 +212,7 @@ class Notifications {
                     if (notificationManager.areNotificationsEnabled()) {
                         var found = false
                         for (channels in notificationManager.notificationChannels) {
-                            if (channels.id.equals(Rotor.id)) {
+                            if (channels.id.equals(id)) {
                                 found = true
                                 break
                             }
@@ -228,7 +227,8 @@ class Notifications {
             }
 
             val notificationManager = NotificationManagerCompat.from(Rotor.context!!)
-            notificationManager.notify(id.toInt(), mBuilder.build())
+            val idNumber = id.split("/")[2].toLong()
+            notificationManager.notify(idNumber.toInt(), mBuilder.build())
         }
 
         @JvmStatic fun loadCachedNotifications() {
@@ -256,7 +256,11 @@ class Notifications {
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
-                            { result -> Log.e(TAG, result.status) },
+                            { result ->
+                                result.status?.let {
+                                    Log.e(TAG, result.status)
+                                }
+                            },
                             { error -> error.printStackTrace() }
                     )
         }

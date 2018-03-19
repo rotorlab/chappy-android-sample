@@ -61,9 +61,11 @@ dependencies {
     implementation ('com.rotor:core:0.1.0@aar') {
         transitive = true
     }
+    /*
     implementation ('com.rotor:database:0.1.0@aar') {
         transitive = true
-    }
+    }*/
+    implementation project(":database")
     implementation project(":notifications")
 }
 
