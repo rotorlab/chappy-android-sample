@@ -40,8 +40,10 @@ public class SplashActivity extends AppCompatActivity {
 
                 Content content = new Content("Hi :)", "Welcome to notifications!", "myChannel", "Test channel", null);
                 ArrayList<String> ids = new ArrayList<>();
-
+                ids.add("f33f3642e39650b9");
+                ids.add("48484aad18e02d76");
                 Notification notification = Notifications.builder(content, null, ids);
+                Notifications.createNotification(notification.getId(), notification);
 
                 ChatManager.syncContacts();
 

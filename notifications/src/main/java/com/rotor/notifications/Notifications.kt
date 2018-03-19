@@ -1,6 +1,5 @@
 package com.rotor.notifications
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.support.v4.app.NotificationCompat
 import com.nostra13.universalimageloader.core.ImageLoader
@@ -12,7 +11,6 @@ import com.rotor.database.Database
 import com.rotor.database.abstr.Reference
 import com.rotor.notifications.enums.Method
 import com.rotor.notifications.model.*
-import org.json.JSONArray
 import org.json.JSONObject
 import java.util.*
 import kotlin.collections.HashMap
@@ -35,6 +33,8 @@ import io.reactivex.schedulers.Schedulers
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
+import java.sql.Ref
+import kotlin.collections.ArrayList
 
 
 /**
@@ -44,7 +44,7 @@ class Notifications {
 
     companion object {
 
-        val NOTIFICATION = "notifications/"
+        val NOTIFICATION = "/notifications/"
         private  var docker: NotificationDocker? = null
         private val TAG: String = Notifications::class.java.simpleName!!
 
@@ -65,19 +65,16 @@ class Notifications {
                 override fun onMessageReceived(jsonObject: JSONObject) {
                     try {
                         if (jsonObject.has("notifications")) {
-                            val notificationMap = jsonObject.get("notifications") as JSONArray
-                            for (i in 0..(notificationMap.length() - 1)) {
-                                val notification = notificationMap.getJSONObject(i)
-                                if (notification.has("method") && notification.has("id")) {
-                                    val method = notification.getString("method")
-                                    if (Method.ADD.getMethod().equals(method)) {
-                                        if (!docker!!.notifications!!.containsKey(notification.getString("id"))) {
-                                            createNotification(NOTIFICATION + notification.getString("id"), null)
-                                        }
-                                    } else if (Method.REMOVE.getMethod().equals(method)) {
-                                        if (docker!!.notifications!!.containsKey(notification.getString("id"))) {
-                                            removeNotification(NOTIFICATION + notification.getString("id"))
-                                        }
+                            val notification = jsonObject.getJSONObject("notifications")
+                            if (notification.has("method") && notification.has("id")) {
+                                val method = notification.getString("method")
+                                if (Method.ADD.getMethod().equals(method)) {
+                                    if (!docker!!.notifications!!.containsKey(notification.getString("id"))) {
+                                        createNotification(notification.getString("id"), null)
+                                    }
+                                } else if (Method.REMOVE.getMethod().equals(method)) {
+                                    if (docker!!.notifications!!.containsKey(notification.getString("id"))) {
+                                        removeNotification(NOTIFICATION + notification.getString("id"))
                                     }
                                 }
                             }
@@ -110,27 +107,36 @@ class Notifications {
         }
 
         @JvmStatic fun createNotification(id: String, notification: Notification ?) {
-            if (!docker!!.notifications!!.containsKey(id)) {
-                Database.listen(id, object: Reference<Notification>(Notification::class.java) {
+            var identifier = NOTIFICATION + id
+            if (!docker!!.notifications!!.containsKey(identifier)) {
+                Database.listen(identifier, object: Reference<Notification>(Notification::class.java) {
+                    var created = false
 
                     override fun onCreate() {
                         notification?.let {
-                            docker!!.notifications!![notification.id] = notification
-                            Database.sync(id)
+                            docker!!.notifications!![identifier] = notification
+                            Database.sync(identifier)
+                            created = true
                         }
                     }
 
                     override fun onChanged(ref: Notification) {
-                        docker!!.notifications!![ref.id] = ref
+                        docker!!.notifications!![identifier] = ref
                         val gson = Gson()
                         val notificationsAsString = gson.toJson(docker!!)
                         ReferenceUtils.addElement(NOTIFICATION, notificationsAsString)
-                        showNotification(id)
+                        showNotification(identifier)
+                        if (created) {
+                            created = false
+                            var rece: ArrayList<Receiver> = arrayListOf()
+                            rece.addAll(ref.receivers.values)
+                            sendNotification(identifier, rece)
+                        }
                     }
 
                     override fun onUpdate(): Notification ? {
-                        if (docker!!.notifications!!.containsKey(id)) {
-                            return docker!!.notifications!!.get(id)
+                        if (docker!!.notifications!!.containsKey(identifier)) {
+                            return docker!!.notifications!!.get(identifier)
                         } else {
                             return null
                         }
@@ -145,9 +151,10 @@ class Notifications {
         }
 
         @JvmStatic fun removeNotification(id: String) {
-            if (docker!!.notifications!!.containsKey(id)) {
-                docker!!.notifications!!.remove(id)
-                Database.unlisten(id)
+            var identifier = NOTIFICATION + id
+            if (docker!!.notifications!!.containsKey(identifier)) {
+                docker!!.notifications!!.remove(identifier)
+                Database.unlisten(identifier)
             }
         }
 
@@ -236,7 +243,7 @@ class Notifications {
                     if (!id.equals(notification.sender.id)) {
                         for (receiver in notification.receivers.values) {
                             if (receiver.id.equals(id) && receiver.viewed == null) {
-                                showNotification(notification.id)
+                                showNotification(NOTIFICATION + notification.id)
                             }
                         }
                     }
@@ -244,8 +251,8 @@ class Notifications {
             }
         }
 
-        @JvmStatic private fun sendNotification(id: String, receivers: List<String>) {
-            api.sendNotification(NotificationSender(id, receivers))
+        @JvmStatic private fun sendNotification(id: String, receivers: ArrayList<Receiver>) {
+            api.sendNotification(NotificationSender("send_notifications", id, receivers))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
