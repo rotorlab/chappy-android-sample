@@ -16,9 +16,9 @@ public class NotificationSender {
     @Expose
     String method;
 
-    @SerializedName("id")
+    @SerializedName("notificationId")
     @Expose
-    String id;
+    String notificationId;
 
     @SerializedName("receivers")
     @Expose
@@ -28,9 +28,9 @@ public class NotificationSender {
         // nothing to do here
     }
 
-    public NotificationSender(String method, String id, List<Receiver> receivers) {
+    public NotificationSender(String method, String notificationId, List<Receiver> receivers) {
         this.method = method;
-        this.id = id;
+        this.notificationId = notificationId;
         this.receivers = receivers;
     }
 
@@ -42,12 +42,12 @@ public class NotificationSender {
         this.method = method;
     }
 
-    public String getId() {
-        return id;
+    public String getNotificationId() {
+        return notificationId;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setNotificationId(String notificationId) {
+        this.notificationId = notificationId;
     }
 
     public List<Receiver> getReceivers() {

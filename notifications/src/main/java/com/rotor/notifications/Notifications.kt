@@ -106,7 +106,7 @@ class Notifications {
         }
 
         @JvmStatic fun createNotification(id: String, notificationn: Notification ?) {
-            var identifier = NOTIFICATION + id
+            var identifier = if (!id.contains("notifications")) NOTIFICATION + id else id
             if (!docker!!.notifications!!.containsKey(identifier)) {
                 Database.listen(identifier, object: Reference<Notification>(Notification::class.java) {
                     var created = false
@@ -218,7 +218,7 @@ class Notifications {
                             }
                         }
                         if (!found) {
-                            notificationManager.createNotificationChannel(channel!!)
+                            notificationManager.createNotificationChannel(channel)
                         }
                     }
                 } else {

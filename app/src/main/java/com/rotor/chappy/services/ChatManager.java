@@ -2,6 +2,7 @@ package com.rotor.chappy.services;
 
 import android.util.Log;
 
+import com.rotor.chappy.ContactsListener;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.Contact;
 import com.rotor.chappy.model.Contacts;
@@ -23,6 +24,7 @@ public class ChatManager {
     public static final Map<String, Chat> map = new HashMap<>();
     public static Contacts contacts = null;
     public static Listener listener;
+    public static boolean shouldStart = false;
 
     public interface Listener {
         void update(List<Chat> chats);
@@ -54,9 +56,7 @@ public class ChatManager {
 
             @Override
             public void onChanged(Chat ref) {
-                if (ref == null) {
-
-                } else if (map.containsKey(path)) {
+                if (map.containsKey(path)) {
                     map.get(path).setMembers(ref.getMembers());
                     map.get(path).setMessages(ref.getMessages());
                     map.get(path).setName(ref.getName());
@@ -93,8 +93,9 @@ public class ChatManager {
     /**
      * creates a listener for given path
      */
-    public static void syncContacts() {
+    public static void splashSyncContacts(final ContactsListener contactsListener) {
         final String path = "/contacts";
+        shouldStart = true;
         Database.listen(path, new Reference<Contacts>(Contacts.class) {
 
             @Override
@@ -106,6 +107,10 @@ public class ChatManager {
             @Override
             public void onChanged(Contacts contacts) {
                 ChatManager.contacts = contacts;
+                if (shouldStart) {
+                    shouldStart = false;
+                    contactsListener.contactsReady();
+                }
             }
 
             @Override
