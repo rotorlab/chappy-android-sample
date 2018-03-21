@@ -1,5 +1,6 @@
 package com.rotor.chappy.services;
 
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.rotor.chappy.ContactsListener;
@@ -55,7 +56,7 @@ public class ChatManager {
             }
 
             @Override
-            public void onChanged(Chat ref) {
+            public void onChanged(@NonNull Chat ref) {
                 if (map.containsKey(path)) {
                     map.get(path).setMembers(ref.getMembers());
                     map.get(path).setMessages(ref.getMessages());
