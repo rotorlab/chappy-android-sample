@@ -27,6 +27,7 @@ import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.rotor.chappy.R;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.Message;
 import com.rotor.core.Rotor;
@@ -46,6 +47,7 @@ public class ChatActivity extends AppCompatActivity {
     private Chat chat;
     private Button sendButton;
     private EditText messageText;
+    private String path;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +58,7 @@ public class ChatActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
 
-        final String path = "/chats/" + intent.getStringExtra("path").replaceAll(" ", "_");
+        path = "/chats/" + intent.getStringExtra("path").replaceAll(" ", "_");
 
         messageList = (RecyclerView) findViewById(com.rotor.chappy.R.id.messages_list);
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
@@ -134,49 +136,50 @@ public class ChatActivity extends AppCompatActivity {
         Database.listen(path, new Reference<Chat>(Chat.class) {
             @Override
             public void onCreate() {
-                // shouldn't be called
+                finish();
             }
 
             @Override
-            public void onChanged(Chat chat) {
-                sendButton.setEnabled(chat != null);
-                if (chat != null) {
-                    ChatActivity.this.chat = chat;
-                }
+            public void onChanged(@NonNull Chat chat) {
+                ChatActivity.this.chat = chat;
 
-                if (chat != null) {
-                    ChatActivity.this.setTitle(chat.getName());
-                    Map<String, Message> messageMap = new TreeMap<>(new Comparator<String>() {
-                        @Override
-                        public int compare(String o1, String o2) {
-                            Long a = Long.valueOf(o1);
-                            Long b = Long.valueOf(o2);
-                            if (a > b) {
-                                return 1;
-                            } else if (a < b) {
-                                return -1;
-                            } else {
-                                return 0;
-                            }
+                ChatActivity.this.setTitle(chat.getName());
+                Map<String, Message> messageMap = new TreeMap<>(new Comparator<String>() {
+                    @Override
+                    public int compare(String o1, String o2) {
+                        Long a = Long.valueOf(o1);
+                        Long b = Long.valueOf(o2);
+                        if (a > b) {
+                            return 1;
+                        } else if (a < b) {
+                            return -1;
+                        } else {
+                            return 0;
                         }
-                    });
+                    }
+                });
 
-                    messageMap.putAll(chat.getMessages());
+                messageMap.putAll(chat.getMessages());
 
-                    chat.setMessages(messageMap);
+                chat.setMessages(messageMap);
 
-                    messageList.getAdapter().notifyDataSetChanged();
+                messageList.getAdapter().notifyDataSetChanged();
 
-                    messageList.smoothScrollToPosition(0);
-                }
+                messageList.smoothScrollToPosition(0);
 
-                sendButton.setEnabled(messageText.toString().length() > 0 && chat != null);
+                sendButton.setEnabled(messageText.toString().length() > 0);
             }
 
             @Nullable
             @Override
             public Chat onUpdate() {
                 return ChatActivity.this.chat;
+            }
+
+            @Override
+            public void onDestroy() {
+                chat = null;
+                finish();
             }
 
             @Override
@@ -189,7 +192,7 @@ public class ChatActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(com.rotor.chappy.R.menu.menu_main, menu);
+        getMenuInflater().inflate(R.menu.menu_chat, menu);
         return true;
     }
 
@@ -198,9 +201,8 @@ public class ChatActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == com.rotor.chappy.R.id.action_settings) {
-            return true;
-        } else if (id == com.rotor.chappy.R.id.action_create_group) {
+        if (id == R.id.action_remove) {
+            Database.remove(path);
             return true;
         }
 

@@ -33,13 +33,7 @@ dependencies {
 
     implementation "com.android.support:support-compat:27.1.0"
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    compile ("com.rotor:core:$rotor_version@aar") {
-        transitive = true
-    }
-    /*
-    compile ("com.rotor:database:$rotor_version@aar") {
-        transitive = true
-    }*/
+    compile project(":core")
     compile project(":database")
     compile 'com.google.code.gson:gson:2.8.2'
     compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.5'

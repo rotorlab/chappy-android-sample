@@ -68,6 +68,13 @@ class KReference<T>(context: Context, path: String, reference: Reference<*>, mom
         }
     }
 
+    override fun remove() {
+        ReferenceUtils.removeElement(path)
+        for (entry in blowerMap.entries) {
+            entry.value.onDestroy()
+        }
+    }
+
     fun getType(): Type {
         return TypeToken.of(clazz).type
     }

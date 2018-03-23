@@ -109,6 +109,7 @@ class Notifications {
             var identifier = if (!id.contains("notifications")) NOTIFICATION + id else id
             if (!docker!!.notifications!!.containsKey(identifier)) {
                 Database.listen(identifier, object: Reference<Notification>(Notification::class.java) {
+
                     var created = false
 
                     override fun onCreate() {
@@ -143,6 +144,12 @@ class Notifications {
 
                     override fun progress(value: Int) {
                         // nothing to do here
+                    }
+
+                    override fun onDestroy() {
+                        if (docker!!.notifications!!.containsKey(identifier)) {
+                            docker!!.notifications!!.remove(identifier)
+                        }
                     }
 
                 })

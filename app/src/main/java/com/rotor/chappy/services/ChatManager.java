@@ -47,6 +47,11 @@ public class ChatManager {
         Database.listen(path, new Reference<Chat>(Chat.class) {
 
             @Override
+            public void onCreate() {
+                createChatListener.newChat();
+            }
+
+            @Override
             public Chat onUpdate() {
                 if (map.containsKey(path)) {
                     return map.get(path);
@@ -64,21 +69,15 @@ public class ChatManager {
                 } else {
                     map.put(path, ref);
                 }
-                Log.e(TAG, "chats: " + map.size());
-
-                List<Chat> chats = new ArrayList<>();
-                for (Map.Entry<String, Chat> entry : ChatManager.getChats().entrySet()) {
-                    chats.add(entry.getValue());
-                }
-
-                if (listener != null) {
-                    ChatManager.listener.update(chats);
-                }
+                updateList();
             }
 
             @Override
-            public void onCreate() {
-                createChatListener.newChat();
+            public void onDestroy() {
+                if (map.containsKey(path)) {
+                    map.remove(path);
+                }
+                updateList();
             }
 
             @Override
@@ -91,6 +90,19 @@ public class ChatManager {
         LocalData.addPath(path);
     }
 
+    private static void updateList() {
+        Log.e(TAG, "chats: " + map.size());
+
+        List<Chat> chats = new ArrayList<>();
+        for (Map.Entry<String, Chat> entry : ChatManager.getChats().entrySet()) {
+            chats.add(entry.getValue());
+        }
+
+        if (listener != null) {
+            ChatManager.listener.update(chats);
+        }
+    }
+
     /**
      * creates a listener for given path
      */
@@ -98,6 +110,11 @@ public class ChatManager {
         final String path = "/contacts";
         shouldStart = true;
         Database.listen(path, new Reference<Contacts>(Contacts.class) {
+
+            @Override
+            public void onDestroy() {
+                contacts = null;
+            }
 
             @Override
             public void onCreate() {

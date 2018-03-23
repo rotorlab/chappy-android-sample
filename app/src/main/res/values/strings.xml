@@ -4,6 +4,7 @@
     <string name="action_email">Set id</string>
     <string name="action_create_group">Create group</string>
     <string name="action_add_contact_to_group">Add contact</string>
+    <string name="action_remove_chat">Remove chat</string>
     <string name="askIdTitle">Who are you?</string>
     <string name="askIdGroupName">Group name</string>
     <string name="agree">Ok</string>
