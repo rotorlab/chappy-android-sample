@@ -20,11 +20,15 @@ import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListene
 import android.support.v4.app.NotificationManagerCompat
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.TaskStackBuilder
+import android.content.Intent
 import android.os.Build
 import android.util.Log
 import com.google.gson.Gson
 import com.rotor.database.utils.ReferenceUtils
 import com.rotor.notifications.data.NotificationDocker
+import com.rotor.notifications.interfaces.ClazzLoader
 import com.rotor.notifications.interfaces.Server
 import com.rotor.notifications.request.NotificationSender
 import com.stringcare.library.SC
@@ -46,13 +50,16 @@ class Notifications {
         val NOTIFICATION = "/notifications/"
         private  var docker: NotificationDocker? = null
         private val TAG: String = Notifications::class.java.simpleName!!
+        private var loader: ClazzLoader<*> ? = null
 
         val api by lazy {
             service(Rotor.urlServer!!)
         }
 
-        @JvmStatic fun initialize() {
+        @JvmStatic fun <T> initialize(clazz: Class<T>) {
             SC.init(Rotor.context)
+
+            loader = ClazzLoader<T>(clazz)
 
             loadCachedNotifications()
 
@@ -131,6 +138,9 @@ class Notifications {
                             var rece: ArrayList<Receiver> = arrayListOf()
                             rece.addAll(ref.receivers.values)
                             sendNotification(identifier, rece)
+                        } else if (ref.receivers[Rotor.id]!!.viewed != null) {
+                            docker!!.notifications!!.remove(identifier)
+                            Database.unlisten(identifier)
                         }
                     }
 
@@ -157,16 +167,17 @@ class Notifications {
         }
 
         @JvmStatic fun removeNotification(id: String) {
-            var identifier = NOTIFICATION + id
+            var identifier = if (!id.contains("notifications")) NOTIFICATION + id else id
             if (docker!!.notifications!!.containsKey(identifier)) {
-                docker!!.notifications!!.remove(identifier)
-                Database.unlisten(identifier)
+                docker!!.notifications!![identifier]!!.receivers.get(Rotor.id)!!.viewed = Date().time
+                Database.sync(identifier)
             }
         }
 
         @JvmStatic fun showNotification(id: String) {
-            if (docker!!.notifications!!.containsKey(id)) {
-                val notification = docker!!.notifications!![id]
+            var identifier = if (!id.contains("notifications")) NOTIFICATION + id else id
+            if (docker!!.notifications!!.containsKey(identifier)) {
+                val notification = docker!!.notifications!![identifier]
 
                 val content = notification!!.content
 
@@ -175,11 +186,11 @@ class Notifications {
                         val imageLoader = ImageLoader.getInstance()
                         imageLoader.loadImage(content.photo, object : SimpleImageLoadingListener() {
                             override fun onLoadingComplete(imageUri: String, view: View, loadedImage: Bitmap) {
-                                interShowNotification(id, content, loadedImage)
+                                interShowNotification(identifier, content, loadedImage)
                             }
                         })
                     } else {
-                        interShowNotification(id, content, null)
+                        interShowNotification(identifier, content, null)
                     }
                 }
             }
@@ -193,6 +204,7 @@ class Notifications {
                         .setLargeIcon(bitmap)
                         .setContentTitle(content.title)
                         .setContentText(content.body)
+                        .setDeleteIntent(deleteIntent(id))
                         .setStyle(NotificationCompat.BigTextStyle().bigText(content.body))
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             } else {
@@ -201,6 +213,7 @@ class Notifications {
                         .setContentTitle(content.title)
                         .setContentText(content.body)
                         .setStyle(NotificationCompat.BigTextStyle().bigText(content.body))
+                        .setDeleteIntent(deleteIntent(id))
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             }
 
@@ -236,6 +249,16 @@ class Notifications {
             val notificationManager = NotificationManagerCompat.from(Rotor.context!!)
             val idNumber = id.split("/")[2].toLong()
             notificationManager.notify(idNumber.toInt(), mBuilder.build())
+        }
+
+        private fun deleteIntent(id: String, code: Int) : PendingIntent {
+            removeNotification(id)
+            val resultIntent = Intent(Rotor.context, loader!!.getClazz())
+            val stackBuilder = TaskStackBuilder.create(Rotor.context)
+            stackBuilder.addNextIntentWithParentStack(resultIntent)
+
+            val resultPendingIntent = stackBuilder.getPendingIntent(code, PendingIntent.FLAG_UPDATE_CURRENT)
+            return resultPendingIntent
         }
 
         @JvmStatic fun loadCachedNotifications() {

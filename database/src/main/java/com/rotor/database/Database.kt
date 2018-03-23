@@ -33,7 +33,7 @@ class Database  {
     companion object {
 
         private val TAG: String = Database::class.java.simpleName!!
-        private var pathMap: HashMap<String, KReference<*>> ? = null
+        @JvmStatic private var pathMap: HashMap<String, KReference<*>> ? = null
         val api by lazy {
             ReferenceUtils.service(Rotor.urlServer!!)
         }
@@ -90,14 +90,14 @@ class Database  {
 
             val blowerCreation = Date().time
 
-            if (pathMap!!.containsKey(path) && (Rotor.rotorService?.getMoment() as Long).equals(pathMap!!.get(path)!!.moment)) {
-                if (Rotor.debug!!) {
-                    Log.d(TAG, "Listener already added for: $path")
-                }
+            if (pathMap!!.containsKey(path)) {
+                Log.d(TAG, "Listener already added for: $path")
                 pathMap!![path]!!.addBlower(blowerCreation, reference)
                 pathMap!![path]!!.loadCachedReference()
                 return
             }
+
+            Log.d(TAG, "Creating reference: $path")
 
             val objectReference = KReference<T>(Rotor.context!!, path, reference, Rotor.rotorService!!.getMoment() as Long)
             pathMap!![path] = objectReference
