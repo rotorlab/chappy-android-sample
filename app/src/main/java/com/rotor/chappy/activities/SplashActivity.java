@@ -42,13 +42,23 @@ public class SplashActivity extends AppCompatActivity {
 
                 Notifications.initialize(NotificationActivity.class);
 
-                Content content = new Content(ACTION_CHAT, "Hi :)", "Welcome to notifications!", "ttt", "myChannel", "Test channel", null, null);
+                Content content = new Content(ACTION_CHAT,
+                        "Hi :)",
+                        "Welcome to notifications!",
+                        "ttt",
+                        "myChannel",
+                        "Test channel",
+                        null,
+                        null);
+
                 ArrayList<String> ids = new ArrayList<>();
                 ids.add(Rotor.getId());
                 ids.add("f33f3642e39650b9");
                 ids.add("48484aad18e02d76");
-                Notification notificationn = Notifications.builder(content, ids);
-                Notifications.createNotification(notificationn.getId(), notificationn);
+
+                Notification notification = Notifications.builder(content, ids);
+
+                Notifications.createNotification(notification.getId(), notification);
 
                 ChatManager.splashSyncContacts(new ContactsListener() {
                     @Override

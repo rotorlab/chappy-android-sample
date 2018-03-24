@@ -22,6 +22,8 @@ import org.json.JSONException;
 
 import java.util.ArrayList;
 
+import static android.content.Intent.FLAG_ACTIVITY_NO_HISTORY;
+
 /**
  * Created by efraespada on 23/03/2018.
  */
@@ -29,16 +31,13 @@ import java.util.ArrayList;
 public class NotificationActivity extends NotificationRouterActivity {
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
+    public void onCreate(@org.jetbrains.annotations.Nullable Bundle savedInstanceState, int action, @NotNull String id, @NotNull String data) {
         LocalData.init(getApplicationContext());
 
         Rotor.initialize(getApplicationContext(), BuildConfig.database_url, BuildConfig.redis_url, new StatusListener() {
             @Override
             public void connected() {
                 Database.initialize();
-                Notifications.initialize(NotificationActivity.class);
                 ChatManager.splashSyncContacts(new ContactsListener() {
                     @Override
                     public void contactsReady() {
@@ -60,6 +59,7 @@ public class NotificationActivity extends NotificationRouterActivity {
 
                     }
                 });
+                Notifications.initialize(NotificationActivity.class);
             }
 
             @Override
@@ -70,11 +70,11 @@ public class NotificationActivity extends NotificationRouterActivity {
         Rotor.debug(true);
     }
 
-
     @Override
     public void notificationTouched(int action, @NotNull String id, @NotNull String data) {
         if (action == SplashActivity.ACTION_CHAT) {
             Intent intent = new Intent(this, ChatActivity.class);
+            intent.addFlags(FLAG_ACTIVITY_NO_HISTORY);
             intent.putExtra("path", data);
             intent.putExtra("notification", id);
             startActivity(intent);
@@ -82,4 +82,5 @@ public class NotificationActivity extends NotificationRouterActivity {
 
         finish();
     }
+
 }

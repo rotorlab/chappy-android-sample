@@ -9,6 +9,10 @@ import android.support.v7.app.AppCompatActivity
  */
 abstract class NotificationRouterActivity : AppCompatActivity() {
 
+    interface NotificationsStatus {
+        fun ready()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -31,16 +35,17 @@ abstract class NotificationRouterActivity : AppCompatActivity() {
             }
         }
 
-        notificationTouched(requestCode!!, id!!, data!!)
+        Notifications.listener(object : NotificationsStatus {
+            override fun ready() {
+                notificationTouched(requestCode!!, id!!, data!!)
+            }
+        })
+
+        onCreate(savedInstanceState, requestCode!!, id!!, data!!)
     }
 
     abstract fun notificationTouched(action: Int, id: String, data: String)
 
-
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        notificationTouched(requestCode, data!!.getStringExtra(Notifications.ID), data.getStringExtra(Notifications.DATA))
-    }
+    abstract fun onCreate(savedInstanceState: Bundle?, action: Int, id: String, data: String)
 
 }

@@ -59,10 +59,6 @@ public class ChatActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
 
-        if (intent.hasExtra("notification")) {
-            Notifications.removeNotification(intent.getStringExtra("notification"));
-        }
-
         path = "/chats/" + intent.getStringExtra("path").replaceAll(" ", "_");
 
         messageList = (RecyclerView) findViewById(com.rotor.chappy.R.id.messages_list);
@@ -193,6 +189,8 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
 
+        // Notifications.removeNotification(intent.getStringExtra("notification"));
+        Notifications.removeNotificationByData(intent.getStringExtra("path"));
     }
 
     @Override
