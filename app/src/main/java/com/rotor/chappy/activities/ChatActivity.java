@@ -33,6 +33,7 @@ import com.rotor.chappy.model.Message;
 import com.rotor.core.Rotor;
 import com.rotor.database.Database;
 import com.rotor.database.abstr.Reference;
+import com.rotor.notifications.Notifications;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -57,6 +58,10 @@ public class ChatActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         Intent intent = getIntent();
+
+        if (intent.hasExtra("notification")) {
+            Notifications.removeNotification(intent.getStringExtra("notification"));
+        }
 
         path = "/chats/" + intent.getStringExtra("path").replaceAll(" ", "_");
 

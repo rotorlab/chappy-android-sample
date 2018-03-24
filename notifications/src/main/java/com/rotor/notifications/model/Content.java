@@ -9,6 +9,18 @@ import com.google.gson.annotations.SerializedName;
 
 public class Content {
 
+    @SerializedName("id")
+    @Expose
+    String id;
+
+    @SerializedName("data")
+    @Expose
+    String data;
+
+    @SerializedName("requestCode")
+    @Expose
+    int requestCode;
+
     @SerializedName("title")
     @Expose
     String title;
@@ -37,7 +49,9 @@ public class Content {
         // nothing to do here
     }
 
-    public Content(String title, String body, String channel, String channelDescription, String photoSmall, String photo) {
+    public Content(int requestCode, String title, String body, String data, String channel, String channelDescription, String photoSmall, String photo) {
+        this.requestCode = requestCode;
+        this.data = data;
         this.title = title;
         this.body = body;
         this.channel = channel;
@@ -93,4 +107,29 @@ public class Content {
     public void setPhoto(String photo) {
         this.photo = photo;
     }
+
+    public int getRequestCode() {
+        return requestCode;
+    }
+
+    public void setRequestCode(int requestCode) {
+        this.requestCode = requestCode;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getData() {
+        return data;
+    }
+
+    public void setData(String data) {
+        this.data = data;
+    }
+
 }

@@ -16,6 +16,7 @@ import com.rotor.notifications.Notifications;
 import com.rotor.notifications.model.Content;
 import com.rotor.notifications.model.Notification;
 
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
 
@@ -69,9 +70,16 @@ public class NotificationActivity extends NotificationRouterActivity {
         Rotor.debug(true);
     }
 
+
     @Override
-    public void notificationTouched(int notification) {
+    public void notificationTouched(int action, @NotNull String id, @NotNull String data) {
+        if (action == SplashActivity.ACTION_CHAT) {
+            Intent intent = new Intent(this, ChatActivity.class);
+            intent.putExtra("path", data);
+            intent.putExtra("notification", id);
+            startActivity(intent);
+        }
 
+        finish();
     }
-
 }

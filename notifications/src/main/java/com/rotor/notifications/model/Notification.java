@@ -23,10 +23,6 @@ public class Notification {
     @Expose
     Content content;
 
-    @SerializedName("data")
-    @Expose
-    Data data;
-
     @SerializedName("sender")
     @Expose
     Sender sender;
@@ -39,11 +35,10 @@ public class Notification {
         // nothing to do here
     }
 
-    public Notification(String id, Long time, Content content, Data data, Sender sender, HashMap<String, Receiver> receivers) {
+    public Notification(String id, Long time, Content content, Sender sender, HashMap<String, Receiver> receivers) {
         this.id = id;
         this.time = time;
         this.content = content;
-        this.data = data;
         this.sender = sender;
         this.receivers = receivers;
     }
@@ -70,14 +65,6 @@ public class Notification {
 
     public void setContent(Content content) {
         this.content = content;
-    }
-
-    public Data getData() {
-        return data;
-    }
-
-    public void setData(Data data) {
-        this.data = data;
     }
 
     public Sender getSender() {

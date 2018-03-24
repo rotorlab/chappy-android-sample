@@ -47,6 +47,9 @@ class Notifications {
 
     companion object {
 
+        val ID = "id"
+        val DATA = "data"
+        val RC = "rquest_code"
         val NOTIFICATION = "/notifications/"
         private  var docker: NotificationDocker? = null
         private val TAG: String = Notifications::class.java.simpleName!!
@@ -103,13 +106,14 @@ class Notifications {
             return retrofit.create(Server::class.java)
         }
 
-        @JvmStatic fun builder(content: Content ?, data: Data ?, receivers: List<String>) : Notification {
+        @JvmStatic fun builder(content: Content ?, receivers: List<String>) : Notification {
             val id = Date().time
             val map = HashMap<String, Receiver>()
             for (receiver in receivers) {
                 map[receiver] = Receiver(receiver, null)
             }
-            return Notification(id.toString(), id, content, data, Sender(Rotor.id!!, id), map)
+            content?.id = id.toString()
+            return Notification(id.toString(), id, content, Sender(Rotor.id!!, id), map)
         }
 
         @JvmStatic fun createNotification(id: String, notificationn: Notification ?) {
@@ -204,7 +208,7 @@ class Notifications {
                         .setLargeIcon(bitmap)
                         .setContentTitle(content.title)
                         .setContentText(content.body)
-                        .setDeleteIntent(deleteIntent(id))
+                        .setContentIntent(intentBuilder(content))
                         .setStyle(NotificationCompat.BigTextStyle().bigText(content.body))
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             } else {
@@ -213,11 +217,14 @@ class Notifications {
                         .setContentTitle(content.title)
                         .setContentText(content.body)
                         .setStyle(NotificationCompat.BigTextStyle().bigText(content.body))
-                        .setDeleteIntent(deleteIntent(id))
+                        .setContentIntent(intentBuilder(content))
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             }
 
+
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
                 if (content.channel != null && content.channelDescription != null) {
                     val name = content.channel
                     val description = content.channelDescription
@@ -251,13 +258,17 @@ class Notifications {
             notificationManager.notify(idNumber.toInt(), mBuilder.build())
         }
 
-        private fun deleteIntent(id: String, code: Int) : PendingIntent {
-            removeNotification(id)
+        private fun intentBuilder(content: Content) : PendingIntent {
             val resultIntent = Intent(Rotor.context, loader!!.getClazz())
+            resultIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            resultIntent.putExtra(ID, content.id)
+            resultIntent.putExtra(DATA, content.data)
+            resultIntent.putExtra(RC, content.requestCode)
+
             val stackBuilder = TaskStackBuilder.create(Rotor.context)
             stackBuilder.addNextIntentWithParentStack(resultIntent)
 
-            val resultPendingIntent = stackBuilder.getPendingIntent(code, PendingIntent.FLAG_UPDATE_CURRENT)
+            val resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
             return resultPendingIntent
         }
 
