@@ -9,7 +9,7 @@ import com.google.gson.annotations.SerializedName;
 
 public class Data {
 
-    @SerializedName("data")
+    @SerializedName("room")
     @Expose
     Object data;
 

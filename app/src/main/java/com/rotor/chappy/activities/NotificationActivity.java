@@ -13,6 +13,7 @@ import com.rotor.core.interfaces.StatusListener;
 import com.rotor.database.Database;
 import com.rotor.notifications.NotificationRouterActivity;
 import com.rotor.notifications.Notifications;
+import com.rotor.notifications.interfaces.Listener;
 import com.rotor.notifications.model.Content;
 import com.rotor.notifications.model.Notification;
 
@@ -59,7 +60,17 @@ public class NotificationActivity extends NotificationRouterActivity {
 
                     }
                 });
-                Notifications.initialize(NotificationActivity.class);
+                Notifications.initialize(NotificationActivity.class, new Listener() {
+                    @Override
+                    public void opened(@NotNull String deviceId, @NotNull Notification notification) {
+
+                    }
+
+                    @Override
+                    public void removed(@NotNull Notification notification) {
+
+                    }
+                });
             }
 
             @Override

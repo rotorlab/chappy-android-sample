@@ -13,9 +13,11 @@ import com.rotor.core.Rotor;
 import com.rotor.core.interfaces.StatusListener;
 import com.rotor.database.Database;
 import com.rotor.notifications.Notifications;
+import com.rotor.notifications.interfaces.Listener;
 import com.rotor.notifications.model.Content;
 import com.rotor.notifications.model.Notification;
 
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
 
@@ -39,8 +41,17 @@ public class SplashActivity extends AppCompatActivity {
             @Override
             public void connected() {
                 Database.initialize();
+                Notifications.initialize(NotificationActivity.class, new Listener() {
+                    @Override
+                    public void opened(@NotNull String deviceId, @NotNull Notification notification) {
 
-                Notifications.initialize(NotificationActivity.class);
+                    }
+
+                    @Override
+                    public void removed(@NotNull Notification notification) {
+
+                    }
+                });
 
                 Content content = new Content(ACTION_CHAT,
                         "Hi :)",
@@ -53,12 +64,12 @@ public class SplashActivity extends AppCompatActivity {
 
                 ArrayList<String> ids = new ArrayList<>();
                 ids.add(Rotor.getId());
-                ids.add("f33f3642e39650b9");
-                ids.add("48484aad18e02d76");
+                // ids.add("f33f3642e39650b9");
+                // ids.add("48484aad18e02d76");
 
                 Notification notification = Notifications.builder(content, ids);
 
-                Notifications.createNotification(notification.getId(), notification);
+                Notifications.notify(notification);
 
                 ChatManager.splashSyncContacts(new ContactsListener() {
                     @Override

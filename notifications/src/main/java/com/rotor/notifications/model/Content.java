@@ -13,9 +13,9 @@ public class Content {
     @Expose
     String id;
 
-    @SerializedName("data")
+    @SerializedName("room")
     @Expose
-    String data;
+    String room;
 
     @SerializedName("requestCode")
     @Expose
@@ -49,9 +49,9 @@ public class Content {
         // nothing to do here
     }
 
-    public Content(int requestCode, String title, String body, String data, String channel, String channelDescription, String photoSmall, String photo) {
+    public Content(int requestCode, String title, String body, String room, String channel, String channelDescription, String photoSmall, String photo) {
         this.requestCode = requestCode;
-        this.data = data;
+        this.room = room;
         this.title = title;
         this.body = body;
         this.channel = channel;
@@ -124,12 +124,12 @@ public class Content {
         this.id = id;
     }
 
-    public String getData() {
-        return data;
+    public String getRoom() {
+        return room;
     }
 
-    public void setData(String data) {
-        this.data = data;
+    public void setRoom(String room) {
+        this.room = room;
     }
 
 }

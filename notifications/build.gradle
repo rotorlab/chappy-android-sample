@@ -35,6 +35,11 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     compile project(":core")
     compile project(":database")
+    /*
+    implementation 'com.rotor:core:0.1.1@aar'
+    compile ('com.rotor:database:0.1.1@aar') {
+        transitive = true
+    }*/
     compile 'com.google.code.gson:gson:2.8.2'
     compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.5'
     compile "com.stringcare:library:0.7"

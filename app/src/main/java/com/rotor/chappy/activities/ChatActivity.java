@@ -189,8 +189,8 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
 
-        // Notifications.removeNotification(intent.getStringExtra("notification"));
-        Notifications.removeNotificationByData(intent.getStringExtra("path"));
+        // Notifications.remove(intent.getStringExtra("notification"));
+        Notifications.remove(intent.getStringExtra("path"));
     }
 
     @Override
