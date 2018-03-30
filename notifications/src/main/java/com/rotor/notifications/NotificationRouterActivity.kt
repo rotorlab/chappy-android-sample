@@ -41,11 +41,11 @@ abstract class NotificationRouterActivity : AppCompatActivity() {
             }
         })
 
-        onCreate(savedInstanceState, requestCode!!, id!!, data!!)
+        onCreate()
     }
 
     abstract fun notificationTouched(action: Int, id: String, data: String)
 
-    abstract fun onCreate(savedInstanceState: Bundle?, action: Int, id: String, data: String)
+    abstract fun onCreate()
 
 }

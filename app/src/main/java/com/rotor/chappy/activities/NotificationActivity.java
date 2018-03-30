@@ -1,8 +1,9 @@
 package com.rotor.chappy.activities;
 
 import android.content.Intent;
-import android.os.Bundle;
-import android.support.annotation.Nullable;
+import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
+import android.util.Log;
 
 import com.rotor.chappy.BuildConfig;
 import com.rotor.chappy.ContactsListener;
@@ -14,14 +15,10 @@ import com.rotor.database.Database;
 import com.rotor.notifications.NotificationRouterActivity;
 import com.rotor.notifications.Notifications;
 import com.rotor.notifications.interfaces.Listener;
-import com.rotor.notifications.model.Content;
 import com.rotor.notifications.model.Notification;
 
-import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
-
-import java.util.ArrayList;
 
 import static android.content.Intent.FLAG_ACTIVITY_NO_HISTORY;
 
@@ -31,8 +28,10 @@ import static android.content.Intent.FLAG_ACTIVITY_NO_HISTORY;
 
 public class NotificationActivity extends NotificationRouterActivity {
 
+    public static String TAG = NotificationActivity.class.getSimpleName();
+
     @Override
-    public void onCreate(@org.jetbrains.annotations.Nullable Bundle savedInstanceState, int action, @NotNull String id, @NotNull String data) {
+    public void onCreate() {
         LocalData.init(getApplicationContext());
 
         Rotor.initialize(getApplicationContext(), BuildConfig.database_url, BuildConfig.redis_url, new StatusListener() {
@@ -62,12 +61,13 @@ public class NotificationActivity extends NotificationRouterActivity {
                 });
                 Notifications.initialize(NotificationActivity.class, new Listener() {
                     @Override
-                    public void opened(@NotNull String deviceId, @NotNull Notification notification) {
-
+                    public void opened(@NonNull String deviceId, @NonNull Notification notification) {
+                        Log.e(TAG, deviceId + " opened " + notification.getContent().getTitle());
+                        Snackbar.make(getWindow().getDecorView().findViewById(android.R.id.content), deviceId + " opened \"" + notification.getContent().getTitle() + "\"", Snackbar.LENGTH_LONG).setAction("Action", null).show();
                     }
 
                     @Override
-                    public void removed(@NotNull Notification notification) {
+                    public void removed(@NonNull Notification notification) {
 
                     }
                 });
@@ -82,7 +82,7 @@ public class NotificationActivity extends NotificationRouterActivity {
     }
 
     @Override
-    public void notificationTouched(int action, @NotNull String id, @NotNull String data) {
+    public void notificationTouched(int action, @NonNull String id, @NonNull String data) {
         if (action == SplashActivity.ACTION_CHAT) {
             Intent intent = new Intent(this, ChatActivity.class);
             intent.addFlags(FLAG_ACTIVITY_NO_HISTORY);

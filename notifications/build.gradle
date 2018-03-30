@@ -32,22 +32,22 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
 
     implementation "com.android.support:support-compat:27.1.0"
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    compile project(":core")
-    compile project(":database")
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation project(":core")
+    implementation project(":database")
     /*
     implementation 'com.rotor:core:0.1.1@aar'
     compile ('com.rotor:database:0.1.1@aar') {
         transitive = true
     }*/
-    compile 'com.google.code.gson:gson:2.8.2'
-    compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.5'
-    compile "com.stringcare:library:0.7"
+    implementation 'com.google.code.gson:gson:2.8.2'
+    implementation 'com.nostra13.universalimageloader:universal-image-loader:1.9.5'
+    implementation "com.stringcare:library:0.7"
 
-    compile "com.squareup.retrofit2:retrofit:2.3.0"
-    compile "com.squareup.retrofit2:adapter-rxjava2:2.3.0"
-    compile "com.squareup.retrofit2:converter-gson:2.3.0"
-    compile "io.reactivex.rxjava2:rxandroid:2.0.2"
+    implementation "com.squareup.retrofit2:retrofit:2.3.0"
+    implementation "com.squareup.retrofit2:adapter-rxjava2:2.3.0"
+    implementation "com.squareup.retrofit2:converter-gson:2.3.0"
+    implementation "io.reactivex.rxjava2:rxandroid:2.0.2"
 }
 
 repositories {

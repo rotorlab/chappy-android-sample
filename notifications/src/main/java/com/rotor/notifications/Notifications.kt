@@ -148,11 +148,13 @@ class Notifications {
                     notification?.let {
                         docker!!.notifications!![identifier] = notification
                         Database.sync(identifier)
+                        Log.e(TAG, "notification added")
                         created = true
                     }
                 }
 
                 override fun onChanged(ref: Notification) {
+                    Log.e(TAG, "notification returned")
                     var readCount = 0
                     val newOpens = ArrayList<String>()
                     if (ref.sender.id.equals(Rotor.id)) {
@@ -168,8 +170,7 @@ class Notifications {
 
                     docker!!.notifications!![identifier] = ref
                     val gson = Gson()
-                    val notificationsAsString = gson.toJson(docker!!)
-                    ReferenceUtils.addElement(NOTIFICATION, notificationsAsString)
+                    ReferenceUtils.addElement(NOTIFICATION, gson.toJson(docker!!))
                     show(identifier)
                     if (created) {
                         created = false
@@ -186,6 +187,7 @@ class Notifications {
 
                         docker!!.notifications!!.remove(identifier)
                         Database.unlisten(identifier)
+                        ReferenceUtils.addElement(NOTIFICATION, gson.toJson(docker!!))
                     } else if (ref.sender.id.equals(Rotor.id) && listener != null) {
                         for (r in newOpens) {
                             listener!!.opened(r, docker!!.notifications!![identifier]!!)
@@ -218,6 +220,8 @@ class Notifications {
                         }
                         docker!!.notifications!!.remove(identifier)
                         Database.unlisten(identifier)
+                        val gson = Gson()
+                        ReferenceUtils.addElement(NOTIFICATION, gson.toJson(docker!!))
                     }
                 }
 

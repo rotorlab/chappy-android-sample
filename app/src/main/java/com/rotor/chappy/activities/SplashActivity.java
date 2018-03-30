@@ -2,8 +2,11 @@ package com.rotor.chappy.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 import com.rotor.chappy.BuildConfig;
 import com.rotor.chappy.ContactsListener;
@@ -17,7 +20,6 @@ import com.rotor.notifications.interfaces.Listener;
 import com.rotor.notifications.model.Content;
 import com.rotor.notifications.model.Notification;
 
-import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
 
@@ -29,6 +31,7 @@ import java.util.ArrayList;
 
 public class SplashActivity extends AppCompatActivity {
 
+    public static String TAG = SplashActivity.class.getSimpleName();
     public static int ACTION_CHAT = 4532;
 
     @Override
@@ -43,16 +46,17 @@ public class SplashActivity extends AppCompatActivity {
                 Database.initialize();
                 Notifications.initialize(NotificationActivity.class, new Listener() {
                     @Override
-                    public void opened(@NotNull String deviceId, @NotNull Notification notification) {
-
+                    public void opened(@NonNull String deviceId, @NonNull Notification notification) {
+                        Log.e(TAG, deviceId + " opened " + notification.getContent().getTitle());
+                        Snackbar.make(getWindow().getDecorView().findViewById(android.R.id.content), deviceId + " opened \"" + notification.getContent().getTitle() + "\"", Snackbar.LENGTH_LONG).setAction("Action", null).show();
                     }
 
                     @Override
-                    public void removed(@NotNull Notification notification) {
+                    public void removed(@NonNull Notification notification) {
 
                     }
                 });
-
+                
                 Content content = new Content(ACTION_CHAT,
                         "Hi :)",
                         "Welcome to notifications!",
