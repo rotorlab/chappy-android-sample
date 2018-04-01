@@ -54,7 +54,7 @@ public class ChatActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(com.rotor.chappy.R.layout.activity_chat);
-        Toolbar toolbar = (Toolbar) findViewById(com.rotor.chappy.R.id.toolbar);
+        Toolbar toolbar = findViewById(com.rotor.chappy.R.id.toolbar);
         setSupportActionBar(toolbar);
 
         Intent intent = getIntent();
@@ -205,6 +205,11 @@ public class ChatActivity extends AppCompatActivity {
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_remove) {
             Database.remove(path);
+            return true;
+        } else if (id == R.id.action_detail) {
+            Intent intent = new Intent(this, ChatDetailActivity.class);
+            intent.putExtra("path", chat.getName());
+            startActivity(intent);
             return true;
         }
 

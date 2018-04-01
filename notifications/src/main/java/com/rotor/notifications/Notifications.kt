@@ -124,6 +124,9 @@ class Notifications {
             val id = Date().time
             val map = HashMap<String, Receiver>()
             for (receiver in receivers) {
+                if (receiver.equals(Rotor.id)) {
+                    continue
+                }
                 map[receiver] = Receiver(receiver, null)
             }
             content?.id = id.toString()
@@ -171,7 +174,9 @@ class Notifications {
                     docker!!.notifications!![identifier] = ref
                     val gson = Gson()
                     ReferenceUtils.addElement(NOTIFICATION, gson.toJson(docker!!))
-                    show(identifier)
+                    if (!ref.sender.id.equals(Rotor.id)) {
+                        show(identifier)
+                    }
                     if (created) {
                         created = false
                         var rece: ArrayList<Receiver> = arrayListOf()
@@ -214,7 +219,10 @@ class Notifications {
                 }
 
                 override fun onDestroy() {
-                    if (docker!!.notifications!![identifier]!!.sender.id.equals(Rotor.id) && docker!!.notifications!!.containsKey(identifier)) {
+                    if (docker != null &&
+                        docker!!.notifications != null && docker!!.notifications!!.containsKey(identifier) &&
+                        docker!!.notifications!![identifier]!!.sender.id.equals(Rotor.id)) {
+
                         listener?.let {
                             it.removed(docker!!.notifications!![identifier]!!)
                         }

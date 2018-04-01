@@ -68,9 +68,11 @@ public class SplashActivity extends AppCompatActivity {
                         null);
 
                 ArrayList<String> ids = new ArrayList<>();
-                ids.add(Rotor.getId());
+                // ids.add(Rotor.getId());
                 // ids.add("f33f3642e39650b9");
                 // ids.add("48484aad18e02d76");
+                ids.add("357c82245dc5b9e6");
+                ids.add("42e9c151fa3ba850");
 
                 Notification notification = Notifications.builder(content, ids);
 

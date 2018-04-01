@@ -73,6 +73,7 @@ class KReference<T>(context: Context, path: String, reference: Reference<*>, mom
         for (entry in blowerMap.entries) {
             entry.value.onDestroy()
         }
+
     }
 
     fun getType(): Type {

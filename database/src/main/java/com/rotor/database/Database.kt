@@ -14,14 +14,12 @@ import com.rotor.database.models.PrimaryReferece.Companion.EMPTY_OBJECT
 import com.rotor.database.models.PrimaryReferece.Companion.NULL
 import com.rotor.database.models.PrimaryReferece.Companion.OS
 import com.rotor.database.models.PrimaryReferece.Companion.PATH
-import com.rotor.database.request.CreateListener
-import com.rotor.database.request.RemoveListener
-import com.rotor.database.request.RemoveReference
-import com.rotor.database.request.UpdateToServer
+import com.rotor.database.request.*
 import com.rotor.database.utils.ReferenceUtils
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import org.json.JSONObject
+import java.security.MessageDigest
 import java.util.*
 
 
@@ -107,19 +105,22 @@ class Database  {
             syncWithServer(path)
         }
 
+        @JvmStatic fun sha1(value: String) : String {
+            val bytes = value.toByteArray()
+            val md = MessageDigest.getInstance("SHA-1")
+            val digest = md.digest(bytes)
+            val stringBuilder = StringBuilder()
+            for (byte in digest) stringBuilder.append("%02x".format(byte))
+            return stringBuilder.toString()
+        }
+
         @JvmStatic private fun syncWithServer(path: String) {
             var content = ReferenceUtils.getElement(path)
             if (content == null) {
                 content = PrimaryReferece.EMPTY_OBJECT
             }
 
-            // val sha1 = ReferenceUtils.SHA1(content)
-            val sha1 = ""
-
-
-            val createListener = CreateListener("listen_reference", path, Rotor.id!!, OS, sha1, content.length)
-
-            api.createReference(createListener)
+            api.createReference(CreateListener("listen_reference", path, Rotor.id!!, OS, sha1(content), content.length))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
@@ -134,8 +135,7 @@ class Database  {
 
         @JvmStatic fun unlisten(path: String) {
             if (pathMap!!.containsKey(path)) {
-                val removeListener = RemoveListener("unlisten_reference", path, Rotor.id!!)
-                api.removeListener(removeListener)
+                api.removeListener(RemoveListener("unlisten_reference", path, Rotor.id!!))
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(
@@ -151,8 +151,7 @@ class Database  {
 
         @JvmStatic fun remove(path: String) {
             if (pathMap!!.containsKey(path)) {
-                val removeReference = RemoveReference("remove_reference", path, Rotor.id!!)
-                api.removeReference(removeReference)
+                api.removeReference(RemoveReference("remove_reference", path, Rotor.id!!))
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(
@@ -174,8 +173,28 @@ class Database  {
                 Log.d(TAG, "differences: $differences")
             }
 
-            val updateToServer = UpdateToServer("update_reference", path, Rotor.id!!, "android", differences, len, clean)
-            api.refreshToServer(updateToServer)
+            api.refreshToServer(UpdateToServer("update_reference", path, Rotor.id!!, "android", differences, len, clean))
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                            { result ->
+                                result.status?.let {
+                                    Log.e(TAG, result.status)
+                                }
+                            },
+                            { error -> error.printStackTrace() }
+                    )
+        }
+
+        @JvmStatic fun refreshFromServer(path: String, content: String) {
+            if (PrimaryReferece.EMPTY_OBJECT.equals(content)) {
+                Log.e(TAG, "no content: $EMPTY_OBJECT")
+                return
+            } else {
+                Log.d(TAG, "content: $content")
+            }
+
+            api.refreshFromServer(UpdateFromServer("update_reference_from", path, Rotor.id!!, "android", content))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
@@ -213,6 +232,7 @@ class Database  {
             if (pathMap!!.containsKey(path)) {
                 pathMap!![path]!!.remove()
                 pathMap!!.remove(path)
+                Database.unlisten(path)
             }
         }
     }

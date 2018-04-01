@@ -5,6 +5,7 @@ import com.efraespada.jsondiff.JSONDiff
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.rotor.core.Rotor
+import com.rotor.database.Database
 import com.rotor.database.Docker
 import com.rotor.database.utils.ReferenceUtils
 import com.stringcare.library.SC
@@ -31,6 +32,7 @@ abstract class PrimaryReferece<T>(context: Context, path: String) {
         internal var ACTION_REFERENCE_REMOVED = "reference_removed"
         internal var STAG = "tag"
         internal var PATH = "id"
+        internal var SHA1 = "sha1"
         internal var REFERENCE = "reference"
         internal var SIZE = "size"
         internal var INDEX = "index"
@@ -159,11 +161,15 @@ abstract class PrimaryReferece<T>(context: Context, path: String) {
 
             when (action) {
 
-                ACTION_SIMPLE_UPDATE -> parseUpdateResult(path, rData)
+                ACTION_SIMPLE_UPDATE -> {
+                    val sha1 = json.getString(SHA1)
+                    parseUpdateResult(path, rData, sha1)
+                }
 
                 ACTION_SLICE_UPDATE -> {
                     val size = json.getInt(SIZE)
                     val index = json.getInt(INDEX)
+                    val sha1 = json.getString(SHA1)
                     if (mapParts.containsKey(path)) {
                         mapParts[path]!![index] = rData
                     } else {
@@ -192,7 +198,7 @@ abstract class PrimaryReferece<T>(context: Context, path: String) {
                         }
                         mapParts.remove(path)
                         val result = complete.toString()
-                        parseUpdateResult(path, result)
+                        parseUpdateResult(path, result, sha1)
                     }
                 }
 
@@ -248,7 +254,7 @@ abstract class PrimaryReferece<T>(context: Context, path: String) {
 
     }
 
-    private fun parseUpdateResult(path: String, data: String) {
+    private fun parseUpdateResult(path: String, data: String, sha1: String) {
         try {
             val jsonObject: JSONObject
 
@@ -340,8 +346,14 @@ abstract class PrimaryReferece<T>(context: Context, path: String) {
 
             ReferenceUtils.addElement(path, jsonObject.toString())
             stringReference = jsonObject.toString()
-            this.len = stringReference!!.length
-            blowerResult(stringReference!!)
+
+            if (sha1.equals(Database.sha1(stringReference!!))) {
+                this.len = stringReference!!.length
+                blowerResult(stringReference!!)
+            } else {
+                Database.refreshFromServer(path, stringReference!!)
+            }
+
         } catch (e: JSONException) {
             e.printStackTrace()
         }
