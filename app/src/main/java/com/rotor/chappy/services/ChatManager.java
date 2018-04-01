@@ -1,7 +1,13 @@
 package com.rotor.chappy.services;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.rotor.chappy.App;
+import com.rotor.chappy.ContactsListener;
+import com.rotor.chappy.R;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.Contact;
 import com.rotor.chappy.model.Contacts;
@@ -23,6 +29,7 @@ public class ChatManager {
     public static final Map<String, Chat> map = new HashMap<>();
     public static Contacts contacts = null;
     public static Listener listener;
+    public static boolean shouldStart = false;
 
     public interface Listener {
         void update(List<Chat> chats);
@@ -44,6 +51,11 @@ public class ChatManager {
         Database.listen(path, new Reference<Chat>(Chat.class) {
 
             @Override
+            public void onCreate() {
+                createChatListener.newChat();
+            }
+
+            @Override
             public Chat onUpdate() {
                 if (map.containsKey(path)) {
                     return map.get(path);
@@ -53,31 +65,29 @@ public class ChatManager {
             }
 
             @Override
-            public void onChanged(Chat ref) {
-                if (ref == null) {
-
-                } else if (map.containsKey(path)) {
+            public void onChanged(@NonNull Chat ref) {
+                if (map.containsKey(path)) {
                     map.get(path).setMembers(ref.getMembers());
                     map.get(path).setMessages(ref.getMessages());
                     map.get(path).setName(ref.getName());
                 } else {
                     map.put(path, ref);
                 }
-                Log.e(TAG, "chats: " + map.size());
-
-                List<Chat> chats = new ArrayList<>();
-                for (Map.Entry<String, Chat> entry : ChatManager.getChats().entrySet()) {
-                    chats.add(entry.getValue());
+                SharedPreferences prefs = App.context().getSharedPreferences(App.context().getPackageName(), Context.MODE_PRIVATE);
+                final String id = prefs.getString(App.context().getString(R.string.var_id), null);
+                if (!map.get(path).getMembers().containsKey(id)) {
+                    map.get(path).getMembers().put(id, contacts.getContacts().get(id));
+                    Database.sync(path);
                 }
-
-                if (listener != null) {
-                    ChatManager.listener.update(chats);
-                }
+                updateList();
             }
 
             @Override
-            public void onCreate() {
-                createChatListener.newChat();
+            public void onDestroy() {
+                if (map.containsKey(path)) {
+                    map.remove(path);
+                }
+                updateList();
             }
 
             @Override
@@ -90,12 +100,31 @@ public class ChatManager {
         LocalData.addPath(path);
     }
 
+    private static void updateList() {
+        Log.e(TAG, "chats: " + map.size());
+
+        List<Chat> chats = new ArrayList<>();
+        for (Map.Entry<String, Chat> entry : ChatManager.getChats().entrySet()) {
+            chats.add(entry.getValue());
+        }
+
+        if (listener != null) {
+            ChatManager.listener.update(chats);
+        }
+    }
+
     /**
      * creates a listener for given path
      */
-    public static void syncContacts() {
+    public static void splashSyncContacts(final ContactsListener contactsListener) {
         final String path = "/contacts";
+        shouldStart = true;
         Database.listen(path, new Reference<Contacts>(Contacts.class) {
+
+            @Override
+            public void onDestroy() {
+                contacts = null;
+            }
 
             @Override
             public void onCreate() {
@@ -106,6 +135,10 @@ public class ChatManager {
             @Override
             public void onChanged(Contacts contacts) {
                 ChatManager.contacts = contacts;
+                if (shouldStart) {
+                    shouldStart = false;
+                    contactsListener.contactsReady();
+                }
             }
 
             @Override
