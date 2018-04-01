@@ -75,8 +75,8 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                // Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG).setAction("Action", null).show();
+                askForGroupName();
             }
         });
     }
@@ -147,48 +147,51 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void askForGroupName() {
-        if (materialDialog == null) {
-            materialDialog = new MaterialDialog.Builder(this)
-                    .title(com.rotor.chappy.R.string.askIdGroupName)
-                    .customView(R.layout.input_group_name, true)
-                    .positiveText(com.rotor.chappy.R.string.agree)
-                    .negativeText(com.rotor.chappy.R.string.disagree)
-                    .cancelable(false)
-                    .onPositive(new MaterialDialog.SingleButtonCallback() {
-                        @Override
-                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                            final EditText name = dialog.getCustomView().findViewById(R.id.etName);
-                            if (!TextUtils.isEmpty(name.getText())) {
-                                SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
-                                final String id = prefs.getString(getString(com.rotor.chappy.R.string.var_name), null);
-                                final String groupPath = "/chats/" + name.getText().toString().trim().replace(" ", "_");
+        if (materialDialog != null) {
+            materialDialog.dismiss();
+            materialDialog = null;
+        }
 
-                                ChatManager.addGChat(groupPath, new ChatManager.CreateChatListener() {
-                                    @Override
-                                    public void newChat() {
-                                        Map<String, Contact> members = new HashMap<>();
-                                        members.put(id, ChatManager.getContacts().getContacts().get(id));
-                                        Map<String, Message> messageMap = new HashMap<>();
-                                        Chat chat = new Chat(name.getText().toString(), members, messageMap);
-                                        ChatManager.map.put(groupPath, chat);
-                                        Database.sync(groupPath);
-                                    }
-                                });
+        materialDialog = new MaterialDialog.Builder(this)
+                .title(com.rotor.chappy.R.string.askIdGroupName)
+                .customView(R.layout.input_group_name, true)
+                .positiveText(com.rotor.chappy.R.string.agree)
+                .negativeText(com.rotor.chappy.R.string.disagree)
+                .cancelable(false)
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        final EditText name = dialog.getCustomView().findViewById(R.id.etName);
+                        if (!TextUtils.isEmpty(name.getText())) {
+                            SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+                            final String id = prefs.getString(getString(R.string.var_id), null);
+                            final String groupPath = "/chats/" + name.getText().toString().trim().replace(" ", "_");
 
-                                dialog.dismiss();
-                                materialDialog = null;
-                            }
-                        }
-                    })
-                    .onNegative(new MaterialDialog.SingleButtonCallback() {
-                        @Override
-                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            ChatManager.addGChat(groupPath, new ChatManager.CreateChatListener() {
+                                @Override
+                                public void newChat() {
+                                    Map<String, Contact> members = new HashMap<>();
+                                    members.put(id, ChatManager.getContacts().getContacts().get(id));
+                                    Map<String, Message> messageMap = new HashMap<>();
+                                    Chat chat = new Chat(name.getText().toString(), members, messageMap);
+                                    ChatManager.map.put(groupPath, chat);
+                                    Database.sync(groupPath);
+                                }
+                            });
+
                             dialog.dismiss();
                             materialDialog = null;
                         }
-                    })
-                    .show();
-        }
+                    }
+                })
+                .onNegative(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        dialog.dismiss();
+                        materialDialog = null;
+                    }
+                })
+                .show();
     }
 
 

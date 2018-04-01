@@ -2,24 +2,35 @@ package com.rotor.chappy.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.widget.Toast;
 
 import com.rotor.chappy.BuildConfig;
+import com.rotor.chappy.ContactsListener;
 import com.rotor.chappy.services.ChatManager;
 import com.rotor.chappy.services.LocalData;
 import com.rotor.core.Rotor;
 import com.rotor.core.interfaces.StatusListener;
 import com.rotor.database.Database;
+import com.rotor.notifications.Notifications;
+import com.rotor.notifications.interfaces.Listener;
+import com.rotor.notifications.model.Notification;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+
+import java.util.ArrayList;
 
 /**
  * Created by efraespada on 27/02/2018.
  */
 
 public class SplashActivity extends AppCompatActivity {
+
+    public static String TAG = SplashActivity.class.getSimpleName();
+    public static int ACTION_CHAT = 4532;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -31,27 +42,41 @@ public class SplashActivity extends AppCompatActivity {
             @Override
             public void connected() {
                 Database.initialize();
-                ChatManager.syncContacts();
-
-                JSONArray array = LocalData.getLocalPaths();
-                for (int i = 0; i < array.length(); i++) {
-                    try {
-                        final String path = array.getString(i);
-                        ChatManager.addGChat(path, new ChatManager.CreateChatListener() {
-                            @Override
-                            public void newChat() {
-                                Database.unlisten(path);
-                                LocalData.removePath(path);
-                            }
-                        });
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+                Notifications.initialize(NotificationActivity.class, new Listener() {
+                    @Override
+                    public void opened(@NonNull String deviceId, @NonNull Notification notification) {
+                        Toast.makeText(getApplicationContext(), deviceId + " opened \"" + notification.getContent().getBody() + "\"", Toast.LENGTH_LONG).show();
                     }
-                }
 
-                Intent intent = new Intent(SplashActivity.this, MainActivity.class);
-                SplashActivity.this.startActivity(intent);
-                SplashActivity.this.finish();
+                    @Override
+                    public void removed(@NonNull Notification notification) {
+
+                    }
+                });
+
+                ChatManager.splashSyncContacts(new ContactsListener() {
+                    @Override
+                    public void contactsReady() {
+                        JSONArray array = LocalData.getLocalPaths();
+                        for (int i = 0; i < array.length(); i++) {
+                            try {
+                                final String path = array.getString(i);
+                                ChatManager.addGChat(path, new ChatManager.CreateChatListener() {
+                                    @Override
+                                    public void newChat() {
+                                        Database.unlisten(path);
+                                        LocalData.removePath(path);
+                                    }
+                                });
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        Intent intent = new Intent(SplashActivity.this, MainActivity.class);
+                        startActivity(intent);
+                        finish();
+                    }
+                });
             }
 
             @Override

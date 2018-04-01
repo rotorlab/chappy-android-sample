@@ -1,0 +1,18 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.rotor.chappy.activities.MainActivity">
+
+    <item
+        android:id="@+id/action_detail"
+        android:orderInCategory="100"
+        android:title="@string/action_detail_chat"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_remove"
+        android:orderInCategory="100"
+        android:title="@string/action_remove_chat"
+        app:showAsAction="never" />
+
+</menu>
