@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.rotor.chappy.BuildConfig;
 import com.rotor.chappy.ContactsListener;
@@ -61,7 +62,7 @@ public class NotificationActivity extends NotificationRouterActivity {
                     @Override
                     public void opened(@NonNull String deviceId, @NonNull Notification notification) {
                         Log.e(TAG, deviceId + " opened " + notification.getContent().getTitle());
-                        Snackbar.make(findViewById(android.R.id.content), deviceId + " opened \"" + notification.getContent().getTitle() + "\"", Snackbar.LENGTH_LONG).setAction("Action", null).show();
+                        Toast.makeText(getApplicationContext(), deviceId + " opened \"" + notification.getContent().getTitle() + "\"", Toast.LENGTH_LONG).show();
                     }
 
                     @Override
