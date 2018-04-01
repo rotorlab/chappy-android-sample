@@ -35,7 +35,6 @@
 
         <activity
             android:name=".activities.ChatActivity"
-            android:launchMode="singleTask"
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="adjustResize">
         </activity>

@@ -61,7 +61,7 @@ public class ChatActivity extends AppCompatActivity {
 
         path = "/chats/" + intent.getStringExtra("path").replaceAll(" ", "_");
 
-        messageList = (RecyclerView) findViewById(com.rotor.chappy.R.id.messages_list);
+        messageList = findViewById(com.rotor.chappy.R.id.messages_list);
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
         linearLayoutManager.setReverseLayout(true);
         messageList.setLayoutManager(linearLayoutManager);
@@ -129,8 +129,7 @@ public class ChatActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG).setAction("Action", null).show();
             }
         });
 
@@ -196,7 +195,7 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_chat, menu);
-        return true;
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override

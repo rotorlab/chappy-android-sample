@@ -20,8 +20,6 @@ import com.rotor.notifications.model.Notification;
 import org.json.JSONArray;
 import org.json.JSONException;
 
-import static android.content.Intent.FLAG_ACTIVITY_NO_HISTORY;
-
 /**
  * Created by efraespada on 23/03/2018.
  */
@@ -63,7 +61,7 @@ public class NotificationActivity extends NotificationRouterActivity {
                     @Override
                     public void opened(@NonNull String deviceId, @NonNull Notification notification) {
                         Log.e(TAG, deviceId + " opened " + notification.getContent().getTitle());
-                        Snackbar.make(getWindow().getDecorView().findViewById(android.R.id.content), deviceId + " opened \"" + notification.getContent().getTitle() + "\"", Snackbar.LENGTH_LONG).setAction("Action", null).show();
+                        Snackbar.make(findViewById(android.R.id.content), deviceId + " opened \"" + notification.getContent().getTitle() + "\"", Snackbar.LENGTH_LONG).setAction("Action", null).show();
                     }
 
                     @Override
@@ -82,15 +80,13 @@ public class NotificationActivity extends NotificationRouterActivity {
     }
 
     @Override
-    public void notificationTouched(int action, @NonNull String id, @NonNull String data) {
+    public void notificationTouched(int action, @NonNull String id, @NonNull String room) {
         if (action == SplashActivity.ACTION_CHAT) {
             Intent intent = new Intent(this, ChatActivity.class);
-            intent.addFlags(FLAG_ACTIVITY_NO_HISTORY);
-            intent.putExtra("path", data);
+            intent.putExtra("path", room);
             intent.putExtra("notification", id);
             startActivity(intent);
         }
-
         finish();
     }
 

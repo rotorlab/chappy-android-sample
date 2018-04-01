@@ -53,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onChatClicked(Chat chat) {
                 Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+                intent.setAction(chat.getName());
                 intent.putExtra("path", chat.getName());
                 MainActivity.this.startActivity(intent);
             }

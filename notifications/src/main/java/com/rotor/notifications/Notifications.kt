@@ -49,7 +49,7 @@ class Notifications {
     companion object {
 
         val ID = "id"
-        val DATA = "data"
+        val ROOM = "room"
         val RC = "request_code"
         val NOTIFICATION = "/notifications/"
         private  var docker: NotificationDocker? = null
@@ -334,10 +334,9 @@ class Notifications {
             val resultIntent = Intent(Rotor.context, loader!!.getClazz())
             resultIntent.addFlags(FLAG_ACTIVITY_NO_HISTORY)
             resultIntent.putExtra(ID, content.id)
-            resultIntent.putExtra(DATA, content.room)
+            resultIntent.putExtra(ROOM, content.room)
             resultIntent.putExtra(RC, content.requestCode)
-
-            val resultPendingIntent = PendingIntent.getActivity(Rotor.context, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            val resultPendingIntent = PendingIntent.getActivity(Rotor.context, 0, resultIntent, PendingIntent.FLAG_ONE_SHOT);
             return resultPendingIntent
         }
 

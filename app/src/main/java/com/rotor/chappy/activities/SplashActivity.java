@@ -48,7 +48,7 @@ public class SplashActivity extends AppCompatActivity {
                     @Override
                     public void opened(@NonNull String deviceId, @NonNull Notification notification) {
                         Log.e(TAG, deviceId + " opened " + notification.getContent().getTitle());
-                        Snackbar.make(getWindow().getDecorView().findViewById(android.R.id.content), deviceId + " opened \"" + notification.getContent().getTitle() + "\"", Snackbar.LENGTH_LONG).setAction("Action", null).show();
+                        Snackbar.make(findViewById(android.R.id.content), deviceId + " opened \"" + notification.getContent().getTitle() + "\"", Snackbar.LENGTH_LONG).setAction("Action", null).show();
                     }
 
                     @Override
@@ -56,7 +56,7 @@ public class SplashActivity extends AppCompatActivity {
 
                     }
                 });
-                
+
                 Content content = new Content(ACTION_CHAT,
                         "Hi :)",
                         "Welcome to notifications!",
