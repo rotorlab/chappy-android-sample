@@ -8,6 +8,7 @@
     <string name="action_detail_chat">Details</string>
     <string name="askIdTitle">Who are you?</string>
     <string name="askIdGroupName">Group name</string>
+    <string name="zumb_title">Message</string>
     <string name="agree">Ok</string>
     <string name="disagree">Cancel</string>
     <string name="contact_path">/contacts</string>

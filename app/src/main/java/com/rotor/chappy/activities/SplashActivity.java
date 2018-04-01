@@ -4,9 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.widget.Toast;
 
 import com.rotor.chappy.BuildConfig;
@@ -18,7 +16,6 @@ import com.rotor.core.interfaces.StatusListener;
 import com.rotor.database.Database;
 import com.rotor.notifications.Notifications;
 import com.rotor.notifications.interfaces.Listener;
-import com.rotor.notifications.model.Content;
 import com.rotor.notifications.model.Notification;
 
 import org.json.JSONArray;
@@ -48,8 +45,7 @@ public class SplashActivity extends AppCompatActivity {
                 Notifications.initialize(NotificationActivity.class, new Listener() {
                     @Override
                     public void opened(@NonNull String deviceId, @NonNull Notification notification) {
-                        Log.e(TAG, deviceId + " opened " + notification.getContent().getTitle());
-                        Toast.makeText(getApplicationContext(), deviceId + " opened \"" + notification.getContent().getTitle() + "\"", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), deviceId + " opened \"" + notification.getContent().getBody() + "\"", Toast.LENGTH_LONG).show();
                     }
 
                     @Override
@@ -57,26 +53,6 @@ public class SplashActivity extends AppCompatActivity {
 
                     }
                 });
-
-                Content content = new Content(ACTION_CHAT,
-                        "Hi :)",
-                        "Welcome to notifications!",
-                        "ttt",
-                        "myChannel",
-                        "Test channel",
-                        null,
-                        null);
-
-                ArrayList<String> ids = new ArrayList<>();
-                // ids.add(Rotor.getId());
-                // ids.add("f33f3642e39650b9");
-                // ids.add("48484aad18e02d76");
-                ids.add("357c82245dc5b9e6");
-                ids.add("42e9c151fa3ba850");
-
-                Notification notification = Notifications.builder(content, ids);
-
-                Notifications.notify(notification);
 
                 ChatManager.splashSyncContacts(new ContactsListener() {
                     @Override

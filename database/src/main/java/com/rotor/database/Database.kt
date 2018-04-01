@@ -232,6 +232,7 @@ class Database  {
             if (pathMap!!.containsKey(path)) {
                 pathMap!![path]!!.remove()
                 pathMap!!.remove(path)
+                ReferenceUtils.removeElement(path)
                 Database.unlisten(path)
             }
         }

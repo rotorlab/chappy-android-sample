@@ -1,9 +1,13 @@
 package com.rotor.chappy.services;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.rotor.chappy.App;
 import com.rotor.chappy.ContactsListener;
+import com.rotor.chappy.R;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.Contact;
 import com.rotor.chappy.model.Contacts;
@@ -68,6 +72,12 @@ public class ChatManager {
                     map.get(path).setName(ref.getName());
                 } else {
                     map.put(path, ref);
+                }
+                SharedPreferences prefs = App.context().getSharedPreferences(App.context().getPackageName(), Context.MODE_PRIVATE);
+                final String id = prefs.getString(App.context().getString(R.string.var_id), null);
+                if (!map.get(path).getMembers().containsKey(id)) {
+                    map.get(path).getMembers().put(id, contacts.getContacts().get(id));
+                    Database.sync(path);
                 }
                 updateList();
             }
