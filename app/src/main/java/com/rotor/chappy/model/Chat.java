@@ -3,6 +3,7 @@ package com.rotor.chappy.model;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -30,6 +31,9 @@ public class Chat {
     }
 
     public Map<String, Contact> getMembers() {
+        if (members == null) {
+            members = new HashMap<>();
+        }
         return members;
     }
 
@@ -38,6 +42,9 @@ public class Chat {
     }
 
     public Map<String, Message> getMessages() {
+        if (messages == null) {
+            messages = new HashMap<>();
+        }
         return messages;
     }
 
