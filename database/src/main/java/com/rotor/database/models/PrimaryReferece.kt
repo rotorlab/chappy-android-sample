@@ -17,7 +17,7 @@ import java.util.*
 /**
  * Created by efraespada on 14/03/2018.
  */
-abstract class PrimaryReferece<T>(context: Context, path: String) {
+abstract class PrimaryReferece<T>(context: Context, db: String, path: String) {
 
     companion object {
         internal var EMPTY_OBJECT = "{}"
@@ -47,6 +47,7 @@ abstract class PrimaryReferece<T>(context: Context, path: String) {
     var len: Int = 0
     var serverLen: Int = 0
     var moment: Long ? = null
+    var databaseName: String
     protected var path: String
     protected var stringReference: String? = null
 
@@ -55,6 +56,7 @@ abstract class PrimaryReferece<T>(context: Context, path: String) {
 
     init {
         this.context = context
+        this.databaseName = db
         this.path = path
         this.gson = getGsonBuilder()
         this.serverLen = 0

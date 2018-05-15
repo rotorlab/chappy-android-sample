@@ -14,6 +14,7 @@ import io.fabric.sdk.android.Fabric;
 public class App extends Application {
 
     private static Context context;
+    public static String databaseName = "database";
 
     @Override
     public void onCreate() {

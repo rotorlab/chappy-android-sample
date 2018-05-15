@@ -31,6 +31,7 @@ import com.rotor.notifications.data.NotificationDocker
 import com.rotor.notifications.interfaces.ClazzLoader
 import com.rotor.notifications.interfaces.Listener
 import com.rotor.notifications.interfaces.Server
+import com.rotor.notifications.request.NotificationGetter
 import com.rotor.notifications.request.NotificationSender
 import com.stringcare.library.SC
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -142,8 +143,8 @@ class Notifications {
         }
 
         @JvmStatic  private fun notify(id: String, notification: Notification ?) {
-            var identifier = if (!id.contains("notifications")) NOTIFICATION + id else id
-            Database.listen(identifier, object: Reference<Notification>(Notification::class.java) {
+            val identifier = if (!id.contains("notifications")) NOTIFICATION + id else id
+            Database.listen("notifications", identifier, object: Reference<Notification>(Notification::class.java) {
 
                 var created = false
 
@@ -248,7 +249,7 @@ class Notifications {
                 }
             }
             if (!deleted) {
-                var identifier = if (!value.contains("notifications")) NOTIFICATION + value else value
+                val identifier = if (!value.contains("notifications")) NOTIFICATION + value else value
                 if (docker!!.notifications!!.containsKey(identifier)) {
                     docker!!.notifications!![identifier]!!.receivers.get(Rotor.id)!!.viewed = Date().time
                     Database.sync(identifier)
@@ -364,10 +365,27 @@ class Notifications {
                     }
                 }
             }
+            getPendingNotification()
         }
 
         @JvmStatic private fun sendNotification(id: String, receivers: ArrayList<Receiver>) {
             api.sendNotification(NotificationSender("send_notifications", id, receivers))
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                            { result ->
+                                result.status?.let {
+                                    Log.e(TAG, result.status)
+                                }
+                            },
+                            { error -> error.printStackTrace() }
+                    )
+        }
+
+        @JvmStatic private fun getPendingNotification() {
+            val receivers: ArrayList<String> = ArrayList()
+            receivers.add(Rotor.id!!)
+            api.getNotifications(NotificationGetter("pending_notifications", receivers))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(

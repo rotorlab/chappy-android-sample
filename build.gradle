@@ -4,7 +4,7 @@ buildscript {
 
     ext.stringcare_version = '0.7'
     ext.rotor_version = '0.1.0'
-    ext.kotlin_version = '1.2.31'
+    ext.kotlin_version = '1.2.41'
 
     repositories {
         jcenter()

@@ -27,6 +27,7 @@ import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.rotor.chappy.App;
 import com.rotor.chappy.R;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.Message;
@@ -133,7 +134,7 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
 
-        Database.listen(path, new Reference<Chat>(Chat.class) {
+        Database.listen(App.databaseName, path, new Reference<Chat>(Chat.class) {
             @Override
             public void onCreate() {
                 finish();

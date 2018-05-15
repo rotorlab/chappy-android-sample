@@ -21,6 +21,7 @@ import android.widget.TextView;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.rotor.chappy.App;
 import com.rotor.chappy.R;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.Contact;
@@ -62,7 +63,7 @@ public class ChatDetailActivity extends AppCompatActivity {
         memberList.setLayoutManager(linearLayoutManager);
         memberList.setAdapter(new MemberAdapter());
 
-        Database.listen(path, new Reference<Chat>(Chat.class) {
+        Database.listen(App.databaseName, path, new Reference<Chat>(Chat.class) {
             @Override
             public void onCreate() {
                 finish();

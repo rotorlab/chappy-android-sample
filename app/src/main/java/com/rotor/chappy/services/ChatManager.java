@@ -48,7 +48,7 @@ public class ChatManager {
     }
 
     public static void addGChat(final String path, final CreateChatListener createChatListener) {
-        Database.listen(path, new Reference<Chat>(Chat.class) {
+        Database.listen(App.databaseName, path, new Reference<Chat>(Chat.class) {
 
             @Override
             public void onCreate() {
@@ -119,7 +119,7 @@ public class ChatManager {
     public static void splashSyncContacts(final ContactsListener contactsListener) {
         final String path = "/contacts";
         shouldStart = true;
-        Database.listen(path, new Reference<Contacts>(Contacts.class) {
+        Database.listen(App.databaseName, path, new Reference<Contacts>(Contacts.class) {
 
             @Override
             public void onDestroy() {
