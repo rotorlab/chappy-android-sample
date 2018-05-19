@@ -1,4 +1,4 @@
-package com.rotor.chappy.activities;
+package com.rotor.chappy.activities.chat;
 
 import android.content.Context;
 import android.content.Intent;
@@ -29,6 +29,7 @@ import android.widget.TextView;
 
 import com.rotor.chappy.App;
 import com.rotor.chappy.R;
+import com.rotor.chappy.activities.ChatDetailActivity;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.Message;
 import com.rotor.core.Rotor;
@@ -43,7 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class ChatActivity extends AppCompatActivity {
+public class ChatActivity extends AppCompatActivity implements ChatInterface.View<Chat> {
 
     private RecyclerView messageList;
     private Chat chat;
@@ -228,6 +229,31 @@ public class ChatActivity extends AppCompatActivity {
     protected void onPause() {
         Rotor.onPause();
         super.onPause();
+    }
+
+    @Override
+    public void onChatCreated() {
+
+    }
+
+    @Override
+    public void onChatChanged(Chat chat) {
+
+    }
+
+    @Override
+    public void onChatUpdate() {
+
+    }
+
+    @Override
+    public void onChatDestroy() {
+
+    }
+
+    @Override
+    public void onChatProgress() {
+
     }
 
     public class MessageAdapter extends RecyclerView.Adapter<ViewHolder> {

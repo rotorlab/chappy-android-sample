@@ -34,7 +34,7 @@
         </activity>
 
         <activity
-            android:name=".activities.ChatActivity"
+            android:name=".activities.chat.ChatActivity"
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="adjustResize">
         </activity>

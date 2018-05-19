@@ -6,6 +6,7 @@ import android.widget.Toast;
 
 import com.rotor.chappy.BuildConfig;
 import com.rotor.chappy.ContactsListener;
+import com.rotor.chappy.activities.chat.ChatActivity;
 import com.rotor.chappy.services.ChatManager;
 import com.rotor.chappy.services.LocalData;
 import com.rotor.core.Rotor;

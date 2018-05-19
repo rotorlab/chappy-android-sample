@@ -356,12 +356,14 @@ class Notifications {
             } else {
                 val gson = Gson()
                 docker = gson.fromJson(notificationsAsString, NotificationDocker::class.java) as NotificationDocker
-                val id = Rotor.id
                 for (notification in docker!!.notifications!!.values) {
                     for (receiver in notification.receivers.values) {
-                        if (receiver.id.equals(id) && receiver.viewed == null) {
+                        if (receiver.id.equals(Rotor.id) && receiver.viewed == null) {
                             notify(notification.id)
                         }
+                    }
+                    if (notification.sender.id.equals(Rotor.id, true)) {
+                        notify(notification.id)
                     }
                 }
             }
