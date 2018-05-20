@@ -1,18 +1,24 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.rotor.chappy.activities.MainActivity">
+    tools:context="com.rotor.chappy.activities.main.MainActivity">
 
     <item
         android:id="@+id/action_settings"
-        android:orderInCategory="100"
+        android:orderInCategory="98"
         android:title="@string/action_settings"
         app:showAsAction="never" />
 
     <item
         android:id="@+id/action_create_group"
-        android:orderInCategory="100"
+        android:orderInCategory="99"
         android:title="@string/action_create_group"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_sign_out"
+        android:orderInCategory="100"
+        android:title="@string/action_sign_out"
         app:showAsAction="never" />
 
 </menu>

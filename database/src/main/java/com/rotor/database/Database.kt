@@ -6,6 +6,7 @@ import com.rotor.core.Builder
 import com.rotor.core.Rotor
 import com.rotor.core.interfaces.BuilderFace
 import com.rotor.database.abstr.Reference
+import com.rotor.database.interfaces.QueryCallback
 import com.rotor.database.models.KReference
 import com.rotor.database.models.PrimaryReferece
 import com.rotor.database.models.PrimaryReferece.Companion.ACTION_NEW_OBJECT
@@ -213,7 +214,7 @@ class Database  {
 
         @JvmStatic fun sync(path: String, clean: Boolean) {
             if (pathMap!!.containsKey(path)) {
-                val result = pathMap!![path]!!.syncReference(clean)
+                val result = pathMap!![path]!!.getDifferences(clean)
                 val diff = result[1] as String
                 val len = result[0] as Int
                 if (!EMPTY_OBJECT.equals(diff)) {
@@ -235,6 +236,19 @@ class Database  {
                 ReferenceUtils.removeElement(path)
                 Database.unlisten(path)
             }
+        }
+
+        @JvmStatic fun query(database: String, path: String, query: String, mask: String, callback: QueryCallback) {
+            api.query(Query(database, path, query, mask))
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                            { result ->
+                                callback.response(result)
+
+                            },
+                            { error -> error.printStackTrace() })
+
         }
     }
 

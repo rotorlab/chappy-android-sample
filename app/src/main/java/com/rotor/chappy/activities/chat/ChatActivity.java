@@ -6,7 +6,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -27,14 +26,11 @@ import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.rotor.chappy.App;
 import com.rotor.chappy.R;
-import com.rotor.chappy.activities.ChatDetailActivity;
+import com.rotor.chappy.activities.chat_detail.ChatDetailActivity;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.Message;
 import com.rotor.core.Rotor;
-import com.rotor.database.Database;
-import com.rotor.database.abstr.Reference;
 import com.rotor.notifications.Notifications;
 
 import java.util.ArrayList;
@@ -52,12 +48,16 @@ public class ChatActivity extends AppCompatActivity implements ChatInterface.Vie
     private EditText messageText;
     private String path;
 
+    private ChatInterface.Presenter presenter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(com.rotor.chappy.R.layout.activity_chat);
         Toolbar toolbar = findViewById(com.rotor.chappy.R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        presenter = new ChatPresenter<Chat>(this);
 
         Intent intent = getIntent();
 
@@ -94,7 +94,7 @@ public class ChatActivity extends AppCompatActivity implements ChatInterface.Vie
                     Message message = new Message(name, messageText.getText().toString());
                     chat.getMessages().put(String.valueOf(new Date().getTime()), message);
 
-                    Database.sync(path);
+                    presenter.sync(path);
 
                     Handler handler = new Handler();
                     handler.postDelayed(new Runnable() {
@@ -135,62 +135,6 @@ public class ChatActivity extends AppCompatActivity implements ChatInterface.Vie
             }
         });
 
-        Database.listen(App.databaseName, path, new Reference<Chat>(Chat.class) {
-            @Override
-            public void onCreate() {
-                finish();
-            }
-
-            @Override
-            public void onChanged(@NonNull Chat chat) {
-                ChatActivity.this.chat = chat;
-
-                ChatActivity.this.setTitle(chat.getName());
-                Map<String, Message> messageMap = new TreeMap<>(new Comparator<String>() {
-                    @Override
-                    public int compare(String o1, String o2) {
-                        Long a = Long.valueOf(o1);
-                        Long b = Long.valueOf(o2);
-                        if (a > b) {
-                            return 1;
-                        } else if (a < b) {
-                            return -1;
-                        } else {
-                            return 0;
-                        }
-                    }
-                });
-
-                messageMap.putAll(chat.getMessages());
-
-                chat.setMessages(messageMap);
-
-                messageList.getAdapter().notifyDataSetChanged();
-
-                messageList.smoothScrollToPosition(0);
-
-                sendButton.setEnabled(messageText.toString().length() > 0);
-            }
-
-            @Nullable
-            @Override
-            public Chat onUpdate() {
-                return ChatActivity.this.chat;
-            }
-
-            @Override
-            public void onDestroy() {
-                chat = null;
-                finish();
-            }
-
-            @Override
-            public void progress(int i) {
-
-            }
-        });
-
-        // Notifications.remove(intent.getStringExtra("notification"));
         Notifications.remove(intent.getStringExtra("path"));
     }
 
@@ -206,7 +150,7 @@ public class ChatActivity extends AppCompatActivity implements ChatInterface.Vie
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_remove) {
-            Database.remove(path);
+            presenter.remove(path);
             return true;
         } else if (id == R.id.action_detail) {
             Intent intent = new Intent(this, ChatDetailActivity.class);
@@ -222,37 +166,67 @@ public class ChatActivity extends AppCompatActivity implements ChatInterface.Vie
     protected void onResume() {
         super.onResume();
         Rotor.onResume();
+        presenter.onResumeView();
+        presenter.prepareFor(path, Chat.class);
         sendButton.setEnabled(messageText.getText().toString().length() > 0 && chat != null);
     }
 
     @Override
     protected void onPause() {
+        presenter.onPauseView();
         Rotor.onPause();
         super.onPause();
     }
 
     @Override
-    public void onChatCreated() {
-
+    public void onCreateReference() {
+        finish();
     }
 
     @Override
-    public void onChatChanged(Chat chat) {
+    public void onReferenceChanged(Chat chat) {
+        ChatActivity.this.chat = chat;
 
+        ChatActivity.this.setTitle(chat.getName());
+        Map<String, Message> messageMap = new TreeMap<>(new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+                Long a = Long.valueOf(o1);
+                Long b = Long.valueOf(o2);
+                if (a > b) {
+                    return 1;
+                } else if (a < b) {
+                    return -1;
+                } else {
+                    return 0;
+                }
+            }
+        });
+
+        messageMap.putAll(chat.getMessages());
+
+        chat.setMessages(messageMap);
+
+        messageList.getAdapter().notifyDataSetChanged();
+
+        messageList.smoothScrollToPosition(0);
+
+        sendButton.setEnabled(messageText.toString().length() > 0);
     }
 
     @Override
-    public void onChatUpdate() {
-
+    public Chat onUpdateReference() {
+        return ChatActivity.this.chat;
     }
 
     @Override
-    public void onChatDestroy() {
-
+    public void onDestroyReference() {
+        chat = null;
+        finish();
     }
 
     @Override
-    public void onChatProgress() {
+    public void progress(int value) {
 
     }
 

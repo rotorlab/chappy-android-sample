@@ -1,19 +1,19 @@
-package com.rotor.chappy.activities;
+package com.rotor.chappy.activities.notifications;
 
 import android.content.Intent;
-import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
 import com.rotor.chappy.BuildConfig;
 import com.rotor.chappy.ContactsListener;
+import com.rotor.chappy.activities.splash.SplashActivity;
+import com.rotor.chappy.activities.chat.ChatActivity;
 import com.rotor.chappy.services.ChatManager;
 import com.rotor.chappy.services.LocalData;
 import com.rotor.core.Rotor;
 import com.rotor.core.interfaces.StatusListener;
 import com.rotor.database.Database;
+import com.rotor.notifications.NotificationRouterActivity;
 import com.rotor.notifications.Notifications;
 import com.rotor.notifications.interfaces.Listener;
 import com.rotor.notifications.model.Notification;
@@ -21,39 +21,22 @@ import com.rotor.notifications.model.Notification;
 import org.json.JSONArray;
 import org.json.JSONException;
 
-import java.util.ArrayList;
-
 /**
- * Created by efraespada on 27/02/2018.
+ * Created by efraespada on 23/03/2018.
  */
 
-public class SplashActivity extends AppCompatActivity {
+public class NotificationActivity extends NotificationRouterActivity {
 
-    public static String TAG = SplashActivity.class.getSimpleName();
-    public static int ACTION_CHAT = 4532;
+    public static String TAG = NotificationActivity.class.getSimpleName();
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
+    public void onCreate() {
         LocalData.init(getApplicationContext());
 
         Rotor.initialize(getApplicationContext(), BuildConfig.database_url, BuildConfig.redis_url, new StatusListener() {
             @Override
             public void connected() {
                 Database.initialize();
-                Notifications.initialize(NotificationActivity.class, new Listener() {
-                    @Override
-                    public void opened(@NonNull String deviceId, @NonNull Notification notification) {
-                        Toast.makeText(getApplicationContext(), deviceId + " opened \"" + notification.getContent().getBody() + "\"", Toast.LENGTH_LONG).show();
-                    }
-
-                    @Override
-                    public void removed(@NonNull Notification notification) {
-
-                    }
-                });
-
                 ChatManager.splashSyncContacts(new ContactsListener() {
                     @Override
                     public void contactsReady() {
@@ -72,9 +55,18 @@ public class SplashActivity extends AppCompatActivity {
                                 e.printStackTrace();
                             }
                         }
-                        Intent intent = new Intent(SplashActivity.this, MainActivity.class);
-                        startActivity(intent);
-                        finish();
+
+                    }
+                });
+                Notifications.initialize(NotificationActivity.class, new Listener() {
+                    @Override
+                    public void opened(@NonNull String deviceId, @NonNull Notification notification) {
+                        Toast.makeText(getApplicationContext(), deviceId + " opened \"" + notification.getContent().getBody() + "\"", Toast.LENGTH_LONG).show();
+                    }
+
+                    @Override
+                    public void removed(@NonNull Notification notification) {
+
                     }
                 });
             }
@@ -86,4 +78,16 @@ public class SplashActivity extends AppCompatActivity {
         });
         Rotor.debug(true);
     }
+
+    @Override
+    public void notificationTouched(int action, @NonNull String id, @NonNull String room) {
+        if (action == SplashActivity.ACTION_CHAT) {
+            Intent intent = new Intent(this, ChatActivity.class);
+            intent.putExtra("path", room);
+            intent.putExtra("notification", id);
+            startActivity(intent);
+        }
+        finish();
+    }
+
 }

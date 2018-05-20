@@ -1,11 +1,10 @@
-package com.rotor.chappy.activities;
+package com.rotor.chappy.activities.chat_detail;
 
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -21,14 +20,11 @@ import android.widget.TextView;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.rotor.chappy.App;
 import com.rotor.chappy.R;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.Contact;
 import com.rotor.chappy.services.ChatManager;
 import com.rotor.core.Rotor;
-import com.rotor.database.Database;
-import com.rotor.database.abstr.Reference;
 import com.rotor.notifications.Notifications;
 import com.rotor.notifications.model.Content;
 
@@ -36,15 +32,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static com.rotor.chappy.activities.SplashActivity.ACTION_CHAT;
+import static com.rotor.chappy.activities.splash.SplashActivity.ACTION_CHAT;
 
-public class ChatDetailActivity extends AppCompatActivity {
+public class ChatDetailActivity extends AppCompatActivity implements ChatDetailInterface.View<Chat> {
 
     private RecyclerView memberList;
     private Chat chat;
     private String path;
     private MaterialDialog materialDialog;
-
+    private ChatDetailInterface.Presenter<Chat> presenter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +51,8 @@ public class ChatDetailActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
 
+        presenter = new ChatDetailPresenter(this);
+
         path = "/chats/" + intent.getStringExtra("path").replaceAll(" ", "_");
 
         memberList = findViewById(R.id.member_list);
@@ -63,36 +61,7 @@ public class ChatDetailActivity extends AppCompatActivity {
         memberList.setLayoutManager(linearLayoutManager);
         memberList.setAdapter(new MemberAdapter());
 
-        Database.listen(App.databaseName, path, new Reference<Chat>(Chat.class) {
-            @Override
-            public void onCreate() {
-                finish();
-            }
-
-            @Override
-            public void onChanged(@NonNull Chat chat) {
-                ChatDetailActivity.this.chat = chat;
-                ChatDetailActivity.this.setTitle(chat.getName());
-                memberList.getAdapter().notifyDataSetChanged();
-            }
-
-            @Nullable
-            @Override
-            public Chat onUpdate() {
-                return ChatDetailActivity.this.chat;
-            }
-
-            @Override
-            public void onDestroy() {
-                chat = null;
-                finish();
-            }
-
-            @Override
-            public void progress(int i) {
-
-            }
-        });
+        presenter.prepareFor(path, Chat.class);
 
     }
 
@@ -100,6 +69,7 @@ public class ChatDetailActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         Rotor.onResume();
+        presenter.prepareFor(path, Chat.class);
     }
 
     @Override
@@ -156,6 +126,34 @@ public class ChatDetailActivity extends AppCompatActivity {
                     }
                 })
                 .show();
+    }
+
+    @Override
+    public void onCreateReference() {
+        finish();
+    }
+
+    @Override
+    public void onReferenceChanged(Chat chat) {
+        ChatDetailActivity.this.chat = chat;
+        ChatDetailActivity.this.setTitle(chat.getName());
+        memberList.getAdapter().notifyDataSetChanged();
+    }
+
+    @Override
+    public Chat onUpdateReference() {
+        return ChatDetailActivity.this.chat;
+    }
+
+    @Override
+    public void onDestroyReference() {
+        chat = null;
+        finish();
+    }
+
+    @Override
+    public void progress(int value) {
+
     }
 
 

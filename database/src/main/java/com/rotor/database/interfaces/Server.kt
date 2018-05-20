@@ -2,6 +2,7 @@ package com.rotor.database.interfaces
 
 import com.rotor.database.request.*
 import io.reactivex.Observable
+import org.json.JSONArray
 import retrofit2.http.Body
 import retrofit2.http.Headers
 import retrofit2.http.POST
@@ -30,5 +31,9 @@ interface Server {
     @Headers("Content-Type: application/json")
     @POST("/")
     fun removeReference(@Body removeReference: RemoveReference) : Observable<SyncResponse>
+
+    @Headers("Content-Type: application/json")
+    @POST("/")
+    fun query(@Body query: Query) : Observable<JSONArray>
 
 }

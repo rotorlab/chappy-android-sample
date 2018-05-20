@@ -1,9 +1,9 @@
-package com.rotor.chappy.activities.chat;
+package com.rotor.chappy.activities.chat_detail;
 
 import com.rotor.chappy.model.ReferencePresenter;
 import com.rotor.chappy.model.ReferenceView;
 
-public interface ChatInterface {
+public interface ChatDetailInterface {
 
     interface Presenter<T> extends ReferencePresenter<T> {
 

@@ -115,7 +115,7 @@ abstract class PrimaryReferece<T>(context: Context, db: String, path: String) {
                 .excludeFieldsWithoutExposeAnnotation().create()
     }
 
-    fun syncReference(clean: Boolean): Array<Any?> {
+    fun getDifferences(clean: Boolean): Array<Any?> {
         val len: Int
         val objects = arrayOfNulls<Any>(2)
 

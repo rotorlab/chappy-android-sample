@@ -1,4 +1,4 @@
-package com.rotor.chappy.activities;
+package com.rotor.chappy.activities.main;
 
 import android.content.Context;
 import android.content.Intent;
@@ -18,8 +18,12 @@ import android.widget.EditText;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.firebase.ui.auth.AuthUI;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.rotor.chappy.R;
 import com.rotor.chappy.activities.chat.ChatActivity;
+import com.rotor.chappy.activities.login.LoginGoogleActivity;
 import com.rotor.chappy.adapters.ChatAdapter;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.Contact;
@@ -33,15 +37,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements MainInterface.View {
 
     private MaterialDialog materialDialog;
     private RecyclerView chatsList;
+    private MainInterface.Presenter presenter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        presenter = new MainPresenter(this);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -52,9 +60,7 @@ public class MainActivity extends AppCompatActivity {
         chatsList.setAdapter(new ChatAdapter() {
             @Override
             public void onChatClicked(Chat chat) {
-                Intent intent = new Intent(MainActivity.this, ChatActivity.class);
-                intent.putExtra("path", chat.getName());
-                MainActivity.this.startActivity(intent);
+                presenter.goToChat(chat);
             }
         });
 
@@ -69,8 +75,6 @@ public class MainActivity extends AppCompatActivity {
 
         ChatManager.refreshChatsList();
 
-        askForEmail();
-
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -79,11 +83,15 @@ public class MainActivity extends AppCompatActivity {
                 askForGroupName();
             }
         });
+
+
+        presenter.prepareChatsFor();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        presenter.onResumeView();
         Rotor.onResume();
         if (chatsList != null) {
             chatsList.getAdapter().notifyDataSetChanged();
@@ -93,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         Rotor.onPause();
+        presenter.onPauseView();
         super.onPause();
     }
 
@@ -106,44 +115,26 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
         } else if (id == R.id.action_create_group) {
             askForGroupName();
             return true;
+        } else if (id == R.id.action_sign_out) {
+            AuthUI.getInstance()
+                    .signOut(this)
+                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            Intent intent = new Intent(MainActivity.this, LoginGoogleActivity.class);
+                            startActivity(intent);
+                            finish();
+                        }
+                    });
+            return true;
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    public void askForEmail() {
-        if (isFirstRun() && materialDialog == null) {
-            materialDialog = new MaterialDialog.Builder(this)
-                    .title(com.rotor.chappy.R.string.askIdTitle)
-                    .customView(R.layout.input_identifier, true)
-                    .positiveText(com.rotor.chappy.R.string.agree)
-                    .negativeText(com.rotor.chappy.R.string.disagree)
-                    .onPositive(new MaterialDialog.SingleButtonCallback() {
-                        @Override
-                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                            EditText name = dialog.getCustomView().findViewById(R.id.etName);
-                            if (!TextUtils.isEmpty(name.getText())) {
-                                setUserAndSynchronize(name.getText().toString());
-                                dialog.dismiss();
-                            }
-                            materialDialog = null;
-                        }
-                    })
-                    .onNegative(new MaterialDialog.SingleButtonCallback() {
-                        @Override
-                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                            dialog.dismiss();
-                            materialDialog = null;
-                        }
-                    })
-                    .show();
-        }
     }
 
     public void askForGroupName() {
@@ -179,6 +170,12 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             });
 
+                            Map<String, Contact> members = new HashMap<>();
+                            members.put(id, ChatManager.getContacts().getContacts().get(id));
+                            Map<String, Message> messageMap = new HashMap<>();
+                            Chat chat = new Chat(name.getText().toString(), members, messageMap);
+                            presenter.createChat(name.getText().toString());
+
                             dialog.dismiss();
                             materialDialog = null;
                         }
@@ -196,35 +193,16 @@ public class MainActivity extends AppCompatActivity {
 
 
     @Override
-    protected void onDestroy() {
-        if (materialDialog != null) {
-            materialDialog.dismiss();
-            materialDialog = null;
-        }
-        super.onDestroy();
+    public void openChat(Chat chat) {
+        Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+        intent.putExtra("path", chat.getName());
+        startActivity(intent);
     }
 
-    public boolean isFirstRun() {
-        SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
-        String id = prefs.getString(getString(com.rotor.chappy.R.string.var_id), null);
-        return id == null || !ChatManager.contacts.getContacts().containsKey(id);
-    }
-
-    /**
-     * Sets current user name and ID.
-     * @param name
-     */
-    public void setUserAndSynchronize(String name) {
-        SharedPreferences.Editor editor = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE).edit();
-        editor.putString(getString(com.rotor.chappy.R.string.var_name), name).apply();
-
-        String id = UUID.randomUUID().toString();
-
-        editor.putString(getString(com.rotor.chappy.R.string.var_id), id).apply();
-
-        Contact contact = new Contact(name, Rotor.getId(), getString(com.rotor.chappy.R.string.var_os), id);
-        ChatManager.contacts.getContacts().put(id, contact);
-
-        Database.sync(getString(com.rotor.chappy.R.string.contact_path), false);
+    @Override
+    public void refresh(List<Chat> chats) {
+        ((ChatAdapter) chatsList.getAdapter()).chats.clear();
+        ((ChatAdapter) chatsList.getAdapter()).chats.addAll(chats);
+        chatsList.getAdapter().notifyDataSetChanged();
     }
 }
