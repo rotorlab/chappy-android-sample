@@ -1,11 +1,10 @@
 package com.rotor.database.interfaces
 
+import com.google.gson.internal.LinkedTreeMap
 import com.rotor.database.request.*
 import io.reactivex.Observable
 import org.json.JSONArray
-import retrofit2.http.Body
-import retrofit2.http.Headers
-import retrofit2.http.POST
+import retrofit2.http.*
 
 /**
  * Created by efraespada on 14/03/2018.
@@ -33,7 +32,7 @@ interface Server {
     fun removeReference(@Body removeReference: RemoveReference) : Observable<SyncResponse>
 
     @Headers("Content-Type: application/json")
-    @POST("/")
-    fun query(@Body query: Query) : Observable<JSONArray>
+    @GET("/")
+    fun query(@Query("database") database: String, @Query("path") path: String, @Query("query") query: String, @Query("mask") mask: String) : Observable<List<LinkedTreeMap<String, String>>>
 
 }

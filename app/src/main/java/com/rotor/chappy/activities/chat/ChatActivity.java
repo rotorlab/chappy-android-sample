@@ -26,6 +26,7 @@ import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.rotor.chappy.R;
 import com.rotor.chappy.activities.chat_detail.ChatDetailActivity;
 import com.rotor.chappy.model.Chat;
@@ -49,6 +50,7 @@ public class ChatActivity extends AppCompatActivity implements ChatInterface.Vie
     private String path;
 
     private ChatInterface.Presenter presenter;
+    private FirebaseAuth mAuth = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +60,10 @@ public class ChatActivity extends AppCompatActivity implements ChatInterface.Vie
         setSupportActionBar(toolbar);
 
         presenter = new ChatPresenter<Chat>(this);
+        mAuth = FirebaseAuth.getInstance();
+        if (mAuth.getCurrentUser() == null) {
+            finish();
+        }
 
         Intent intent = getIntent();
 
@@ -88,10 +94,8 @@ public class ChatActivity extends AppCompatActivity implements ChatInterface.Vie
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
-                String name = prefs.getString(getString(com.rotor.chappy.R.string.var_id), null);
-                if (name != null) {
-                    Message message = new Message(name, messageText.getText().toString());
+                if (mAuth.getCurrentUser() != null && mAuth.getCurrentUser().getUid() != null) {
+                    Message message = new Message(mAuth.getCurrentUser().getUid(), messageText.getText().toString());
                     chat.getMessages().put(String.valueOf(new Date().getTime()), message);
 
                     presenter.sync(path);

@@ -23,6 +23,7 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.rotor.chappy.R;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.Contact;
+import com.rotor.chappy.model.User;
 import com.rotor.chappy.services.ChatManager;
 import com.rotor.core.Rotor;
 import com.rotor.notifications.Notifications;
@@ -68,6 +69,7 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
     @Override
     protected void onResume() {
         super.onResume();
+        presenter.onResumeView();
         Rotor.onResume();
         presenter.prepareFor(path, Chat.class);
     }
@@ -75,6 +77,7 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
     @Override
     protected void onPause() {
         Rotor.onPause();
+        presenter.onPauseView();
         super.onPause();
     }
 
@@ -98,11 +101,10 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
                             SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
                             final String id = prefs.getString(getString(R.string.var_id), null);
 
-                            Contact contact = ChatManager.getContacts().getContacts().get(id);
-
+                            User user = chat.getMembers().get(id);
                             Content content = new Content(ACTION_CHAT,
                                     chat.getName(),
-                                    contact.getName() + ": " + message.getText().toString(),
+                                    user.getName() + ": " + message.getText().toString(),
                                     chat.getName(),
                                     "myChannel",
                                     "Test channel",
@@ -172,20 +174,20 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
 
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            List<Contact> members = new ArrayList<>();
-            for (Map.Entry<String, Contact> entry : chat.getMembers().entrySet()) {
+            List<User> members = new ArrayList<>();
+            for (Map.Entry<String, User> entry : chat.getMembers().entrySet()) {
                 members.add(entry.getValue());
             }
 
-            final Contact contact = members.get(position);
-            holder.name.setText(contact.getName());
+            final User user = members.get(position);
+            holder.name.setText(user.getName());
             SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
             final String id = prefs.getString(getString(R.string.var_id), null);
-            holder.dm.setVisibility(!contact.getId().equals(id) ? View.VISIBLE :  View.GONE);
+            holder.dm.setVisibility(!user.getUid().equals(id) ? View.VISIBLE :  View.GONE);
             holder.dm.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    askForMessage(contact.getToken());
+                    askForMessage(user.getToken());
                 }
             });
         }

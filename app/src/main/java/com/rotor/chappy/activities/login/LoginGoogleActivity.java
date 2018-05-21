@@ -12,6 +12,8 @@ import com.google.firebase.auth.FirebaseUser;
 import com.rotor.chappy.R;
 import com.rotor.chappy.activities.main.MainActivity;
 import com.rotor.chappy.model.User;
+import com.rotor.chappy.services.Data;
+import com.rotor.core.Rotor;
 
 import java.util.Arrays;
 import java.util.List;
@@ -92,7 +94,7 @@ public class LoginGoogleActivity extends AppCompatActivity implements LoginGoogl
 
     @Override
     public void onCreateReference() {
-        user = new User(uid, name, email, photo);
+        user = new User(uid, name, email, photo, "android", Rotor.getId());
         presenter.sync("/users/" + uid);
     }
 
@@ -101,6 +103,7 @@ public class LoginGoogleActivity extends AppCompatActivity implements LoginGoogl
         if (!omitMoreChanges) {
             omitMoreChanges = true;
             presenter.sayHello(user);
+            Data.defineUser(user);
             Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
                 @Override

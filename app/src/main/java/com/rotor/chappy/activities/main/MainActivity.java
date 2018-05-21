@@ -1,8 +1,6 @@
 package com.rotor.chappy.activities.main;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -26,22 +24,17 @@ import com.rotor.chappy.activities.chat.ChatActivity;
 import com.rotor.chappy.activities.login.LoginGoogleActivity;
 import com.rotor.chappy.adapters.ChatAdapter;
 import com.rotor.chappy.model.Chat;
-import com.rotor.chappy.model.Contact;
-import com.rotor.chappy.model.Message;
-import com.rotor.chappy.services.ChatManager;
 import com.rotor.core.Rotor;
-import com.rotor.database.Database;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
-public class MainActivity extends AppCompatActivity implements MainInterface.View {
+public class MainActivity extends AppCompatActivity implements MainInterface.View<Chat> {
 
     private MaterialDialog materialDialog;
     private RecyclerView chatsList;
-    private MainInterface.Presenter presenter;
+    private MainInterface.Presenter<Chat> presenter;
+    private Map<String, Chat> chats;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +43,9 @@ public class MainActivity extends AppCompatActivity implements MainInterface.Vie
 
         presenter = new MainPresenter(this);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        chats = new HashMap<>();
+
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         chatsList = findViewById(R.id.chats_list);
@@ -64,26 +59,13 @@ public class MainActivity extends AppCompatActivity implements MainInterface.Vie
             }
         });
 
-        ChatManager.setListener(new ChatManager.Listener() {
-            @Override
-            public void update(List<Chat> chats) {
-                ((ChatAdapter) chatsList.getAdapter()).chats.clear();
-                ((ChatAdapter) chatsList.getAdapter()).chats.addAll(chats);
-                chatsList.getAdapter().notifyDataSetChanged();
-            }
-        });
-
-        ChatManager.refreshChatsList();
-
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG).setAction("Action", null).show();
                 askForGroupName();
             }
         });
-
 
         presenter.prepareChatsFor();
     }
@@ -154,28 +136,10 @@ public class MainActivity extends AppCompatActivity implements MainInterface.Vie
                     public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                         final EditText name = dialog.getCustomView().findViewById(R.id.etName);
                         if (!TextUtils.isEmpty(name.getText())) {
-                            SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
-                            final String id = prefs.getString(getString(R.string.var_id), null);
-                            final String groupPath = "/chats/" + name.getText().toString().trim().replace(" ", "_");
-
-                            ChatManager.addGChat(groupPath, new ChatManager.CreateChatListener() {
-                                @Override
-                                public void newChat() {
-                                    Map<String, Contact> members = new HashMap<>();
-                                    members.put(id, ChatManager.getContacts().getContacts().get(id));
-                                    Map<String, Message> messageMap = new HashMap<>();
-                                    Chat chat = new Chat(name.getText().toString(), members, messageMap);
-                                    ChatManager.map.put(groupPath, chat);
-                                    Database.sync(groupPath);
-                                }
-                            });
-
-                            Map<String, Contact> members = new HashMap<>();
-                            members.put(id, ChatManager.getContacts().getContacts().get(id));
-                            Map<String, Message> messageMap = new HashMap<>();
-                            Chat chat = new Chat(name.getText().toString(), members, messageMap);
-                            presenter.createChat(name.getText().toString());
-
+                            Chat chat = presenter.createChat(name.getText().toString());
+                            String path = "/chats/" + chat.getId();
+                            chats.put(path, chat);
+                            presenter.prepareFor(path, Chat.class);
                             dialog.dismiss();
                             materialDialog = null;
                         }
@@ -195,14 +159,40 @@ public class MainActivity extends AppCompatActivity implements MainInterface.Vie
     @Override
     public void openChat(Chat chat) {
         Intent intent = new Intent(MainActivity.this, ChatActivity.class);
-        intent.putExtra("path", chat.getName());
+        intent.putExtra("path", chat.getId());
         startActivity(intent);
     }
 
     @Override
-    public void refresh(List<Chat> chats) {
+    public void refreshUI() {
         ((ChatAdapter) chatsList.getAdapter()).chats.clear();
-        ((ChatAdapter) chatsList.getAdapter()).chats.addAll(chats);
+        ((ChatAdapter) chatsList.getAdapter()).chats.addAll(chats.values());
         chatsList.getAdapter().notifyDataSetChanged();
+    }
+
+    @Override
+    public void onCreateReference(String key) {
+        // should be called
+    }
+
+    @Override
+    public void onReferenceChanged(String key, Chat chat) {
+        chats.put(key, chat);
+        presenter.refreshUI();
+    }
+
+    @Override
+    public Chat onUpdateReference(String key) {
+        return chats.get(key);
+    }
+
+    @Override
+    public void onDestroyReference(String key) {
+        chats.remove(key);
+    }
+
+    @Override
+    public void progress(String key, int value) {
+
     }
 }

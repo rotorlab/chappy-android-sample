@@ -11,6 +11,7 @@ import com.rotor.chappy.R;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.Contact;
 import com.rotor.chappy.model.Contacts;
+import com.rotor.chappy.model.User;
 import com.rotor.database.Database;
 import com.rotor.database.abstr.Reference;
 
@@ -128,7 +129,7 @@ public class ChatManager {
 
             @Override
             public void onCreate() {
-                contacts = new Contacts(new HashMap<String, Contact>());
+                contacts = new Contacts(new HashMap<String, User>());
                 Database.sync(path);
             }
 

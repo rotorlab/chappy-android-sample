@@ -239,7 +239,7 @@ class Database  {
         }
 
         @JvmStatic fun query(database: String, path: String, query: String, mask: String, callback: QueryCallback) {
-            api.query(Query(database, path, query, mask))
+            api.query(database, path, query, mask)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(

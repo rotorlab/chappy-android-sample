@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 import com.rotor.chappy.App;
 import com.rotor.chappy.activities.login.LoginGoogleInterface;
 import com.rotor.chappy.model.BasePresenter;
+import com.rotor.chappy.model.MapReferenceView;
 import com.rotor.chappy.model.ReferenceView;
 import com.rotor.chappy.model.RelationView;
 import com.rotor.chappy.model.User;
@@ -26,6 +27,21 @@ public class Data {
     }
 
 
+    public <T> void listen(final String path, final BasePresenter presenter, final MapReferenceView<T> referenceView, Class<T> clazz) {
+
+        if (map.containsKey(path)) {
+            RelationView<T> relationView = map.get(path);
+            relationView.addView(presenter, referenceView);
+            map.put(path, relationView);
+        } else {
+            RelationView<T> relationView = new RelationView<>(path);
+            relationView.addView(presenter, referenceView);
+            map.put(path, relationView);
+        }
+
+        implListen(path, clazz);
+    }
+
     public <T> void listen(final String path, final BasePresenter presenter, final ReferenceView<T> referenceView, Class<T> clazz) {
 
         if (map.containsKey(path)) {
@@ -38,6 +54,10 @@ public class Data {
             map.put(path, relationView);
         }
 
+        implListen(path, clazz);
+    }
+
+    private <T> void implListen(final String path, Class<T> clazz) {
         Database.listen(App.databaseName, path, new Reference<T>(clazz) {
             @Override
             public void onCreate() {
@@ -45,6 +65,10 @@ public class Data {
                 ReferenceView<T> rF = rV.activeView();
                 if (rF != null) {
                     rF.onCreateReference();
+                }
+                MapReferenceView<T> rFM = rV.activeMapView();
+                if (rFM != null) {
+                    rFM.onCreateReference(path);
                 }
             }
 
@@ -54,6 +78,10 @@ public class Data {
                 ReferenceView<T> rF = rV.activeView();
                 if (rF != null) {
                     rF.onReferenceChanged(value);
+                }
+                MapReferenceView<T> rFM = rV.activeMapView();
+                if (rFM != null) {
+                    rFM.onReferenceChanged(path, value);
                 }
             }
 
@@ -65,7 +93,12 @@ public class Data {
                 if (rF != null) {
                     return rF.onUpdateReference();
                 } else {
-                    return null;
+                    MapReferenceView<T> rFM = rV.activeMapView();
+                    if (rFM != null) {
+                        return rFM.onUpdateReference(path);
+                    } else {
+                        return null;
+                    }
                 }
             }
 
@@ -73,14 +106,27 @@ public class Data {
             public void onDestroy() {
                 RelationView<T> rV = map.get(path);
                 ReferenceView<T> rF = rV.activeView();
-                rF.onDestroyReference();
+                if (rF != null) {
+                    rF.onDestroyReference();
+                }
+
+                MapReferenceView<T> rFM = rV.activeMapView();
+                if (rFM != null) {
+                    rFM.onDestroyReference(path);
+                }
             }
 
             @Override
             public void progress(int i) {
                 RelationView<T> rV = map.get(path);
                 ReferenceView<T> rF = rV.activeView();
-                rF.progress(i);
+                if (rF != null) {
+                    rF.progress(i);
+                }
+                MapReferenceView<T> rFM = rV.activeMapView();
+                if (rFM != null) {
+                    rFM.progress(path, i);
+                }
             }
         });
     }

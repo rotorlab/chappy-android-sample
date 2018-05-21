@@ -13,17 +13,17 @@ public class Contacts {
 
     @SerializedName("contacts")
     @Expose
-    Map<String, Contact> contacts;
+    Map<String, User> contacts;
 
-    public Contacts(Map<String, Contact> contacts) {
+    public Contacts(Map<String, User> contacts) {
         this.contacts = contacts;
     }
 
-    public Map<String, Contact> getContacts() {
+    public Map<String, User> getContacts() {
         return contacts;
     }
 
-    public void setContacts(Map<String, Contact> contacts) {
+    public void setContacts(Map<String, User> contacts) {
         this.contacts = contacts;
     }
 }

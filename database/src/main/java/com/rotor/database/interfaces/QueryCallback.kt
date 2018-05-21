@@ -1,9 +1,9 @@
 package com.rotor.database.interfaces
 
-import org.json.JSONArray
+import com.google.gson.internal.LinkedTreeMap
 
 interface QueryCallback {
 
-    fun response(list: JSONArray)
+    fun response(list: List<LinkedTreeMap<String, String>>)
 
 }
