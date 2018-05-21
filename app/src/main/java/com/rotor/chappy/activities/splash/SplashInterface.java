@@ -1,7 +1,7 @@
 package com.rotor.chappy.activities.splash;
 
-import com.rotor.chappy.model.BasePresenter;
-import com.rotor.chappy.model.ReferenceView;
+import com.rotor.chappy.model.mpv.BasePresenter;
+import com.rotor.chappy.model.mpv.ReferenceView;
 
 public interface SplashInterface {
 

@@ -1,15 +1,13 @@
 package com.rotor.chappy.services;
 
-import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.rotor.chappy.App;
-import com.rotor.chappy.activities.login.LoginGoogleInterface;
-import com.rotor.chappy.model.BasePresenter;
-import com.rotor.chappy.model.MapReferenceView;
-import com.rotor.chappy.model.ReferenceView;
-import com.rotor.chappy.model.RelationView;
+import com.rotor.chappy.model.mpv.BasePresenter;
+import com.rotor.chappy.model.mpv.MapReferenceView;
+import com.rotor.chappy.model.mpv.ReferenceView;
+import com.rotor.chappy.model.mpv.RelationView;
 import com.rotor.chappy.model.User;
 import com.rotor.database.Database;
 import com.rotor.database.abstr.Reference;

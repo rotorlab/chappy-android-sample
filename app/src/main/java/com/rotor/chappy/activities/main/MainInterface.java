@@ -1,14 +1,8 @@
 package com.rotor.chappy.activities.main;
 
-import com.rotor.chappy.model.BasePresenter;
 import com.rotor.chappy.model.Chat;
-import com.rotor.chappy.model.MapReferenceView;
-import com.rotor.chappy.model.ReferencePresenter;
-import com.rotor.chappy.model.ReferenceView;
-import com.rotor.chappy.model.User;
-
-import java.util.List;
-import java.util.Map;
+import com.rotor.chappy.model.mpv.MapReferenceView;
+import com.rotor.chappy.model.mpv.ReferencePresenter;
 
 public interface MainInterface {
 

@@ -1,4 +1,4 @@
-package com.rotor.chappy.model;
+package com.rotor.chappy.model.mpv;
 
 public interface ReferenceView<T> {
 
