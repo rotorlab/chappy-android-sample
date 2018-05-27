@@ -24,26 +24,30 @@ import com.rotor.chappy.activities.chat.ChatActivity;
 import com.rotor.chappy.activities.login.LoginGoogleActivity;
 import com.rotor.chappy.adapters.ChatAdapter;
 import com.rotor.chappy.model.Chat;
+import com.rotor.chappy.model.User;
+import com.rotor.chappy.model.mpv.ProfilesView;
 import com.rotor.core.Rotor;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class MainActivity extends AppCompatActivity implements MainInterface.View<Chat> {
+public class MainActivity extends AppCompatActivity implements MainInterface.View<Chat>, ProfilesView {
 
     private MaterialDialog materialDialog;
     private RecyclerView chatsList;
     private MainInterface.Presenter<Chat> presenter;
     private Map<String, Chat> chats;
+    private Map<String, User> profiles;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        presenter = new MainPresenter(this);
+        presenter = new MainPresenter(this, this);
 
         chats = new HashMap<>();
+        profiles = new HashMap<>();
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -194,5 +198,30 @@ public class MainActivity extends AppCompatActivity implements MainInterface.Vie
     @Override
     public void progress(String key, int value) {
 
+    }
+
+    @Override
+    public void onCreateUser(String key) {
+        // should not be called
+    }
+
+    @Override
+    public void onUserChanged(String key, User user) {
+        profiles.put(key, user);
+    }
+
+    @Override
+    public User onUpdateUser(String key) {
+        return profiles.get(key);
+    }
+
+    @Override
+    public void onDestroyUser(String key) {
+        profiles.remove(key);
+    }
+
+    @Override
+    public void userProgress(String key, int value) {
+        // nothing to do here
     }
 }

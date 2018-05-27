@@ -1,21 +1,31 @@
 package com.rotor.chappy.activities.login;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 
+import com.efraespada.motiondetector.MotionDetector;
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.IdpResponse;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.rotor.chappy.R;
 import com.rotor.chappy.activities.main.MainActivity;
+import com.rotor.chappy.model.Location;
 import com.rotor.chappy.model.User;
-import com.rotor.chappy.services.Data;
+import com.rotor.chappy.services.ChatRepository;
 import com.rotor.core.Rotor;
 
 import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -30,6 +40,8 @@ public class LoginGoogleActivity extends AppCompatActivity implements LoginGoogl
 
     private boolean omitMoreChanges = false;
     private User user;
+
+    private int LOCATION_REQUEST_CODE = 2345;
 
     private String uid;
     private String name;
@@ -94,7 +106,7 @@ public class LoginGoogleActivity extends AppCompatActivity implements LoginGoogl
 
     @Override
     public void onCreateReference() {
-        user = new User(uid, name, email, photo, "android", Rotor.getId());
+        user = new User(uid, name, email, photo, "android", Rotor.getId(), "", 0L, new HashMap<String, Location>());
         presenter.sync("/users/" + uid);
     }
 
@@ -103,14 +115,19 @@ public class LoginGoogleActivity extends AppCompatActivity implements LoginGoogl
         if (!omitMoreChanges) {
             omitMoreChanges = true;
             presenter.sayHello(user);
-            Data.defineUser(user);
-            Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    presenter.goMain();
+            ChatRepository.defineUser(user);
+            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                        ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                    startService();
+                } else {
+                    String[] perm = new String[]{
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION
+                    };
+                    ActivityCompat.requestPermissions(this, perm, LOCATION_REQUEST_CODE);
                 }
-            }, 3000);
+            }
         }
     }
 
@@ -129,9 +146,67 @@ public class LoginGoogleActivity extends AppCompatActivity implements LoginGoogl
 
     }
 
+    private void startService() {
+        MotionDetector.start(new com.efraespada.motiondetector.Listener() {
+            @Override
+            public void locationChanged(android.location.Location location) {
+                if (ChatRepository.getUser().getLocations() == null) {
+                    ChatRepository.getUser().setLocations(new HashMap<String, com.rotor.chappy.model.Location>());
+                }
+                String id = new Date().getTime() + "";
+                com.rotor.chappy.model.Location loc = new com.rotor.chappy.model.Location();
+                loc.setAccuracy(location.getAccuracy());
+                loc.setLatitude(location.getLatitude());
+                loc.setLongitude(location.getLongitude());
+                loc.setAltitude(location.getAltitude());
+                loc.setSpeed(location.getSpeed());
+                loc.setSteps(user.getSteps());
+                loc.setType(ChatRepository.getUser().getType());
+                loc.setId(id);
+
+                ChatRepository.getUser().getLocations().put(loc.getId(), loc);
+            }
+
+            @Override
+            public void accelerationChanged(float acceleration) {
+                // nothing to do here
+            }
+
+            @Override
+            public void step() {
+                ChatRepository.getUser().setSteps(ChatRepository.getUser().getSteps() + 1);
+            }
+
+            @Override
+            public void type(String type) {
+                ChatRepository.getUser().setType(type);
+            }
+        });
+
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                presenter.goMain();
+            }
+        }, 3000);
+    }
+
+
     @Override
     protected void onDestroy() {
         presenter.onPauseView();
         super.onDestroy();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)  == PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)  == PackageManager.PERMISSION_GRANTED) {
+            startService();
+        } else {
+            finish();
+        }
     }
 }

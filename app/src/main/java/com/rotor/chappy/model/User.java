@@ -3,6 +3,8 @@ package com.rotor.chappy.model;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import java.util.Map;
+
 public class User {
 
     @SerializedName("uid")
@@ -29,17 +31,32 @@ public class User {
     @Expose
     String token;
 
+    @SerializedName("type")
+    @Expose
+    String type;
+
+    @SerializedName("steps")
+    @Expose
+    Long steps;
+
+    @SerializedName("locations")
+    @Expose
+    Map<String, Location> locations;
+
     public User() {
 
     }
 
-    public User(String uid, String name, String email, String photo, String os, String token) {
+    public User(String uid, String name, String email, String photo, String os, String token, String type, Long steps, Map<String, Location> locations) {
         this.uid = uid;
         this.name = name;
         this.email = email;
         this.photo = photo;
         this.os = os;
         this.token = token;
+        this.type = type;
+        this.steps = steps;
+        this.locations = locations;
     }
 
     public String getUid() {
@@ -89,4 +106,29 @@ public class User {
     public void setToken(String token) {
         this.token = token;
     }
+
+    public Long getSteps() {
+        return steps;
+    }
+
+    public void setSteps(Long steps) {
+        this.steps = steps;
+    }
+
+    public Map<String, Location> getLocations() {
+        return locations;
+    }
+
+    public void setLocations(Map<String, Location> locations) {
+        this.locations = locations;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
 }

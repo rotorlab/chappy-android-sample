@@ -3,18 +3,18 @@ package com.rotor.chappy.activities.splash;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.rotor.chappy.model.User;
-import com.rotor.chappy.services.Data;
+import com.rotor.chappy.services.ChatRepository;
 
 public class SplashPresenter implements SplashInterface.Presenter {
 
     private SplashInterface.View<User> view;
-    private Data data;
+    private ChatRepository chatRepository;
     private FirebaseAuth mAuth;
     private boolean visible;
 
     public SplashPresenter(SplashInterface.View<User> view) {
         this.view = view;
-        this.data = new Data();
+        this.chatRepository = new ChatRepository();
         mAuth = FirebaseAuth.getInstance();
     }
 
@@ -24,7 +24,7 @@ public class SplashPresenter implements SplashInterface.Presenter {
         if (user == null) {
             view.goLogin();
         } else {
-            data.listen("/users/" + user.getUid(), this, view, User.class);
+            chatRepository.listen("/users/" + user.getUid(), this, view, User.class);
         }
     }
 

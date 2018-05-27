@@ -15,12 +15,12 @@ import com.rotor.database.abstr.Reference;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Data {
+public class ChatRepository {
 
     private static User user;
     private static final Map<String, RelationView> map = new HashMap<>();
 
-    public Data() {
+    public ChatRepository() {
 
     }
 
@@ -138,7 +138,7 @@ public class Data {
     }
 
     public static void defineUser(User user) {
-        Data.user = user;
+        ChatRepository.user = user;
     }
 
     public static User getUser() {

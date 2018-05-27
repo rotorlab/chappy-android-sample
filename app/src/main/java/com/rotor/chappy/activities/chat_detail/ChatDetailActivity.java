@@ -61,7 +61,6 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
         memberList.setAdapter(new MemberAdapter());
 
         presenter.prepareFor(path, Chat.class);
-
     }
 
     @Override
@@ -69,7 +68,6 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
         super.onResume();
         presenter.onResumeView();
         Rotor.onResume();
-        presenter.prepareFor(path, Chat.class);
     }
 
     @Override

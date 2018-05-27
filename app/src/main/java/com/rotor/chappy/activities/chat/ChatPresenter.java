@@ -1,31 +1,31 @@
 package com.rotor.chappy.activities.chat;
 
-import com.rotor.chappy.services.Data;
+import com.rotor.chappy.services.ChatRepository;
 
 public class ChatPresenter<T> implements ChatInterface.Presenter {
 
     private ChatInterface.View<T> view;
-    private Data data;
+    private ChatRepository chatRepository;
     private boolean visible;
 
     public ChatPresenter(ChatInterface.View<T> view) {
         this.view = view;
-        this.data = new Data();
+        this.chatRepository = new ChatRepository();
     }
 
     @Override
     public void prepareFor(String path, Class clazz) {
-        data.listen(path, this, view, clazz);
+        chatRepository.listen(path, this, view, clazz);
     }
 
     @Override
     public void sync(String id) {
-        data.sync(id);
+        chatRepository.sync(id);
     }
 
     @Override
     public void remove(String id) {
-        data.remove(id);
+        chatRepository.remove(id);
     }
 
     @Override

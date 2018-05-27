@@ -1,32 +1,32 @@
 package com.rotor.chappy.activities.login;
 
 import com.rotor.chappy.model.User;
-import com.rotor.chappy.services.Data;
+import com.rotor.chappy.services.ChatRepository;
 
 public class LoginGooglePresenter implements LoginGoogleInterface.Presenter<User> {
 
     private LoginGoogleInterface.View<User> view;
-    private Data data;
+    private ChatRepository chatRepository;
     private boolean visible;
 
     public LoginGooglePresenter(LoginGoogleInterface.View<User> view) {
         this.view = view;
-        this.data = new Data();
+        this.chatRepository = new ChatRepository();
     }
 
     @Override
     public void prepareFor(String id, Class clazz) {
-        data.listen(id, this, view, clazz);
+        chatRepository.listen(id, this, view, clazz);
     }
 
     @Override
     public void sync(String id) {
-        data.sync(id);
+        chatRepository.sync(id);
     }
 
     @Override
     public void remove(String id) {
-        data.remove(id);
+        chatRepository.remove(id);
     }
 
     @Override

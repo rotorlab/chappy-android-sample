@@ -156,7 +156,7 @@ public class ChatActivity extends AppCompatActivity implements ChatInterface.Vie
             return true;
         } else if (id == R.id.action_detail) {
             Intent intent = new Intent(this, ChatDetailActivity.class);
-            intent.putExtra("path", chat.getName());
+            intent.putExtra("path", chat.getId());
             startActivity(intent);
             return true;
         }
