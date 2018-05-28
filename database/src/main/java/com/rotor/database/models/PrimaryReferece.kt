@@ -44,7 +44,6 @@ abstract class PrimaryReferece<T>(context: Context, db: String, path: String) {
     var database: Docker? = null
     private val context: Context
     protected var gson: Gson
-    var len: Int = 0
     var serverLen: Int = 0
     var moment: Long ? = null
     var databaseName: String
@@ -63,7 +62,6 @@ abstract class PrimaryReferece<T>(context: Context, db: String, path: String) {
         SC.init(this.context)
         this.mapParts = HashMap()
         this.stringReference = ReferenceUtils.getElement(path)
-        this.len = if (stringReference == null) 0 else stringReference!!.length
     }
 
     /**
@@ -350,7 +348,6 @@ abstract class PrimaryReferece<T>(context: Context, db: String, path: String) {
             stringReference = jsonObject.toString()
 
             if (sha1.equals(Database.sha1(stringReference!!))) {
-                this.len = stringReference!!.length
                 blowerResult(stringReference!!)
             } else {
                 Database.refreshFromServer(path, stringReference!!)
@@ -370,7 +367,6 @@ abstract class PrimaryReferece<T>(context: Context, db: String, path: String) {
     private fun parseContentResult(path: String, data: String) {
         ReferenceUtils.addElement(path, data)
         stringReference = data
-        this.len = stringReference!!.length
         blowerResult(stringReference!!)
     }
 }

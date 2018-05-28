@@ -7,6 +7,9 @@ import android.location.Location;
 import com.crashlytics.android.Crashlytics;
 import com.efraespada.motiondetector.MotionDetector;
 import com.google.firebase.auth.FirebaseAuth;
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.rotor.chappy.model.User;
 import com.rotor.chappy.services.ChatRepository;
 import com.rotor.chappy.services.ProfileRepository;
@@ -36,6 +39,16 @@ public class App extends Application {
                 .debuggable(true)
                 .build();
         Fabric.with(fabric);
+
+        DisplayImageOptions defaultOptions = new DisplayImageOptions.Builder()
+            .cacheInMemory(true)
+            .cacheOnDisk(true)
+            .build();
+        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(getApplicationContext())
+            .defaultDisplayImageOptions(defaultOptions)
+            .build();
+
+        ImageLoader.getInstance().init(config);
 
         auth = FirebaseAuth.getInstance();
         MotionDetector.initialize(this);

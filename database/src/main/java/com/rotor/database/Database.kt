@@ -2,6 +2,7 @@ package com.rotor.database
 
 import android.os.Handler
 import android.util.Log
+import cc.duduhuo.util.digest.Digest
 import com.rotor.core.Builder
 import com.rotor.core.Rotor
 import com.rotor.core.interfaces.BuilderFace
@@ -19,8 +20,8 @@ import com.rotor.database.request.*
 import com.rotor.database.utils.ReferenceUtils
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import org.apache.commons.lang3.StringEscapeUtils
 import org.json.JSONObject
-import java.security.MessageDigest
 import java.util.*
 
 
@@ -107,12 +108,7 @@ class Database  {
         }
 
         @JvmStatic fun sha1(value: String) : String {
-            val bytes = value.toByteArray()
-            val md = MessageDigest.getInstance("SHA-1")
-            val digest = md.digest(bytes)
-            val stringBuilder = StringBuilder()
-            for (byte in digest) stringBuilder.append("%02x".format(byte))
-            return stringBuilder.toString()
+            return Digest.sha1Hex(StringEscapeUtils.escapeJava(value), false)
         }
 
         @JvmStatic private fun syncWithServer(path: String) {
@@ -191,8 +187,6 @@ class Database  {
             if (PrimaryReferece.EMPTY_OBJECT.equals(content)) {
                 Log.e(TAG, "no content: $EMPTY_OBJECT")
                 return
-            } else {
-                Log.d(TAG, "content: $content")
             }
 
             api.refreshFromServer(UpdateFromServer("update_reference_from", pathMap!!.get(path)!!.databaseName, path, Rotor.id!!, "android", content))

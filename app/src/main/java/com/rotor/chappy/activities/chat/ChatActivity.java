@@ -25,29 +25,37 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.makeramen.roundedimageview.RoundedImageView;
+import com.nostra13.universalimageloader.core.ImageLoader;
 import com.rotor.chappy.R;
 import com.rotor.chappy.activities.chat_detail.ChatDetailActivity;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.Message;
+import com.rotor.chappy.model.User;
+import com.rotor.chappy.model.mpv.ProfilesView;
 import com.rotor.core.Rotor;
 import com.rotor.notifications.Notifications;
+
+import org.apache.commons.lang3.StringEscapeUtils;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class ChatActivity extends AppCompatActivity implements ChatInterface.View<Chat> {
+public class ChatActivity extends AppCompatActivity implements ChatInterface.View<Chat>, ProfilesView {
 
     private RecyclerView messageList;
     private Chat chat;
     private Button sendButton;
     private EditText messageText;
     private String path;
+    private static final Map<String, User> users = new HashMap<>();
 
-    private ChatInterface.Presenter presenter;
+    private ChatPresenter<Chat> presenter;
     private FirebaseAuth mAuth = null;
 
     @Override
@@ -57,7 +65,7 @@ public class ChatActivity extends AppCompatActivity implements ChatInterface.Vie
         Toolbar toolbar = findViewById(com.rotor.chappy.R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        presenter = new ChatPresenter<Chat>(this);
+        presenter = new ChatPresenter<>(this, this);
         mAuth = FirebaseAuth.getInstance();
         if (mAuth.getCurrentUser() == null) {
             finish();
@@ -93,7 +101,7 @@ public class ChatActivity extends AppCompatActivity implements ChatInterface.Vie
             @Override
             public void onClick(View v) {
                 if (mAuth.getCurrentUser() != null && mAuth.getCurrentUser().getUid() != null) {
-                    Message message = new Message(mAuth.getCurrentUser().getUid(), messageText.getText().toString());
+                    Message message = new Message(mAuth.getCurrentUser().getUid(), StringEscapeUtils.escapeJava(messageText.getText().toString()));
                     chat.getMessages().put(String.valueOf(new Date().getTime()), message);
 
                     presenter.sync(path);
@@ -189,6 +197,12 @@ public class ChatActivity extends AppCompatActivity implements ChatInterface.Vie
     public void onReferenceChanged(Chat chat) {
         ChatActivity.this.chat = chat;
 
+        for (Map.Entry<String, User> entry : chat.getMembers().entrySet()) {
+            if (!users.containsKey("/users/" + entry.getValue().getUid())) {
+                presenter.prepareProfileFor("/users/" + entry.getValue().getUid());
+            }
+        }
+
         ChatActivity.this.setTitle(chat.getName());
         Map<String, Message> messageMap = new TreeMap<>(new Comparator<String>() {
             @Override
@@ -232,6 +246,31 @@ public class ChatActivity extends AppCompatActivity implements ChatInterface.Vie
 
     }
 
+    @Override
+    public void onCreateUser(String key) {
+        // should be called
+    }
+
+    @Override
+    public void onUserChanged(String key, User user) {
+        users.put(key, user);
+    }
+
+    @Override
+    public User onUpdateUser(String key) {
+        return users.get(key);
+    }
+
+    @Override
+    public void onDestroyUser(String key) {
+        users.remove(key);
+    }
+
+    @Override
+    public void userProgress(String key, int value) {
+        // nothing to do here
+    }
+
     public class MessageAdapter extends RecyclerView.Adapter<ViewHolder> {
 
         private MessageAdapter() {
@@ -241,7 +280,7 @@ public class ChatActivity extends AppCompatActivity implements ChatInterface.Vie
         @Override
         @NonNull
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View itemView = LayoutInflater.from(parent.getContext()).inflate(com.rotor.chappy.R.layout.item_message, parent, false);
+            View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message, parent, false);
             return new ViewHolder(itemView);
         }
 
@@ -254,7 +293,11 @@ public class ChatActivity extends AppCompatActivity implements ChatInterface.Vie
 
             Message message = chat.getMessages().get(messages.get((messages.size() - 1) - position));
 
-            holder.text.setText(message.getText());
+            User user = users.get("/users/" + message.getAuthor());
+            holder.author.setText(user.getName() + ":");
+            holder.message.setText(StringEscapeUtils.unescapeJava(message.getText()));
+
+            ImageLoader.getInstance().displayImage(user.getPhoto(), holder.image);
         }
 
         @Override
@@ -270,12 +313,16 @@ public class ChatActivity extends AppCompatActivity implements ChatInterface.Vie
     static class ViewHolder extends RecyclerView.ViewHolder {
 
         RelativeLayout content;
-        TextView text;
+        RoundedImageView image;
+        TextView author;
+        TextView message;
 
         ViewHolder(View itemView) {
             super(itemView);
-            content = itemView.findViewById(com.rotor.chappy.R.id.message_content);
-            text = itemView.findViewById(com.rotor.chappy.R.id.message);
+            content = itemView.findViewById(R.id.message_content);
+            image = itemView.findViewById(R.id.image);
+            author = itemView.findViewById(R.id.author);
+            message = itemView.findViewById(R.id.message);
         }
     }
 

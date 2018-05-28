@@ -21,6 +21,7 @@ import com.rotor.chappy.activities.login.LoginGoogleActivity;
 import com.rotor.chappy.activities.main.MainActivity;
 import com.rotor.chappy.activities.notifications.NotificationActivity;
 import com.rotor.chappy.model.User;
+import com.rotor.chappy.model.mpv.ProfileView;
 import com.rotor.chappy.services.ChatRepository;
 import com.rotor.core.Rotor;
 import com.rotor.core.interfaces.StatusListener;
@@ -36,7 +37,7 @@ import java.util.HashMap;
  * Created by efraespada on 27/02/2018.
  */
 
-public class SplashActivity extends AppCompatActivity implements SplashInterface.View<User> {
+public class SplashActivity extends AppCompatActivity implements SplashInterface.View {
 
     public static String TAG = SplashActivity.class.getSimpleName();
     public static int ACTION_CHAT = 4532;
@@ -92,32 +93,6 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
         finish();
     }
 
-    @Override
-    public void onCreateReference() {
-        presenter.goLogin();
-    }
-
-    @Override
-    public void onReferenceChanged(final User user) {
-        this.user = user;
-        if (!omitMoreChanges) {
-            omitMoreChanges = true;
-            ChatRepository.defineUser(user);
-            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
-                        ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                    startService();
-                } else {
-                    String[] perm = new String[]{
-                            Manifest.permission.ACCESS_FINE_LOCATION,
-                            Manifest.permission.ACCESS_COARSE_LOCATION
-                    };
-                    ActivityCompat.requestPermissions(this, perm, LOCATION_REQUEST_CODE);
-                }
-            }
-        }
-    }
-
     private void startService() {
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
@@ -128,21 +103,6 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
         }, 3000);
     }
 
-    @Override
-    public User onUpdateReference() {
-        return user;
-    }
-
-    @Override
-    public void onDestroyReference() {
-        user = null;
-        presenter.goLogin();
-    }
-
-    @Override
-    public void progress(int value) {
-
-    }
 
     @Override
     protected void onResume() {
@@ -167,4 +127,45 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
         }
     }
 
+    @Override
+    public void onCreateUser() {
+        presenter.goLogin();
+    }
+
+    @Override
+    public void onUserChanged(User user) {
+        this.user = user;
+        if (!omitMoreChanges) {
+            omitMoreChanges = true;
+            ChatRepository.defineUser(user);
+            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                        ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                    startService();
+                } else {
+                    String[] perm = new String[]{
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION
+                    };
+                    ActivityCompat.requestPermissions(this, perm, LOCATION_REQUEST_CODE);
+                }
+            }
+        }
+    }
+
+    @Override
+    public User onUpdateUser() {
+        return user;
+    }
+
+    @Override
+    public void onDestroyUser() {
+        user = null;
+        presenter.goLogin();
+    }
+
+    @Override
+    public void userProgress(int value) {
+        // nothing to do here
+    }
 }

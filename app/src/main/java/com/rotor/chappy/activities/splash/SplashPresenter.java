@@ -3,18 +3,21 @@ package com.rotor.chappy.activities.splash;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.rotor.chappy.model.User;
+import com.rotor.chappy.model.mpv.ProfilePresenter;
+import com.rotor.chappy.model.mpv.ProfileView;
 import com.rotor.chappy.services.ChatRepository;
+import com.rotor.chappy.services.ProfileRepository;
 
-public class SplashPresenter implements SplashInterface.Presenter {
+public class SplashPresenter implements SplashInterface.Presenter, ProfilePresenter {
 
-    private SplashInterface.View<User> view;
-    private ChatRepository chatRepository;
+    private SplashInterface.View view;
+    private ProfileRepository profileRepository;
     private FirebaseAuth mAuth;
     private boolean visible;
 
-    public SplashPresenter(SplashInterface.View<User> view) {
+    public SplashPresenter(SplashInterface.View view) {
         this.view = view;
-        this.chatRepository = new ChatRepository();
+        this.profileRepository = new ProfileRepository();
         mAuth = FirebaseAuth.getInstance();
     }
 
@@ -24,7 +27,7 @@ public class SplashPresenter implements SplashInterface.Presenter {
         if (user == null) {
             view.goLogin();
         } else {
-            chatRepository.listen("/users/" + user.getUid(), this, view, User.class);
+            prepareProfileFor("/users/" + user.getUid());
         }
     }
 
@@ -51,5 +54,20 @@ public class SplashPresenter implements SplashInterface.Presenter {
     @Override
     public boolean isVisible() {
         return visible;
+    }
+
+    @Override
+    public void prepareProfileFor(String id) {
+        profileRepository.listen(id, this, view);
+    }
+
+    @Override
+    public void syncProfile(String id) {
+        profileRepository.sync(id);
+    }
+
+    @Override
+    public void removeProfile(String id) {
+        profileRepository.remove(id);
     }
 }

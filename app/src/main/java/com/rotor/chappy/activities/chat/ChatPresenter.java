@@ -1,16 +1,23 @@
 package com.rotor.chappy.activities.chat;
 
+import com.rotor.chappy.model.mpv.ProfilePresenter;
+import com.rotor.chappy.model.mpv.ProfilesView;
 import com.rotor.chappy.services.ChatRepository;
+import com.rotor.chappy.services.ProfileRepository;
 
-public class ChatPresenter<T> implements ChatInterface.Presenter {
+public class ChatPresenter<T> implements ChatInterface.Presenter, ProfilePresenter {
 
     private ChatInterface.View<T> view;
+    private ProfilesView viewProfiles;
     private ChatRepository chatRepository;
+    private ProfileRepository profileRepository;
     private boolean visible;
 
-    public ChatPresenter(ChatInterface.View<T> view) {
+    public ChatPresenter(ChatInterface.View<T> view, ProfilesView viewProfiles) {
         this.view = view;
+        this.viewProfiles = viewProfiles;
         this.chatRepository = new ChatRepository();
+        this.profileRepository = new ProfileRepository();
     }
 
     @Override
@@ -41,5 +48,20 @@ public class ChatPresenter<T> implements ChatInterface.Presenter {
     @Override
     public boolean isVisible() {
         return visible;
+    }
+
+    @Override
+    public void prepareProfileFor(String id) {
+        profileRepository.listen(id, this, viewProfiles);
+    }
+
+    @Override
+    public void syncProfile(String id) {
+        profileRepository.sync(id);
+    }
+
+    @Override
+    public void removeProfile(String id) {
+        profileRepository.remove(id);
     }
 }
