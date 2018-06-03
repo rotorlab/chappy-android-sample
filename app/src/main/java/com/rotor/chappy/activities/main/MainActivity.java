@@ -42,6 +42,8 @@ import com.rotor.chappy.model.User;
 import com.rotor.chappy.model.mpv.ProfilesView;
 import com.rotor.core.Rotor;
 
+import org.apache.commons.lang3.StringEscapeUtils;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -160,7 +162,7 @@ public class MainActivity extends AppCompatActivity implements MainInterface.Vie
                     public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                         final EditText name = dialog.getCustomView().findViewById(R.id.etName);
                         if (!TextUtils.isEmpty(name.getText())) {
-                            Chat chat = presenter.createChat(name.getText().toString());
+                            Chat chat = presenter.createChat(StringEscapeUtils.escapeJava(name.getText().toString()));
                             String path = "/chats/" + chat.getId();
                             chats.put(path, chat);
                             presenter.prepareFor(path, Chat.class);

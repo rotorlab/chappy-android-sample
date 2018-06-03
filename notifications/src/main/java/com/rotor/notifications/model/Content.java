@@ -3,6 +3,8 @@ package com.rotor.notifications.model;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import org.apache.commons.lang3.StringEscapeUtils;
+
 /**
  * Created by efraespada on 19/03/2018.
  */
@@ -52,8 +54,8 @@ public class Content {
     public Content(int requestCode, String title, String body, String room, String channel, String channelDescription, String photoSmall, String photo) {
         this.requestCode = requestCode;
         this.room = room;
-        this.title = title;
-        this.body = body;
+        this.title = StringEscapeUtils.escapeJava(title);
+        this.body = StringEscapeUtils.escapeJava(body);
         this.channel = channel;
         this.channelDescription = channelDescription;
         this.photoSmall = photoSmall;
