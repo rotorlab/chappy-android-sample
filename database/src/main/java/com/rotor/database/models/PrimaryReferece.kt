@@ -344,8 +344,8 @@ abstract class PrimaryReferece<T>(context: Context, db: String, path: String) {
                 }
             }
 
-            ReferenceUtils.addElement(path, jsonObject.toString())
             stringReference = jsonObject.toString()
+            ReferenceUtils.addElement(path, stringReference!!)
 
             if (sha1.equals(Database.sha1(stringReference!!))) {
                 blowerResult(stringReference!!)

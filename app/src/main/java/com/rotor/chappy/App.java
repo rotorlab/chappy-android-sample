@@ -30,6 +30,7 @@ public class App extends Application {
     public static String databaseName = "database";
     public FirebaseAuth auth;
 
+    public String type = "";
     @Override
     public void onCreate() {
         super.onCreate();
@@ -53,12 +54,16 @@ public class App extends Application {
         auth = FirebaseAuth.getInstance();
         MotionDetector.initialize(this);
         MotionDetector.debug(true);
+        MotionDetector.minAccuracy(30);
         MotionDetector.start(new com.efraespada.motiondetector.Listener() {
             @Override
             public void locationChanged(Location location) {
                 if (auth.getCurrentUser() != null) {
                     User user = ProfileRepository.getUser("/users/" + auth.getCurrentUser().getUid());
                     if (user != null) {
+                        if (user.getLocations() == null) {
+                            user.setLocations(new HashMap<String, com.rotor.chappy.model.Location>());
+                        }
                         String id = new Date().getTime() + "";
                         com.rotor.chappy.model.Location loc = new com.rotor.chappy.model.Location();
                         loc.setAccuracy(location.getAccuracy());
@@ -95,12 +100,15 @@ public class App extends Application {
 
             @Override
             public void type(String type) {
-                if (auth.getCurrentUser() != null) {
-                    User user = ProfileRepository.getUser("/users/" + auth.getCurrentUser().getUid());
-                    if (user != null) {
-                        user.setType(type);
-                        ProfileRepository.setUser("/users/" + user.getUid(), user);
-                        Database.sync("/users/" + user.getUid());
+                if (!App.this.type.equals(type)) {
+                    App.this.type = type;
+                    if (auth.getCurrentUser() != null) {
+                        User user = ProfileRepository.getUser("/users/" + auth.getCurrentUser().getUid());
+                        if (user != null) {
+                            user.setType(type);
+                            ProfileRepository.setUser("/users/" + user.getUid(), user);
+                            Database.sync("/users/" + user.getUid());
+                        }
                     }
                 }
             }

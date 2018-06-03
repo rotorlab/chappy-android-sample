@@ -106,7 +106,7 @@ public class LoginGoogleActivity extends AppCompatActivity implements LoginGoogl
 
     @Override
     public void onCreateReference() {
-        user = new User(uid, name, email, photo, "android", Rotor.getId(), "", 0L, new HashMap<String, Location>());
+        user = new User(uid, name, email, photo, "android", Rotor.getId(), "", 0L, null);
         presenter.sync("/users/" + uid);
     }
 

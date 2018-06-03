@@ -27,7 +27,7 @@ public class Chat {
 
     @SerializedName("members")
     @Expose
-    Map<String, User> members;
+    Map<String, Member> members;
 
     @SerializedName("messages")
     @Expose
@@ -48,7 +48,7 @@ public class Chat {
         messages = new HashMap<>();
     }
 
-    public Chat(String id, Long creation, String name, Map<String, User> members, Map<String, Message> messages) {
+    public Chat(String id, Long creation, String name, Map<String, Member> members, Map<String, Message> messages) {
         this.id = id;
         this.creation = creation;
         this.name = name;
@@ -56,19 +56,19 @@ public class Chat {
         this.messages = messages;
     }
 
-    public Map<String, User> getMembers() {
+    public Map<String, Member> getMembers() {
         if (members == null) {
             members = new HashMap<>();
         }
         return members;
     }
 
-    public void setMembers(Map<String, User> members) {
+    public void setMembers(Map<String, Member> members) {
         this.members = members;
     }
 
-    public void addMember(User user) {
-        this.members.put(user.getUid(), user);
+    public void addMember(Member member) {
+        this.members.put(member.getId(), member);
     }
 
     public Map<String, Message> getMessages() {

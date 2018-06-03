@@ -30,6 +30,7 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.rotor.chappy.R;
 import com.rotor.chappy.activities.chat_detail.ChatDetailActivity;
 import com.rotor.chappy.model.Chat;
+import com.rotor.chappy.model.Member;
 import com.rotor.chappy.model.Message;
 import com.rotor.chappy.model.User;
 import com.rotor.chappy.model.mpv.ProfilesView;
@@ -197,9 +198,9 @@ public class ChatActivity extends AppCompatActivity implements ChatInterface.Vie
     public void onReferenceChanged(Chat chat) {
         ChatActivity.this.chat = chat;
 
-        for (Map.Entry<String, User> entry : chat.getMembers().entrySet()) {
-            if (!users.containsKey("/users/" + entry.getValue().getUid())) {
-                presenter.prepareProfileFor("/users/" + entry.getValue().getUid());
+        for (Map.Entry<String, Member> entry : chat.getMembers().entrySet()) {
+            if (!users.containsKey("/users/" + entry.getValue().getId())) {
+                presenter.prepareProfileFor("/users/" + entry.getValue().getId());
             }
         }
 
@@ -254,6 +255,8 @@ public class ChatActivity extends AppCompatActivity implements ChatInterface.Vie
     @Override
     public void onUserChanged(String key, User user) {
         users.put(key, user);
+        messageList.getAdapter().notifyDataSetChanged();
+        messageList.smoothScrollToPosition(0);
     }
 
     @Override
@@ -271,7 +274,7 @@ public class ChatActivity extends AppCompatActivity implements ChatInterface.Vie
         // nothing to do here
     }
 
-    public class MessageAdapter extends RecyclerView.Adapter<ViewHolder> {
+    public class MessageAdapter extends RecyclerView.Adapter<VHMessages> {
 
         private MessageAdapter() {
             // nothing to do here
@@ -279,13 +282,13 @@ public class ChatActivity extends AppCompatActivity implements ChatInterface.Vie
 
         @Override
         @NonNull
-        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        public VHMessages onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message, parent, false);
-            return new ViewHolder(itemView);
+            return new VHMessages(itemView);
         }
 
         @Override
-        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        public void onBindViewHolder(@NonNull VHMessages holder, int position) {
             List<String> messages = new ArrayList<>();
             for (Map.Entry<String, Message> entry : chat.getMessages().entrySet()) {
                 messages.add(entry.getKey());
@@ -293,11 +296,13 @@ public class ChatActivity extends AppCompatActivity implements ChatInterface.Vie
 
             Message message = chat.getMessages().get(messages.get((messages.size() - 1) - position));
 
-            User user = users.get("/users/" + message.getAuthor());
-            holder.author.setText(user.getName() + ":");
-            holder.message.setText(StringEscapeUtils.unescapeJava(message.getText()));
+            if (users.containsKey("/users/" + message.getAuthor())) {
+                User user = users.get("/users/" + message.getAuthor());
+                holder.author.setText(user.getName() + ":");
+                holder.message.setText(StringEscapeUtils.unescapeJava(message.getText()));
 
-            ImageLoader.getInstance().displayImage(user.getPhoto(), holder.image);
+                ImageLoader.getInstance().displayImage(user.getPhoto(), holder.image);
+            }
         }
 
         @Override
@@ -310,14 +315,14 @@ public class ChatActivity extends AppCompatActivity implements ChatInterface.Vie
         }
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
+    static class VHMessages extends RecyclerView.ViewHolder {
 
         RelativeLayout content;
         RoundedImageView image;
         TextView author;
         TextView message;
 
-        ViewHolder(View itemView) {
+        VHMessages(View itemView) {
             super(itemView);
             content = itemView.findViewById(R.id.message_content);
             image = itemView.findViewById(R.id.image);

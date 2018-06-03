@@ -20,26 +20,36 @@ import android.widget.TextView;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.makeramen.roundedimageview.RoundedImageView;
+import com.nostra13.universalimageloader.core.ImageLoader;
 import com.rotor.chappy.R;
+import com.rotor.chappy.activities.chat.ChatActivity;
 import com.rotor.chappy.model.Chat;
+import com.rotor.chappy.model.Member;
+import com.rotor.chappy.model.Message;
 import com.rotor.chappy.model.User;
+import com.rotor.chappy.model.mpv.ProfilesView;
 import com.rotor.core.Rotor;
 import com.rotor.notifications.Notifications;
 import com.rotor.notifications.model.Content;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import static com.rotor.chappy.activities.splash.SplashActivity.ACTION_CHAT;
 
-public class ChatDetailActivity extends AppCompatActivity implements ChatDetailInterface.View<Chat> {
+public class ChatDetailActivity extends AppCompatActivity implements ChatDetailInterface.View<Chat>, ProfilesView {
 
     private RecyclerView memberList;
     private Chat chat;
     private String path;
     private MaterialDialog materialDialog;
-    private ChatDetailInterface.Presenter<Chat> presenter;
+    private ChatDetailPresenter presenter;
+    private static final Map<String, User> users = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +60,7 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
 
         Intent intent = getIntent();
 
-        presenter = new ChatDetailPresenter(this);
+        presenter = new ChatDetailPresenter(this, this);
 
         path = "/chats/" + intent.getStringExtra("path").replaceAll(" ", "_");
 
@@ -59,8 +69,6 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
         linearLayoutManager.setReverseLayout(true);
         memberList.setLayoutManager(linearLayoutManager);
         memberList.setAdapter(new MemberAdapter());
-
-        presenter.prepareFor(path, Chat.class);
     }
 
     @Override
@@ -68,6 +76,7 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
         super.onResume();
         presenter.onResumeView();
         Rotor.onResume();
+        presenter.prepareFor(path, Chat.class);
     }
 
     @Override
@@ -97,19 +106,22 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
                             SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
                             final String id = prefs.getString(getString(R.string.var_id), null);
 
-                            User user = chat.getMembers().get(id);
-                            Content content = new Content(ACTION_CHAT,
-                                    chat.getName(),
-                                    user.getName() + ": " + message.getText().toString(),
-                                    chat.getName(),
-                                    "myChannel",
-                                    "Test channel",
-                                    null,
-                                    null);
+                            Member member = chat.getMembers().get(id);
+                            if (users.containsKey(member.getId())) {
+                                User user = users.get(member.getId());
+                                Content content = new Content(ACTION_CHAT,
+                                        chat.getName(),
+                                        user.getName() + ": " + message.getText().toString(),
+                                        chat.getName(),
+                                        "myChannel",
+                                        "Test channel",
+                                        null,
+                                        null);
 
-                            ArrayList<String> ids = new ArrayList<>();
-                            ids.add(token);
-                            Notifications.notify(Notifications.builder(content, ids));
+                                ArrayList<String> ids = new ArrayList<>();
+                                ids.add(token);
+                                Notifications.notify(Notifications.builder(content, ids));
+                            }
 
                             dialog.dismiss();
                             materialDialog = null;
@@ -135,6 +147,15 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
     public void onReferenceChanged(Chat chat) {
         ChatDetailActivity.this.chat = chat;
         ChatDetailActivity.this.setTitle(chat.getName());
+
+        for (Map.Entry<String, Member> entry : chat.getMembers().entrySet()) {
+            if (!users.containsKey("/users/" + entry.getValue().getId())) {
+                presenter.prepareProfileFor("/users/" + entry.getValue().getId());
+            }
+        }
+
+        ChatDetailActivity.this.setTitle(chat.getName());
+
         memberList.getAdapter().notifyDataSetChanged();
     }
 
@@ -154,8 +175,35 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
 
     }
 
+    @Override
+    public void onCreateUser(String key) {
+        // should not be called
+    }
 
-    public class MemberAdapter extends RecyclerView.Adapter<ViewHolder> {
+    @Override
+    public void onUserChanged(String key, User user) {
+        users.put(key, user);
+        memberList.getAdapter().notifyDataSetChanged();
+    }
+
+    @Override
+    public User onUpdateUser(String key) {
+        return users.get(key);
+    }
+
+    @Override
+    public void onDestroyUser(String key) {
+        users.remove(key);
+        memberList.getAdapter().notifyDataSetChanged();
+    }
+
+    @Override
+    public void userProgress(String key, int value) {
+
+    }
+
+
+    public class MemberAdapter extends RecyclerView.Adapter<VHMember> {
 
         private MemberAdapter() {
             // nothing to do here
@@ -163,29 +211,31 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
 
         @Override
         @NonNull
-        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        public VHMember onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_member, parent, false);
-            return new ViewHolder(itemView);
+            return new VHMember(itemView);
         }
 
         @Override
-        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            List<User> members = new ArrayList<>();
-            for (Map.Entry<String, User> entry : chat.getMembers().entrySet()) {
+        public void onBindViewHolder(@NonNull VHMember holder, int position) {
+            List<Member> members = new ArrayList<>();
+            for (Map.Entry<String, Member> entry : chat.getMembers().entrySet()) {
                 members.add(entry.getValue());
             }
+            final Member member = members.get(position);
 
-            final User user = members.get(position);
-            holder.name.setText(user.getName());
-            SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
-            final String id = prefs.getString(getString(R.string.var_id), null);
-            holder.dm.setVisibility(!user.getUid().equals(id) ? View.VISIBLE :  View.GONE);
-            holder.dm.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    askForMessage(user.getToken());
-                }
-            });
+            if (users.containsKey(member.getId())) {
+                final User user = users.get(member.getId());
+                holder.name.setText(user.getName());
+                ImageLoader.getInstance().displayImage(user.getPhoto(), holder.image);
+
+                holder.dm.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        askForMessage(user.getToken());
+                    }
+                });
+            }
         }
 
         @Override
@@ -198,15 +248,17 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
         }
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
+    static class VHMember extends RecyclerView.ViewHolder {
 
         RelativeLayout content;
+        RoundedImageView image;
         TextView name;
         Button dm;
 
-        ViewHolder(View itemView) {
+        VHMember(View itemView) {
             super(itemView);
             content = itemView.findViewById(R.id.member_content);
+            image = itemView.findViewById(R.id.image);
             name = itemView.findViewById(R.id.name);
             dm = itemView.findViewById(R.id.dm);
         }

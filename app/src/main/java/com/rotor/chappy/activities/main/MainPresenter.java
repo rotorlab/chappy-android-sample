@@ -7,6 +7,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.gson.internal.LinkedTreeMap;
 import com.rotor.chappy.App;
 import com.rotor.chappy.model.Chat;
+import com.rotor.chappy.model.Member;
 import com.rotor.chappy.model.User;
 import com.rotor.chappy.model.mpv.ProfilePresenter;
 import com.rotor.chappy.model.mpv.ProfilesView;
@@ -16,6 +17,7 @@ import com.rotor.chappy.services.ProfileRepository;
 import com.rotor.database.Database;
 import com.rotor.database.interfaces.QueryCallback;
 
+import java.util.Date;
 import java.util.List;
 
 public class MainPresenter implements MainInterface.Presenter<Chat>, ProfilePresenter {
@@ -44,7 +46,7 @@ public class MainPresenter implements MainInterface.Presenter<Chat>, ProfilePres
         } else {
             prepareProfileFor("/users/" + user.getUid());
             Database.query(App.databaseName,"/chats/*",
-                    "{\"members\": { \"" + user.getUid() + "\": { \"uid\": \"" + user.getUid() + "\" } } }",
+                    "{\"members\": { \"" + user.getUid() + "\": { \"id\": \"" + user.getUid() + "\" } } }",
                     "{ \"id\": \"\" }",
                     new QueryCallback() {
 
@@ -64,7 +66,11 @@ public class MainPresenter implements MainInterface.Presenter<Chat>, ProfilePres
     @Override
     public Chat createChat(String name) {
         Chat chat = new Chat(name);
-        chat.addMember(ChatRepository.getUser());
+        Member member = new Member();
+        member.setDate(new Date().getTime());
+        member.setId(ChatRepository.getUser().getUid());
+        member.setRol("admin");
+        chat.addMember(member);
         return chat;
     }
 

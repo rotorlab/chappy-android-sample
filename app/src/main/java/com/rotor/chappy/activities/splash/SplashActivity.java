@@ -149,6 +149,8 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
                     };
                     ActivityCompat.requestPermissions(this, perm, LOCATION_REQUEST_CODE);
                 }
+            } else {
+                startService();
             }
         }
     }

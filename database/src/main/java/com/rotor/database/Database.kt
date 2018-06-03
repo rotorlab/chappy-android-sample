@@ -3,6 +3,7 @@ package com.rotor.database
 import android.os.Handler
 import android.util.Log
 import cc.duduhuo.util.digest.Digest
+import com.efraespada.jsondiff.JSONDiff
 import com.rotor.core.Builder
 import com.rotor.core.Rotor
 import com.rotor.core.interfaces.BuilderFace
@@ -108,7 +109,7 @@ class Database  {
         }
 
         @JvmStatic fun sha1(value: String) : String {
-            return Digest.sha1Hex(StringEscapeUtils.escapeJava(value), false)
+            return JSONDiff.hash(StringEscapeUtils.unescapeJava(value))
         }
 
         @JvmStatic private fun syncWithServer(path: String) {
@@ -164,10 +165,7 @@ class Database  {
 
         @JvmStatic private fun refreshToServer(path: String, differences: String, len: Int, clean: Boolean) {
             if (differences == PrimaryReferece.EMPTY_OBJECT) {
-                Log.e(TAG, "no differences: $differences")
                 return
-            } else {
-                Log.d(TAG, "differences: $differences")
             }
 
             api.refreshToServer(UpdateToServer("update_reference", pathMap!!.get(path)!!.databaseName, path, Rotor.id!!, "android", differences, len, clean))
@@ -233,7 +231,7 @@ class Database  {
         }
 
         @JvmStatic fun query(database: String, path: String, query: String, mask: String, callback: QueryCallback) {
-            api.query(database, path, query, mask)
+            api.query(Rotor.id!!, database, path, query, mask)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(

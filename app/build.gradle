@@ -34,8 +34,8 @@ android {
         device {
             applicationId "com.rotor.chappy"
             versionNameSuffix "-device"
-            buildConfigField "String", "database_url", "\"http://172.20.10.8:1508/\""
-            buildConfigField "String", "redis_url", "\"redis://172.20.10.8\""
+            buildConfigField "String", "database_url", "\"http://192.168.1.130:1508/\""
+            buildConfigField "String", "redis_url", "\"redis://192.168.1.130\""
             dimension "origin"
         }
     }
@@ -62,7 +62,7 @@ dependencies {
     implementation 'com.nostra13.universalimageloader:universal-image-loader:1.9.5'
     implementation 'org.apache.commons:commons-lang3:3.6'
 
-    implementation 'com.efraespada:motiondetector:0.0.2'
+    implementation 'com.efraespada:motiondetector:0.0.3'
 
     implementation "com.stringcare:library:$stringcare_version"
     implementation 'com.google.code.gson:gson:2.8.2'
