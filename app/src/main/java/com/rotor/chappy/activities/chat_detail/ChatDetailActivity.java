@@ -126,6 +126,22 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
                     chat.addMember(member);
                     presenter.sync(path);
                     Log.e("UID", "result:" + result);
+
+                    if (users.containsKey("/users/" + presenter.getLoggedUid())) {
+                        User user = users.get("/users/" + presenter.getLoggedUid());
+                        Content content = new Content(ACTION_CHAT,
+                                getString(R.string.notification_message_added_to_group_title),
+                                getString(R.string.notification_message_added_to_group, chat.getName()),
+                                chat.getId(),
+                                "myChannel",
+                                "Test channel",
+                                user.getPhoto(),
+                                null);
+
+                        ArrayList<String> ids = new ArrayList<>();
+                        ids.add(result);
+                        Notifications.notify(Notifications.builder(content, ids));
+                    }
                 }
                 break;
         }
