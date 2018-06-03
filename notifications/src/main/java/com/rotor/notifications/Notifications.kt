@@ -371,7 +371,7 @@ class Notifications {
         }
 
         @JvmStatic private fun sendNotification(id: String, receivers: ArrayList<Receiver>) {
-            api.sendNotification(NotificationSender("send_notifications", id, receivers))
+            api.sendNotification(NotificationSender("send_notifications", Rotor.id, id, receivers))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
@@ -387,7 +387,7 @@ class Notifications {
         @JvmStatic private fun getPendingNotification() {
             val receivers: ArrayList<String> = ArrayList()
             receivers.add(Rotor.id!!)
-            api.getNotifications(NotificationGetter("pending_notifications", receivers))
+            api.getNotifications(NotificationGetter("pending_notifications", Rotor.id, receivers))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(

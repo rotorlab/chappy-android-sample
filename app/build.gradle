@@ -83,6 +83,12 @@ dependencies {
     implementation "com.android.support:recyclerview-v7:27.1.1"
     implementation "com.android.support:support-annotations:27.1.1"
     implementation "com.android.support:design:27.1.1"
+    implementation "com.mikepenz:iconics-core:3.0.4@aar"
+    implementation "com.mikepenz:iconics-views:3.0.4@aar"
+    implementation 'com.mikepenz:google-material-typeface:3.0.1.2.original@aar'
+    implementation 'com.mikepenz:material-design-iconic-typeface:2.2.0.4@aar'
+    implementation 'com.mikepenz:community-material-typeface:2.0.46.1@aar'
+
 
 
     /*

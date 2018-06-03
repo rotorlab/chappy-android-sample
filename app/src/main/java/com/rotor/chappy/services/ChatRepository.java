@@ -103,14 +103,12 @@ public class ChatRepository {
             @Override
             public void onDestroy() {
                 RelationView<T> rV = map.get(path);
-                ReferenceView<T> rF = rV.activeView();
-                if (rF != null) {
-                    rF.onDestroyReference();
+                for (Map.Entry<BasePresenter, ReferenceView<T>> entry : rV.getMap().entrySet()) {
+                    entry.getValue().onDestroyReference();
                 }
 
-                MapReferenceView<T> rFM = rV.activeMapView();
-                if (rFM != null) {
-                    rFM.onDestroyReference(path);
+                for (Map.Entry<BasePresenter, MapReferenceView<T>> entry : rV.getMapMap().entrySet()) {
+                    entry.getValue().onDestroyReference(path);
                 }
             }
 

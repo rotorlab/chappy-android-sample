@@ -15,6 +15,10 @@ public class NotificationGetter {
     @Expose
     String method;
 
+    @SerializedName("token")
+    @Expose
+    String token;
+
     @SerializedName("receivers")
     @Expose
     List<String> receivers;
@@ -23,7 +27,8 @@ public class NotificationGetter {
         // nothing to do here
     }
 
-    public NotificationGetter(String method,List<String> receivers) {
+    public NotificationGetter(String method, String token, List<String> receivers) {
+        this.token = token;
         this.method = method;
         this.receivers = receivers;
     }
@@ -42,5 +47,13 @@ public class NotificationGetter {
 
     public void setReceivers(List<String> receiver) {
         this.receivers = receiver;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 }

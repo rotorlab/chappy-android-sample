@@ -39,6 +39,7 @@ import com.rotor.notifications.model.Content;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -115,9 +116,16 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
         switch(requestCode) {
             case SCANNER_CODE:
                 if (resultCode == RESULT_OK) {
+                    presenter.onResumeView();
                     Bundle res = data.getExtras();
                     String result = res.getString("uid");
-                    Log.d("UID", "result:" + result);
+                    Member member = new Member();
+                    member.setId(result);
+                    member.setRol("basic");
+                    member.setDate(new Date().getTime());
+                    chat.addMember(member);
+                    presenter.sync(path);
+                    Log.e("UID", "result:" + result);
                 }
                 break;
         }
@@ -139,20 +147,16 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
                     @Override
                     public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                         final EditText message = dialog.getCustomView().findViewById(R.id.etName);
-                        if (!TextUtils.isEmpty(message.getText())) {
-                            SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
-                            final String id = prefs.getString(getString(R.string.var_id), null);
-
-                            Member member = chat.getMembers().get(id);
-                            if (users.containsKey(member.getId())) {
-                                User user = users.get(member.getId());
+                        if (!TextUtils.isEmpty(message.getText()))
+                            if (users.containsKey("/users/" + presenter.getLoggedUid())) {
+                                User user = users.get("/users/" + presenter.getLoggedUid());
                                 Content content = new Content(ACTION_CHAT,
                                         chat.getName(),
                                         user.getName() + ": " + message.getText().toString(),
-                                        chat.getName(),
+                                        chat.getId(),
                                         "myChannel",
                                         "Test channel",
-                                        null,
+                                        user.getPhoto(),
                                         null);
 
                                 ArrayList<String> ids = new ArrayList<>();
@@ -160,9 +164,8 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
                                 Notifications.notify(Notifications.builder(content, ids));
                             }
 
-                            dialog.dismiss();
-                            materialDialog = null;
-                        }
+                        dialog.dismiss();
+                        materialDialog = null;
                     }
                 })
                 .onNegative(new MaterialDialog.SingleButtonCallback() {

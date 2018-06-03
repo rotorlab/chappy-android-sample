@@ -46,4 +46,12 @@ public class RelationView<T> {
         }
         return activeView;
     }
+
+    public Map<BasePresenter, ReferenceView<T>> getMap() {
+        return map;
+    }
+
+    public Map<BasePresenter, MapReferenceView<T>> getMapMap() {
+        return mapMap;
+    }
 }

@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Chappy</string>
+    <string name="menu_label_profile">Perfil</string>
+    <string name="menu_label_chats">Chats</string>
+    <string name="menu_label_settings">Ajustes</string>
+    <string name="menu_label_sign_out">Cerrar sesión</string>
     <string name="action_settings">Ajustes</string>
     <string name="action_email">Set id</string>
     <string name="action_create_group">Crear grupo</string>

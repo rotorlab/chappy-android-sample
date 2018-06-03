@@ -1,5 +1,6 @@
 package com.rotor.chappy.activities.main;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -19,6 +20,8 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.mikepenz.google_material_typeface_library.GoogleMaterial;
+import com.mikepenz.iconics.context.IconicsContextWrapper;
 import com.mikepenz.materialdrawer.AccountHeader;
 import com.mikepenz.materialdrawer.AccountHeaderBuilder;
 import com.mikepenz.materialdrawer.Drawer;
@@ -32,6 +35,7 @@ import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 import com.rotor.chappy.R;
 import com.rotor.chappy.activities.chat.ChatActivity;
 import com.rotor.chappy.activities.login.LoginGoogleActivity;
+import com.rotor.chappy.activities.profile.ProfileActivity;
 import com.rotor.chappy.adapters.ChatAdapter;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.User;
@@ -50,6 +54,11 @@ public class MainActivity extends AppCompatActivity implements MainInterface.Vie
     private Map<String, User> profiles;
     private Toolbar toolbar;
     private boolean uiReady;
+
+    @Override
+    protected void attachBaseContext(Context context) {
+        super.attachBaseContext(IconicsContextWrapper.wrap(context));
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -204,6 +213,7 @@ public class MainActivity extends AppCompatActivity implements MainInterface.Vie
     @Override
     public void onDestroyReference(String key) {
         chats.remove(key);
+        presenter.refreshUI();
     }
 
     @Override
@@ -237,28 +247,57 @@ public class MainActivity extends AppCompatActivity implements MainInterface.Vie
                     })
                     .build();
 
-            PrimaryDrawerItem item1 = new PrimaryDrawerItem().withIdentifier(1).withName("home");
-            SecondaryDrawerItem item2 = new SecondaryDrawerItem().withIdentifier(2).withName(R.string.action_settings);
+            PrimaryDrawerItem profileButton = new PrimaryDrawerItem().withIdentifier(1).withName(R.string.menu_label_profile).withIcon(GoogleMaterial.Icon.gmd_account_circle);
+            PrimaryDrawerItem chatsButton = new PrimaryDrawerItem().withIdentifier(2).withName(R.string.menu_label_chats).withIcon(GoogleMaterial.Icon.gmd_message);
+            SecondaryDrawerItem settingsButton = new SecondaryDrawerItem().withIdentifier(3).withName(R.string.menu_label_settings).withIcon(GoogleMaterial.Icon.gmd_settings);
+            SecondaryDrawerItem logoutButton = new SecondaryDrawerItem().withIdentifier(4).withName(R.string.menu_label_sign_out).withIcon(GoogleMaterial.Icon.gmd_exit_to_app);
 
             DrawerBuilder builder = new DrawerBuilder()
                     .withActivity(this)
                     .withToolbar(toolbar)
                     .withAccountHeader(headerResult)
                     .addDrawerItems(
-                            item1,
+                            profileButton,
+                            chatsButton,
                             new DividerDrawerItem(),
-                            item2,
-                            new SecondaryDrawerItem().withName(R.string.action_settings)
+                            settingsButton,
+                            logoutButton
                     )
                     .withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
                         @Override
                         public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
                             // do something with the clicked item :D
-                            return true;
+                            int id = (int) drawerItem.getIdentifier();
+                            switch (id) {
+                                case 1:
+                                    Intent intent = new Intent(MainActivity.this, ProfileActivity.class);
+                                    startActivity(intent);
+                                    finish();
+                                    return true;
+                                case 2:
+                                    return true;
+
+                                case 4:
+                                    AuthUI.getInstance()
+                                            .signOut(MainActivity.this)
+                                            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                @Override
+                                                public void onComplete(@NonNull Task<Void> task) {
+                                                    Intent intent = new Intent(MainActivity.this, LoginGoogleActivity.class);
+                                                    startActivity(intent);
+                                                    finish();
+                                                }
+                                            });
+                                    return true;
+                                default:
+                                    return false;
+                            }
                         }
                     });
 
             Drawer drawer = builder.build();
+
+            drawer.setSelection(chatsButton);
         }
     }
 

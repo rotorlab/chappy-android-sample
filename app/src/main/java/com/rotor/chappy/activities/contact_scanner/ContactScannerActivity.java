@@ -10,6 +10,7 @@ import com.google.android.gms.samples.vision.barcodereader.BarcodeCapture;
 import com.google.android.gms.samples.vision.barcodereader.BarcodeGraphic;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.rotor.chappy.R;
+import com.stringcare.library.SC;
 
 
 import java.util.List;
@@ -38,7 +39,7 @@ public class ContactScannerActivity extends AppCompatActivity implements Barcode
             @Override
             public void run() {
                 Bundle conData = new Bundle();
-                conData.putString("uid", barcode.displayValue);
+                conData.putString("uid", SC.decryptString(barcode.displayValue));
                 Intent intent = new Intent();
                 intent.putExtras(conData);
                 setResult(RESULT_OK, intent);
