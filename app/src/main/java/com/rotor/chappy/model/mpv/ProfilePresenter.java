@@ -8,4 +8,6 @@ public interface ProfilePresenter extends BasePresenter {
 
     void removeProfile(String id);
 
+    String getLoggedUid();
+
 }

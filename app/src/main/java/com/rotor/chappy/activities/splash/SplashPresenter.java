@@ -18,7 +18,7 @@ public class SplashPresenter implements SplashInterface.Presenter, ProfilePresen
     public SplashPresenter(SplashInterface.View view) {
         this.view = view;
         this.profileRepository = new ProfileRepository();
-        mAuth = FirebaseAuth.getInstance();
+        this.mAuth = FirebaseAuth.getInstance();
     }
 
     @Override
@@ -69,5 +69,10 @@ public class SplashPresenter implements SplashInterface.Presenter, ProfilePresen
     @Override
     public void removeProfile(String id) {
         profileRepository.remove(id);
+    }
+
+    @Override
+    public String getLoggedUid() {
+        return mAuth != null && mAuth.getCurrentUser() != null ? mAuth.getCurrentUser().getUid() : null;
     }
 }

@@ -4,9 +4,9 @@
     tools:context="com.rotor.chappy.activities.main.MainActivity">
 
     <item
-        android:id="@+id/action_remove"
+        android:id="@+id/action_add_contact"
         android:orderInCategory="100"
-        android:title="@string/action_remove_chat"
+        android:title="@string/action_add_contact_to_group"
         app:showAsAction="never" />
 
 </menu>

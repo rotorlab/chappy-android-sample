@@ -1,5 +1,6 @@
 package com.rotor.chappy.activities.chat_detail;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.mpv.ProfilePresenter;
 import com.rotor.chappy.model.mpv.ProfilesView;
@@ -13,12 +14,14 @@ public class ChatDetailPresenter implements ChatDetailInterface.Presenter<Chat>,
     private ProfileRepository profileRepository;
     private ChatRepository chatRepository;
     private boolean visible;
+    private FirebaseAuth mAuth;
 
     public ChatDetailPresenter(ChatDetailInterface.View<Chat> view, ProfilesView viewProfiles) {
         this.view = view;
         this.viewProfiles = viewProfiles;
         this.chatRepository = new ChatRepository();
         this.profileRepository = new ProfileRepository();
+        this.mAuth = FirebaseAuth.getInstance();
     }
 
     @Override
@@ -64,5 +67,10 @@ public class ChatDetailPresenter implements ChatDetailInterface.Presenter<Chat>,
     @Override
     public void removeProfile(String id) {
         profileRepository.remove(id);
+    }
+
+    @Override
+    public String getLoggedUid() {
+        return mAuth != null && mAuth.getCurrentUser() != null ? mAuth.getCurrentUser().getUid() : null;
     }
 }

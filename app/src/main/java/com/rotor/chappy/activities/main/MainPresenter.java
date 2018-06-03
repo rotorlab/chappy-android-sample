@@ -34,7 +34,7 @@ public class MainPresenter implements MainInterface.Presenter<Chat>, ProfilePres
         this.viewProfiles = viewProfiles;
         this.chatRepository = new ChatRepository();
         this.profileRepository = new ProfileRepository();
-        mAuth = FirebaseAuth.getInstance();
+        this.mAuth = FirebaseAuth.getInstance();
     }
 
 
@@ -127,5 +127,10 @@ public class MainPresenter implements MainInterface.Presenter<Chat>, ProfilePres
     @Override
     public void removeProfile(String id) {
         profileRepository.remove(id);
+    }
+
+    @Override
+    public String getLoggedUid() {
+        return mAuth != null && mAuth.getCurrentUser() != null ? mAuth.getCurrentUser().getUid() : null;
     }
 }

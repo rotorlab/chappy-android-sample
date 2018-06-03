@@ -300,7 +300,9 @@ public class ChatActivity extends AppCompatActivity implements ChatInterface.Vie
                 User user = users.get("/users/" + message.getAuthor());
                 holder.author.setText(user.getName() + ":");
                 holder.message.setText(StringEscapeUtils.unescapeJava(message.getText()));
+                if (presenter.getLoggedUid() != null) {
 
+                }
                 ImageLoader.getInstance().displayImage(user.getPhoto(), holder.image);
             }
         }

@@ -19,6 +19,16 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.mikepenz.materialdrawer.AccountHeader;
+import com.mikepenz.materialdrawer.AccountHeaderBuilder;
+import com.mikepenz.materialdrawer.Drawer;
+import com.mikepenz.materialdrawer.DrawerBuilder;
+import com.mikepenz.materialdrawer.model.DividerDrawerItem;
+import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
+import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
+import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
+import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
+import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 import com.rotor.chappy.R;
 import com.rotor.chappy.activities.chat.ChatActivity;
 import com.rotor.chappy.activities.login.LoginGoogleActivity;
@@ -35,9 +45,11 @@ public class MainActivity extends AppCompatActivity implements MainInterface.Vie
 
     private MaterialDialog materialDialog;
     private RecyclerView chatsList;
-    private MainInterface.Presenter<Chat> presenter;
+    private MainPresenter presenter;
     private Map<String, Chat> chats;
     private Map<String, User> profiles;
+    private Toolbar toolbar;
+    private boolean uiReady;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,11 +57,11 @@ public class MainActivity extends AppCompatActivity implements MainInterface.Vie
         setContentView(R.layout.activity_main);
 
         presenter = new MainPresenter(this, this);
-
+        uiReady = false;
         chats = new HashMap<>();
         profiles = new HashMap<>();
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
+        toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         chatsList = findViewById(R.id.chats_list);
@@ -70,8 +82,6 @@ public class MainActivity extends AppCompatActivity implements MainInterface.Vie
                 askForGroupName();
             }
         });
-
-        presenter.prepareChatsFor();
     }
 
     @Override
@@ -79,6 +89,7 @@ public class MainActivity extends AppCompatActivity implements MainInterface.Vie
         super.onResume();
         presenter.onResumeView();
         Rotor.onResume();
+        presenter.prepareChatsFor();
         if (chatsList != null) {
             chatsList.getAdapter().notifyDataSetChanged();
         }
@@ -208,6 +219,47 @@ public class MainActivity extends AppCompatActivity implements MainInterface.Vie
     @Override
     public void onUserChanged(String key, User user) {
         profiles.put(key, user);
+        if (user.getUid().equals(presenter.getLoggedUid()) && !uiReady) {
+            uiReady = true;
+
+            AccountHeader headerResult = new AccountHeaderBuilder()
+                    .withActivity(this)
+                    .withHeaderBackground(R.drawable.header)
+                    .withSelectionListEnabledForSingleProfile(false)
+                    .addProfiles(
+                            new ProfileDrawerItem().withName(user.getName()).withEmail(user.getEmail()).withIcon(user.getPhoto())
+                    )
+                    .withOnAccountHeaderListener(new AccountHeader.OnAccountHeaderListener() {
+                        @Override
+                        public boolean onProfileChanged(View view, IProfile profile, boolean currentProfile) {
+                            return false;
+                        }
+                    })
+                    .build();
+
+            PrimaryDrawerItem item1 = new PrimaryDrawerItem().withIdentifier(1).withName("home");
+            SecondaryDrawerItem item2 = new SecondaryDrawerItem().withIdentifier(2).withName(R.string.action_settings);
+
+            DrawerBuilder builder = new DrawerBuilder()
+                    .withActivity(this)
+                    .withToolbar(toolbar)
+                    .withAccountHeader(headerResult)
+                    .addDrawerItems(
+                            item1,
+                            new DividerDrawerItem(),
+                            item2,
+                            new SecondaryDrawerItem().withName(R.string.action_settings)
+                    )
+                    .withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
+                        @Override
+                        public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
+                            // do something with the clicked item :D
+                            return true;
+                        }
+                    });
+
+            Drawer drawer = builder.build();
+        }
     }
 
     @Override

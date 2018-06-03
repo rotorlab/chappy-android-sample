@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Chappy</string>
+    <string name="action_settings">Ajustes</string>
+    <string name="action_email">Set id</string>
+    <string name="action_create_group">Crear grupo</string>
+    <string name="action_sign_out">Cerrar sessión</string>
+    <string name="action_add_contact_to_group">Añadir contacto</string>
+    <string name="action_remove_chat">Eliminar chat</string>
+    <string name="action_detail_chat">Detalles</string>
+    <string name="askIdGroupName">Nombre del grupo</string>
+    <string name="zumb_title">MD</string>
+    <string name="agree">Aceptar</string>
+    <string name="disagree">Cancelar</string>
+    <string name="contact_path">/contacts</string>
+    <string name="var_id">id</string>
+    <string name="var_name">name</string>
+    <string name="var_os">android</string>
+    <string name="search_hint">Di algo</string>
+    <string name="name_hint">Obi-Wan Kenobi</string>
+    <string name="name_me">Yo</string>
+</resources>

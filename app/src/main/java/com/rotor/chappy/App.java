@@ -2,11 +2,16 @@ package com.rotor.chappy;
 
 import android.app.Application;
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
+import android.net.Uri;
+import android.widget.ImageView;
 
 import com.crashlytics.android.Crashlytics;
 import com.efraespada.motiondetector.MotionDetector;
 import com.google.firebase.auth.FirebaseAuth;
+import com.mikepenz.materialdrawer.util.AbstractDrawerImageLoader;
+import com.mikepenz.materialdrawer.util.DrawerImageLoader;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
@@ -112,6 +117,30 @@ public class App extends Application {
                     }
                 }
             }
+        });
+
+        DrawerImageLoader.init(new AbstractDrawerImageLoader() {
+            @Override
+            public void set(ImageView imageView, Uri uri, Drawable placeholder) {
+                ImageLoader.getInstance().displayImage(uri.toString(), imageView);
+            }
+
+            @Override
+            public void cancel(ImageView imageView) {
+                // nothing to do here
+            }
+
+    /*
+    @Override
+    public Drawable placeholder(Context ctx) {
+        return super.placeholder(ctx);
+    }
+
+    @Override
+    public Drawable placeholder(Context ctx, String tag) {
+        return super.placeholder(ctx, tag);
+    }
+    */
         });
     }
 

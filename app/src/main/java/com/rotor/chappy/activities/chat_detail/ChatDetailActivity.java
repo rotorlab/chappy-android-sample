@@ -10,7 +10,10 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -24,6 +27,7 @@ import com.makeramen.roundedimageview.RoundedImageView;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.rotor.chappy.R;
 import com.rotor.chappy.activities.chat.ChatActivity;
+import com.rotor.chappy.activities.contact_scanner.ContactScannerActivity;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.Member;
 import com.rotor.chappy.model.Message;
@@ -50,6 +54,7 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
     private MaterialDialog materialDialog;
     private ChatDetailPresenter presenter;
     private static final Map<String, User> users = new HashMap<>();
+    public static final int SCANNER_CODE = 2345;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,7 +71,6 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
 
         memberList = findViewById(R.id.member_list);
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
-        linearLayoutManager.setReverseLayout(true);
         memberList.setLayoutManager(linearLayoutManager);
         memberList.setAdapter(new MemberAdapter());
     }
@@ -84,6 +88,39 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
         Rotor.onPause();
         presenter.onPauseView();
         super.onPause();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_chat_detail, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_add_contact) {
+            Intent intent = new Intent(this, ContactScannerActivity.class);
+            startActivityForResult(intent, SCANNER_CODE);
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch(requestCode) {
+            case SCANNER_CODE:
+                if (resultCode == RESULT_OK) {
+                    Bundle res = data.getExtras();
+                    String result = res.getString("uid");
+                    Log.d("UID", "result:" + result);
+                }
+                break;
+        }
     }
 
     public void askForMessage(final String token) {
@@ -224,17 +261,25 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
             }
             final Member member = members.get(position);
 
-            if (users.containsKey(member.getId())) {
-                final User user = users.get(member.getId());
+            if (users.containsKey("/users/" + member.getId())) {
+                final User user = users.get("/users/" + member.getId());
                 holder.name.setText(user.getName());
                 ImageLoader.getInstance().displayImage(user.getPhoto(), holder.image);
 
-                holder.dm.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        askForMessage(user.getToken());
-                    }
-                });
+                if (user.getUid().equals(presenter.getLoggedUid())) {
+                    holder.name.setText(getString(R.string.name_me));
+                    holder.dm.setVisibility(View.GONE);
+                    holder.dm.setOnClickListener(null);
+                } else {
+                    holder.name.setText(user.getName());
+                    holder.dm.setVisibility(View.VISIBLE);
+                    holder.dm.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            askForMessage(user.getToken());
+                        }
+                    });
+                }
             }
         }
 
