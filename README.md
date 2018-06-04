@@ -10,7 +10,9 @@ Clone the repository and open the project in Android Studio:
 git clone https://github.com/rotorlab/chappy-android-sample.git
 ```
 
-### Data model sample
+### Run Chappy
+All you need to start Chappy is running a [Rotor server-node](https://github.com/rotorlab/server-node) (and that's all). Data source model is defined in Android client, no logic is needed in back-end side.
+
 ```java
 public class Chat {
 
