@@ -5,7 +5,8 @@ package com.rotor.database.request
  */
 
 data class UpdateFromServer( val method: String,
-                        val path: String,
-                        val token: String,
-                        val os: String,
-                        val content: String)
+                             val database: String,
+                             val path: String,
+                             val token: String,
+                             val os: String,
+                             val content: String)

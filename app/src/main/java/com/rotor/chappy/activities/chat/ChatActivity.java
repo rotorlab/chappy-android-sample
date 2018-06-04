@@ -1,12 +1,9 @@
-package com.rotor.chappy.activities;
+package com.rotor.chappy.activities.chat;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -27,28 +24,40 @@ import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.makeramen.roundedimageview.RoundedImageView;
+import com.nostra13.universalimageloader.core.ImageLoader;
 import com.rotor.chappy.R;
+import com.rotor.chappy.activities.chat_detail.ChatDetailActivity;
 import com.rotor.chappy.model.Chat;
+import com.rotor.chappy.model.Member;
 import com.rotor.chappy.model.Message;
+import com.rotor.chappy.model.User;
+import com.rotor.chappy.model.mpv.ProfilesView;
 import com.rotor.core.Rotor;
-import com.rotor.database.Database;
-import com.rotor.database.abstr.Reference;
 import com.rotor.notifications.Notifications;
+
+import org.apache.commons.lang3.StringEscapeUtils;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class ChatActivity extends AppCompatActivity {
+public class ChatActivity extends AppCompatActivity implements ChatInterface.View<Chat>, ProfilesView {
 
     private RecyclerView messageList;
     private Chat chat;
     private Button sendButton;
     private EditText messageText;
     private String path;
+    private static final Map<String, User> users = new HashMap<>();
+
+    private ChatPresenter<Chat> presenter;
+    private FirebaseAuth mAuth = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +65,12 @@ public class ChatActivity extends AppCompatActivity {
         setContentView(com.rotor.chappy.R.layout.activity_chat);
         Toolbar toolbar = findViewById(com.rotor.chappy.R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        presenter = new ChatPresenter<>(this, this);
+        mAuth = FirebaseAuth.getInstance();
+        if (mAuth.getCurrentUser() == null) {
+            finish();
+        }
 
         Intent intent = getIntent();
 
@@ -86,13 +101,11 @@ public class ChatActivity extends AppCompatActivity {
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
-                String name = prefs.getString(getString(com.rotor.chappy.R.string.var_id), null);
-                if (name != null) {
-                    Message message = new Message(name, messageText.getText().toString());
+                if (mAuth.getCurrentUser() != null && mAuth.getCurrentUser().getUid() != null) {
+                    Message message = new Message(mAuth.getCurrentUser().getUid(), StringEscapeUtils.escapeJava(messageText.getText().toString()));
                     chat.getMessages().put(String.valueOf(new Date().getTime()), message);
 
-                    Database.sync(path);
+                    presenter.sync(path);
 
                     Handler handler = new Handler();
                     handler.postDelayed(new Runnable() {
@@ -133,62 +146,6 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
 
-        Database.listen(path, new Reference<Chat>(Chat.class) {
-            @Override
-            public void onCreate() {
-                finish();
-            }
-
-            @Override
-            public void onChanged(@NonNull Chat chat) {
-                ChatActivity.this.chat = chat;
-
-                ChatActivity.this.setTitle(chat.getName());
-                Map<String, Message> messageMap = new TreeMap<>(new Comparator<String>() {
-                    @Override
-                    public int compare(String o1, String o2) {
-                        Long a = Long.valueOf(o1);
-                        Long b = Long.valueOf(o2);
-                        if (a > b) {
-                            return 1;
-                        } else if (a < b) {
-                            return -1;
-                        } else {
-                            return 0;
-                        }
-                    }
-                });
-
-                messageMap.putAll(chat.getMessages());
-
-                chat.setMessages(messageMap);
-
-                messageList.getAdapter().notifyDataSetChanged();
-
-                messageList.smoothScrollToPosition(0);
-
-                sendButton.setEnabled(messageText.toString().length() > 0);
-            }
-
-            @Nullable
-            @Override
-            public Chat onUpdate() {
-                return ChatActivity.this.chat;
-            }
-
-            @Override
-            public void onDestroy() {
-                chat = null;
-                finish();
-            }
-
-            @Override
-            public void progress(int i) {
-
-            }
-        });
-
-        // Notifications.remove(intent.getStringExtra("notification"));
         Notifications.remove(intent.getStringExtra("path"));
     }
 
@@ -204,11 +161,11 @@ public class ChatActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_remove) {
-            Database.remove(path);
+            presenter.remove(path);
             return true;
         } else if (id == R.id.action_detail) {
             Intent intent = new Intent(this, ChatDetailActivity.class);
-            intent.putExtra("path", chat.getName());
+            intent.putExtra("path", chat.getId());
             startActivity(intent);
             return true;
         }
@@ -220,16 +177,104 @@ public class ChatActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         Rotor.onResume();
+        presenter.onResumeView();
+        presenter.prepareFor(path, Chat.class);
         sendButton.setEnabled(messageText.getText().toString().length() > 0 && chat != null);
     }
 
     @Override
     protected void onPause() {
+        presenter.onPauseView();
         Rotor.onPause();
         super.onPause();
     }
 
-    public class MessageAdapter extends RecyclerView.Adapter<ViewHolder> {
+    @Override
+    public void onCreateReference() {
+        finish();
+    }
+
+    @Override
+    public void onReferenceChanged(Chat chat) {
+        ChatActivity.this.chat = chat;
+
+        for (Map.Entry<String, Member> entry : chat.getMembers().entrySet()) {
+            if (!users.containsKey("/users/" + entry.getValue().getId())) {
+                presenter.prepareProfileFor("/users/" + entry.getValue().getId());
+            }
+        }
+
+        ChatActivity.this.setTitle(chat.getName());
+        Map<String, Message> messageMap = new TreeMap<>(new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+                Long a = Long.valueOf(o1);
+                Long b = Long.valueOf(o2);
+                if (a > b) {
+                    return 1;
+                } else if (a < b) {
+                    return -1;
+                } else {
+                    return 0;
+                }
+            }
+        });
+
+        messageMap.putAll(chat.getMessages());
+
+        chat.setMessages(messageMap);
+
+        messageList.getAdapter().notifyDataSetChanged();
+
+        messageList.smoothScrollToPosition(0);
+
+        sendButton.setEnabled(messageText.toString().length() > 0);
+    }
+
+    @Override
+    public Chat onUpdateReference() {
+        return ChatActivity.this.chat;
+    }
+
+    @Override
+    public void onDestroyReference() {
+        chat = null;
+        finish();
+    }
+
+    @Override
+    public void progress(int value) {
+
+    }
+
+    @Override
+    public void onCreateUser(String key) {
+        // should be called
+    }
+
+    @Override
+    public void onUserChanged(String key, User user) {
+        users.put(key, user);
+        messageList.getAdapter().notifyDataSetChanged();
+        messageList.smoothScrollToPosition(0);
+    }
+
+    @Override
+    public User onUpdateUser(String key) {
+        return users.get(key);
+    }
+
+    @Override
+    public void onDestroyUser(String key) {
+        users.remove(key);
+    }
+
+    @Override
+    public void userProgress(String key, int value) {
+        // nothing to do here
+    }
+
+    public class MessageAdapter extends RecyclerView.Adapter<VHMessages> {
 
         private MessageAdapter() {
             // nothing to do here
@@ -237,13 +282,13 @@ public class ChatActivity extends AppCompatActivity {
 
         @Override
         @NonNull
-        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View itemView = LayoutInflater.from(parent.getContext()).inflate(com.rotor.chappy.R.layout.item_message, parent, false);
-            return new ViewHolder(itemView);
+        public VHMessages onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message, parent, false);
+            return new VHMessages(itemView);
         }
 
         @Override
-        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        public void onBindViewHolder(@NonNull VHMessages holder, int position) {
             List<String> messages = new ArrayList<>();
             for (Map.Entry<String, Message> entry : chat.getMessages().entrySet()) {
                 messages.add(entry.getKey());
@@ -251,7 +296,15 @@ public class ChatActivity extends AppCompatActivity {
 
             Message message = chat.getMessages().get(messages.get((messages.size() - 1) - position));
 
-            holder.text.setText(message.getText());
+            if (users.containsKey("/users/" + message.getAuthor())) {
+                User user = users.get("/users/" + message.getAuthor());
+                holder.author.setText(user.getName() + ":");
+                holder.message.setText(StringEscapeUtils.unescapeJava(message.getText()));
+                if (presenter.getLoggedUid() != null) {
+
+                }
+                ImageLoader.getInstance().displayImage(user.getPhoto(), holder.image);
+            }
         }
 
         @Override
@@ -264,15 +317,19 @@ public class ChatActivity extends AppCompatActivity {
         }
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
+    static class VHMessages extends RecyclerView.ViewHolder {
 
         RelativeLayout content;
-        TextView text;
+        RoundedImageView image;
+        TextView author;
+        TextView message;
 
-        ViewHolder(View itemView) {
+        VHMessages(View itemView) {
             super(itemView);
-            content = itemView.findViewById(com.rotor.chappy.R.id.message_content);
-            text = itemView.findViewById(com.rotor.chappy.R.id.message);
+            content = itemView.findViewById(R.id.message_content);
+            image = itemView.findViewById(R.id.image);
+            author = itemView.findViewById(R.id.author);
+            message = itemView.findViewById(R.id.message);
         }
     }
 

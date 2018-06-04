@@ -2,10 +2,13 @@ package com.rotor.database
 
 import android.os.Handler
 import android.util.Log
+import cc.duduhuo.util.digest.Digest
+import com.efraespada.jsondiff.JSONDiff
 import com.rotor.core.Builder
 import com.rotor.core.Rotor
 import com.rotor.core.interfaces.BuilderFace
 import com.rotor.database.abstr.Reference
+import com.rotor.database.interfaces.QueryCallback
 import com.rotor.database.models.KReference
 import com.rotor.database.models.PrimaryReferece
 import com.rotor.database.models.PrimaryReferece.Companion.ACTION_NEW_OBJECT
@@ -18,8 +21,8 @@ import com.rotor.database.request.*
 import com.rotor.database.utils.ReferenceUtils
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import org.apache.commons.lang3.StringEscapeUtils
 import org.json.JSONObject
-import java.security.MessageDigest
 import java.util.*
 
 
@@ -75,7 +78,7 @@ class Database  {
             })
         }
 
-        @JvmStatic fun <T> listen(path: String, reference: Reference<T>) {
+        @JvmStatic fun <T> listen(database: String, path: String, reference: Reference<T>) {
             if (pathMap == null) {
                 Log.e(TAG, "Use Database.initialize(Context context, String urlServer, String token, StatusListener) before create real time references")
                 return
@@ -97,7 +100,7 @@ class Database  {
 
             Log.d(TAG, "Creating reference: $path")
 
-            val objectReference = KReference<T>(Rotor.context!!, path, reference, Rotor.rotorService!!.getMoment() as Long)
+            val objectReference = KReference<T>(Rotor.context!!, database, path, reference, Rotor.rotorService!!.getMoment() as Long)
             pathMap!![path] = objectReference
 
             objectReference.loadCachedReference()
@@ -106,12 +109,7 @@ class Database  {
         }
 
         @JvmStatic fun sha1(value: String) : String {
-            val bytes = value.toByteArray()
-            val md = MessageDigest.getInstance("SHA-1")
-            val digest = md.digest(bytes)
-            val stringBuilder = StringBuilder()
-            for (byte in digest) stringBuilder.append("%02x".format(byte))
-            return stringBuilder.toString()
+            return JSONDiff.hash(StringEscapeUtils.unescapeJava(value))
         }
 
         @JvmStatic private fun syncWithServer(path: String) {
@@ -120,7 +118,7 @@ class Database  {
                 content = PrimaryReferece.EMPTY_OBJECT
             }
 
-            api.createReference(CreateListener("listen_reference", path, Rotor.id!!, OS, sha1(content), content.length))
+            api.createReference(CreateListener("listen_reference", pathMap!!.get(path)!!.databaseName, path, Rotor.id!!, OS, sha1(content), content.length))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
@@ -135,7 +133,7 @@ class Database  {
 
         @JvmStatic fun unlisten(path: String) {
             if (pathMap!!.containsKey(path)) {
-                api.removeListener(RemoveListener("unlisten_reference", path, Rotor.id!!))
+                api.removeListener(RemoveListener("unlisten_reference", pathMap!!.get(path)!!.databaseName, path, Rotor.id!!))
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(
@@ -151,7 +149,7 @@ class Database  {
 
         @JvmStatic fun remove(path: String) {
             if (pathMap!!.containsKey(path)) {
-                api.removeReference(RemoveReference("remove_reference", path, Rotor.id!!))
+                api.removeReference(RemoveReference("remove_reference", pathMap!!.get(path)!!.databaseName, path, Rotor.id!!))
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(
@@ -167,13 +165,10 @@ class Database  {
 
         @JvmStatic private fun refreshToServer(path: String, differences: String, len: Int, clean: Boolean) {
             if (differences == PrimaryReferece.EMPTY_OBJECT) {
-                Log.e(TAG, "no differences: $differences")
                 return
-            } else {
-                Log.d(TAG, "differences: $differences")
             }
 
-            api.refreshToServer(UpdateToServer("update_reference", path, Rotor.id!!, "android", differences, len, clean))
+            api.refreshToServer(UpdateToServer("update_reference", pathMap!!.get(path)!!.databaseName, path, Rotor.id!!, "android", differences, len, clean))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
@@ -190,11 +185,9 @@ class Database  {
             if (PrimaryReferece.EMPTY_OBJECT.equals(content)) {
                 Log.e(TAG, "no content: $EMPTY_OBJECT")
                 return
-            } else {
-                Log.d(TAG, "content: $content")
             }
 
-            api.refreshFromServer(UpdateFromServer("update_reference_from", path, Rotor.id!!, "android", content))
+            api.refreshFromServer(UpdateFromServer("update_reference_from", pathMap!!.get(path)!!.databaseName, path, Rotor.id!!, "android", content))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
@@ -213,7 +206,7 @@ class Database  {
 
         @JvmStatic fun sync(path: String, clean: Boolean) {
             if (pathMap!!.containsKey(path)) {
-                val result = pathMap!![path]!!.syncReference(clean)
+                val result = pathMap!![path]!!.getDifferences(clean)
                 val diff = result[1] as String
                 val len = result[0] as Int
                 if (!EMPTY_OBJECT.equals(diff)) {
@@ -235,6 +228,19 @@ class Database  {
                 ReferenceUtils.removeElement(path)
                 Database.unlisten(path)
             }
+        }
+
+        @JvmStatic fun query(database: String, path: String, query: String, mask: String, callback: QueryCallback) {
+            api.query(Rotor.id!!, database, path, query, mask)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                            { result ->
+                                callback.response(result)
+
+                            },
+                            { error -> error.printStackTrace() })
+
         }
     }
 
