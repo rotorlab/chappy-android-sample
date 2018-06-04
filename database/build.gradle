@@ -28,11 +28,11 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.android.support:appcompat-v7:27.1.0'
+    implementation 'com.android.support:appcompat-v7:27.1.1'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
-    //implementation 'com.efraespada:jsondiff:1.1.0'
+    implementation 'com.efraespada:jsondiff:1.1.2'
 
     implementation "com.squareup.retrofit2:retrofit:2.3.0"
     implementation "com.squareup.retrofit2:adapter-rxjava2:2.3.0"
@@ -48,9 +48,8 @@ dependencies {
     implementation 'com.google.guava:guava:22.0-android'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation "com.stringcare:library:0.7"
-    // implementation "com.rotor:core:$rotor_version"
-    implementation project(":core")
-    implementation project(":jsondiff")
+    implementation "com.rotor:core:$rotor_version"
+    // implementation project(":core")
     implementation 'com.google.code.gson:gson:2.8.2'
 }
 repositories {

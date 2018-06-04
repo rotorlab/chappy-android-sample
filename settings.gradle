@@ -1,1 +1,1 @@
-include ':app', ':notifications', ':database', ':core', ':jsondiff'
+include ':app', ':notifications', ':database', ':core'

@@ -89,19 +89,18 @@ dependencies {
     implementation 'com.mikepenz:material-design-iconic-typeface:2.2.0.4@aar'
     implementation 'com.mikepenz:community-material-typeface:2.0.46.1@aar'
 
-
-
-    /*
-    implementation ('com.rotor:core:0.1.1@aar') {
+    implementation ('com.rotor:core:0.3@aar') {
         transitive = true
     }
-    implementation ('com.rotor:database:0.1.1@aar') {
+    implementation ('com.rotor:database:0.3@aar') {
         transitive = true
     }
-    */
-    implementation project(":core")
-    implementation project(":database")
-    implementation project(":notifications")
+    implementation ('com.rotor:notifications:0.3@aar') {
+        transitive = true
+    }
+    // implementation project(":core")
+    // implementation project(":database")
+    // implementation project(":notifications")
 
 }
 
