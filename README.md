@@ -1,13 +1,16 @@
 <p align="center"><img width="10%" vspace="20" src="https://github.com/rotorlab/chappy-android-sample/raw/develop/app/src/main/res/mipmap-xxxhdpi/ic_launcher_rounded.png"></p>
 
-Chappy: sample of real-time changes
--------------------------------------------
- 
-Sample app of the use of Rotor libraries (Core and Database). Clone the repo and open the project in Android Studio:
+# Chappy 
+**Proof of Concept** app about the use of Rotor libraries (Core, Database and Notifications). Chappy has a **mvp architecture** for interacting dynamically between Rotor data sources and views.
+
+The repository goal is to show a reactive engine, where every data change involves an interface change. Everything with the minimum number of requests.
+
+Clone the repository and open the project in Android Studio:
 ```bash
 git clone https://github.com/rotorlab/chappy-android-sample.git
 ```
-### Datamodel sample
+
+### Data model sample
 ```java
 public class Chat {
 
@@ -33,82 +36,7 @@ public class Chat {
     
 }
 ```
-### Interaction sample
-Define a chat listener and add messages:
-```java
-private Chat chat;
 
-class ChatActivity ..
-
-@Override protected void onCreate(Bundle savedInstanceState) {
-    
-    final String path = "/chats/welcome_chat";
-    
-    /* object instances, list adapter, etc.. */
-    
-    Database.listen(path, new Reference<Chat>(Chat.class) {
-    
-        @Override public void onCreate() {
-            chat = new Chat();
-            chat.setTitle("Foo Chat");
-            Database.sync(path);
-        }
-            
-        @Override public Chat onUpdate() {
-            return chat;
-        }
-    
-        @Override public void onChanged(Chat chat) {
-            ChatActivity.this.chat = chat;
-            
-            // update screent title
-            ChatActivity.this.setTitle(chat.getName());
-            
-            // order messages
-            Map<String, Message> messageMap = new TreeMap<>(new Comparator<String>() {
-                @Override public int compare(String o1, String o2) {
-                    Long a = Long.valueOf(o1);
-                    Long b = Long.valueOf(o2);
-                    if (a > b) {
-                        return 1;
-                    } else if (a < b) {
-                        return -1;
-                    } else {
-                        return 0;
-                    }
-                }
-            });
-            messageMap.putAll(ChatActivity.this.chat.getMessages());
-            ChatActivity.this.chat.setMessages(messageMap);
-    
-            // update list
-            messageList.getAdapter().notifyDataSetChanged();
-            messageList.smoothScrollToPosition(0);
-        }
-    
-        @Override public void progress(int value) {
-            // print progress
-        }
-    
-    });
-     
-    sendButton.setOnClickListener(new View.OnClickListener() {
-        @Override public void onClick(View v) {
-            SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
-            String username = prefs.getString("username", null);
-            if (name != null) {
-                Message message = new Message(username, messageText.getText().toString());
-                chat.getMessages().put(String.valueOf(new Date().getTime()), message);
-        
-                Database.sync(path);
-        
-                messageText.setText("");
-            }
-        }
-    });
-}
-```
-You can do changes or wait for them. All devices listening the same object will receive this changes to stay up to date:
  
 <p align="center"><img width="30%" vspace="20" src="https://github.com/rotorlab/chappy-android-sample/raw/develop/sample1.png"></p>
 
