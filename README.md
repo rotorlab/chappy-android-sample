@@ -35,14 +35,16 @@ public class Chat {
     }
     
     /* getter and setter methods */
-    
 }
 ```
 
+### Configuration
+This app doesn't need any configuration for virtual devices before start. Inside the project you will find few variants, the important ones:
+- `emulatorDebug`: Sets internal URIs for work with Android emulator (10.0.2.2)
+- `deviceDebug`: Sets normal URIs for work with a physical Android device (ex. 192.168.1.130)
  
 <p align="center"><img width="30%" vspace="20" src="https://github.com/rotorlab/chappy-android-sample/raw/develop/sample1.png"></p>
-
-
+ 
 License
 -------
     Copyright 2018 RotorLab Organization
