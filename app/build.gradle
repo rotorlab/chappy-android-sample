@@ -78,7 +78,7 @@ dependencies {
     implementation("com.mikepenz:materialdrawer:6.0.7@aar") {
         transitive = true
     }
-
+    implementation 'me.himanshusoni.chatmessageview:chat-message-view:1.0.7'
     implementation "com.android.support:appcompat-v7:27.1.1"
     implementation "com.android.support:recyclerview-v7:27.1.1"
     implementation "com.android.support:support-annotations:27.1.1"

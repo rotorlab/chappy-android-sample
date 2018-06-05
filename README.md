@@ -1,7 +1,7 @@
 <p align="center"><img width="10%" vspace="20" src="https://github.com/rotorlab/chappy-android-sample/raw/develop/app/src/main/res/mipmap-xxxhdpi/ic_launcher_rounded.png"></p>
 
 # Chappy 
-**Proof of Concept** app about the use of Rotor libraries (Core, Database and Notifications). Chappy has a **mvp architecture** for interacting dynamically between Rotor data sources and views.
+**Proof of Concept** app using of Rotor libraries (Core, Database and Notifications). Chappy has a **mvp architecture** for interacting dynamically between Rotor data sources and views.
 
 The repository goal is to show a reactive engine, where every data change involves an interface change. Everything with the minimum number of requests.
 
@@ -11,23 +11,23 @@ git clone https://github.com/rotorlab/chappy-android-sample.git
 ```
 
 ### Run Chappy
-All you need to start Chappy is running a [Rotor server-node](https://github.com/rotorlab/server-node) (and that's all). Data source model is defined in Android client, no logic is needed in back-end side.
+All you need to start Chappy is to run a [Rotor server-node](https://github.com/rotorlab/server-node) (and that's all). Data source model is defined in Android client, no logic is needed in back-end side.
 
 ```java
 public class Chat {
-
+ 
     @SerializedName("name")
     @Expose
     String name;
-
+ 
     @SerializedName("members")
     @Expose
     Map<String, Member> members;
-
+ 
     @SerializedName("messages")
     @Expose
     Map<String, Message> messages;
-
+ 
     public Chat(String name, Map<String, Member> members, Map<String, Message> messages) {
         this.name = name;
         this.members = members;
@@ -39,9 +39,9 @@ public class Chat {
 ```
 
 ### Configuration
-This app doesn't need any configuration for virtual devices before start. Inside the project you will find few variants, the important ones:
+This app doesn't need any configuration for virtual devices before start. Inside the project you will find some variants, the important ones:
 - `emulatorDebug`: Sets internal URIs for work with Android emulator (10.0.2.2)
-- `deviceDebug`: Sets normal URIs for work with a physical Android device (ex. 192.168.1.130)
+- `deviceDebug`: Sets normal URIs for work with a physical Android device (85.168.1.130)
  
 <p align="center"><img width="30%" vspace="20" src="https://github.com/rotorlab/chappy-android-sample/raw/develop/sample1.png"></p>
  
