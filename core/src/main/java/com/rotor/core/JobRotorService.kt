@@ -10,6 +10,8 @@ import android.util.Log
 import com.lambdaworks.redis.RedisClient
 import com.lambdaworks.redis.pubsub.RedisPubSubConnection
 import com.lambdaworks.redis.pubsub.RedisPubSubListener
+import com.rotor.core.Rotor.Companion.PREF_CONFIG
+import com.rotor.core.Rotor.Companion.PREF_URL
 import org.json.JSONException
 import org.json.JSONObject
 import java.util.*
@@ -80,11 +82,11 @@ class JobRotorService : JobService() {
                 url = Rotor.urlRedis
             }
             if (url == null || url?.length == 0) {
-                val shared = applicationContext.getSharedPreferences(RotorService.PREF_CONFIG, Context.MODE_PRIVATE)
-                url = shared.getString(RotorService.PREF_URL, null)
+                val shared = applicationContext.getSharedPreferences(PREF_CONFIG, Context.MODE_PRIVATE)
+                url = shared.getString(PREF_URL, null)
             } else {
-                val shared = applicationContext.getSharedPreferences(RotorService.PREF_CONFIG, Context.MODE_PRIVATE).edit()
-                shared.putString(RotorService.PREF_URL, url)
+                val shared = applicationContext.getSharedPreferences(PREF_CONFIG, Context.MODE_PRIVATE).edit()
+                shared.putString(PREF_URL, url)
                 shared.apply()
             }
 

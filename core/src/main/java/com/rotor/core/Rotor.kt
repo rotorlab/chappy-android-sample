@@ -6,15 +6,10 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.Intent
-import android.content.ServiceConnection
-import android.os.IBinder
 import android.provider.Settings
 import android.util.Log
-import com.rotor.core.interfaces.InternalServiceListener
 import com.rotor.core.interfaces.StatusListener
 import com.google.gson.Gson
-import com.rotor.core.RotorService.Companion.PREF_CONFIG
-import com.rotor.core.RotorService.Companion.PREF_ID
 import com.rotor.core.interfaces.BuilderFace
 import org.json.JSONObject
 
@@ -27,6 +22,9 @@ class Rotor {
     companion object {
 
         private val TAG = Rotor::class.java.simpleName
+        internal val PREF_ID = "rotor_id"
+        internal val PREF_URL = "rotor_url"
+        internal val PREF_CONFIG = "rotor_config"
 
         var context: Context? = null
         @JvmStatic var id: String ? = null
