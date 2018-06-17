@@ -57,6 +57,7 @@ public class App extends Application {
         ImageLoader.getInstance().init(config);
 
         auth = FirebaseAuth.getInstance();
+        /*
         MotionDetector.initialize(this);
         MotionDetector.debug(true);
         MotionDetector.minAccuracy(30);
@@ -118,6 +119,7 @@ public class App extends Application {
                 }
             }
         });
+        */
 
         DrawerImageLoader.init(new AbstractDrawerImageLoader() {
             @Override

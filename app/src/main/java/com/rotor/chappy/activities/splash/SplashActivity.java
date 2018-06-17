@@ -107,11 +107,13 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
     @Override
     protected void onResume() {
         super.onResume();
+        Rotor.onResume();
         presenter.onResumeView();
     }
 
     @Override
     protected void onPause() {
+        Rotor.onPause();
         presenter.onPauseView();
         super.onPause();
     }

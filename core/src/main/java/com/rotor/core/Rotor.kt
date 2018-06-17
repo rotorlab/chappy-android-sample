@@ -1,5 +1,7 @@
 package com.rotor.core
 
+import android.app.job.JobInfo
+import android.app.job.JobScheduler
 import android.content.ComponentName
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
@@ -31,49 +33,13 @@ class Rotor {
         @JvmStatic var urlServer: String ? = null
         @JvmStatic var urlRedis: String ? = null
         lateinit var statusListener: StatusListener
-
-        var rotorService: RotorService? = null
-        private var isServiceBound: Boolean? = null
+        private var jobId = 0
+        private var serviceComponent: ComponentName ? = null
 
         var gson: Gson? = null
         var debug: Boolean? = null
-        var initializing: Boolean? = null
+        var initialize: Boolean = false
         var builders: HashMap<Builder, BuilderFace> ? = null
-
-        @JvmStatic val serviceConnection: ServiceConnection = object : ServiceConnection {
-
-            override fun onServiceConnected(className: ComponentName, service: IBinder) {
-                if (service is RotorService.FBinder) {
-                    rotorService = service.service
-                    rotorService?.sc = this
-                    rotorService?.listener = object : InternalServiceListener {
-
-                        override fun connected() {
-                            if (initializing!!) {
-                                initializing = false
-                                statusListener.connected()
-                            }
-                        }
-
-                        override fun reconnecting() {
-                            statusListener.reconnecting()
-                        }
-                    }
-                    if (initializing!!) {
-                        rotorService?.startService()
-                    }
-                    if (debug!!) Log.e(TAG, "instanced service")
-                }
-            }
-
-            override fun onServiceDisconnected(className: ComponentName) {
-                if (className.className == RotorService::class.java.name) {
-                    rotorService?.listener = null
-                    rotorService = null
-                }
-                if (debug!!) Log.e(TAG, "disconnected")
-            }
-        }
 
         @JvmStatic fun initialize(context: Context, urlServer: String, redisServer: String, statusListener: StatusListener) {
             Companion.context = context
@@ -91,8 +57,11 @@ class Rotor {
                 Companion.id = generateNewId()
             }
 
-            Companion.initializing = true
+            serviceComponent = ComponentName(context, JobRotorService::class.java)
 
+            Companion.initialize = false
+
+            stop()
             start()
         }
 
@@ -104,48 +73,28 @@ class Rotor {
             return id
         }
 
-        @JvmStatic fun stop() {
-            if (isServiceBound != null && isServiceBound!! && rotorService != null && rotorService!!.getServiceConnection() != null) {
-                rotorService!!.stopService()
-                try {
-                    context!!.unbindService(rotorService!!.getServiceConnection())
-                } catch (e: IllegalArgumentException) {
-                    // nothing to do here
-                }
-
-                if (debug!!) Log.e(TAG, "unbound")
-                context!!.stopService(Intent(context, RotorService::class.java))
-                isServiceBound = false
+        fun stop() {
+            try {
+                finishJob()
+                context?.stopService(Intent(context, JobRotorService::class.java))
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
 
         private fun start() {
-            if (isServiceBound == null || !isServiceBound!!) {
-                val i = Intent(context, RotorService::class.java)
-                context!!.startService(i)
-                context!!.bindService(i, getServiceConnection(RotorService())!!, Context.BIND_AUTO_CREATE)
-                isServiceBound = true
-            }
+            val startServiceIntent = Intent(context, JobRotorService::class.java)
+            context?.startService(startServiceIntent)
+
+            scheduleJob()
         }
 
         @JvmStatic fun onResume() {
-            start()
+            // start()
         }
 
         @JvmStatic fun onPause() {
-            if (rotorService != null && isServiceBound != null && isServiceBound!!) {
-                context!!.unbindService(rotorService!!.getServiceConnection())
-                isServiceBound = false
-            }
-        }
-
-
-        @JvmStatic private fun getServiceConnection(obj: Any): ServiceConnection? {
-            return if (obj is RotorService) {
-                serviceConnection
-            } else {
-                null
-            }
+            //stop()
         }
 
         @JvmStatic fun onMessageReceived(jsonObject: JSONObject) {
@@ -164,6 +113,32 @@ class Rotor {
 
         @JvmStatic fun debug(debug: Boolean) {
             Companion.debug = debug
+        }
+
+        fun scheduleJob() {
+            val builder = JobInfo.Builder(jobId++, serviceComponent!!)
+            builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+
+            Log.d(TAG, "Scheduling job")
+            (context?.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler).schedule(builder.build())
+        }
+
+        private fun finishJob() {
+            (context?.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler).cancelAll()
+        }
+
+        internal fun connected() {
+            initialize = true
+            statusListener.connected()
+        }
+
+        internal fun notConnected() {
+            initialize = false
+            statusListener.reconnecting()
+        }
+
+        fun isConnected() : Boolean {
+            return initialize
         }
 
     }

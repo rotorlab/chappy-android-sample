@@ -84,7 +84,7 @@ class Database  {
                 return
             }
 
-            if (Rotor.rotorService == null || Rotor.rotorService?.getMoment() == null) {
+            if (!Rotor.isConnected()) {
                 Rotor.statusListener.reconnecting()
                 return
             }
@@ -100,7 +100,7 @@ class Database  {
 
             Log.d(TAG, "Creating reference: $path")
 
-            val objectReference = KReference<T>(Rotor.context!!, database, path, reference, Rotor.rotorService!!.getMoment() as Long)
+            val objectReference = KReference<T>(Rotor.context!!, database, path, reference, Date().time)
             pathMap!![path] = objectReference
 
             objectReference.loadCachedReference()

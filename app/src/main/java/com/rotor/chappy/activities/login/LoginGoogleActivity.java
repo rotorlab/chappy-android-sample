@@ -98,6 +98,18 @@ public class LoginGoogleActivity extends AppCompatActivity implements LoginGoogl
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        Rotor.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        Rotor.onPause();
+        super.onPause();
+    }
+
+    @Override
     public void goMain() {
         Intent intent = new Intent(LoginGoogleActivity.this, MainActivity.class);
         startActivity(intent);
@@ -151,6 +163,7 @@ public class LoginGoogleActivity extends AppCompatActivity implements LoginGoogl
     }
 
     private void startService() {
+        /*
         MotionDetector.start(new com.efraespada.motiondetector.Listener() {
             @Override
             public void locationChanged(android.location.Location location) {
@@ -186,6 +199,7 @@ public class LoginGoogleActivity extends AppCompatActivity implements LoginGoogl
                 ChatRepository.getUser().setType(type);
             }
         });
+        */
 
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
@@ -194,6 +208,7 @@ public class LoginGoogleActivity extends AppCompatActivity implements LoginGoogl
                 presenter.goMain();
             }
         }, 3000);
+
     }
 
 

@@ -3,7 +3,7 @@
 buildscript {
 
     ext.stringcare_version = '0.7'
-    ext.rotor_version = '0.2'
+    ext.rotor_version = '0.3'
     ext.kotlin_version = '1.2.41'
 
     repositories {
