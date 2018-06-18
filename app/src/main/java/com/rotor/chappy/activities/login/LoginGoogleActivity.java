@@ -22,6 +22,7 @@ import com.rotor.chappy.model.Location;
 import com.rotor.chappy.model.User;
 import com.rotor.chappy.services.ChatRepository;
 import com.rotor.core.Rotor;
+import com.rotor.database.Database;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -81,8 +82,8 @@ public class LoginGoogleActivity extends AppCompatActivity implements LoginGoogl
                 email = user.getEmail();
                 photo = user.getPhotoUrl().toString();
 
-                presenter.prepareFor("/users/" + uid, User.class);
-                presenter.sync("/users/" + uid);
+                presenter.prepareProfileFor("/users/" + uid);
+                presenter.syncProfile("/users/" + uid);
             } else {
                 // Sign in failed. If response is null the user canceled the
                 // sign-in flow using the back button. Otherwise check
@@ -114,52 +115,6 @@ public class LoginGoogleActivity extends AppCompatActivity implements LoginGoogl
         Intent intent = new Intent(LoginGoogleActivity.this, MainActivity.class);
         startActivity(intent);
         finish();
-    }
-
-    @Override
-    public void onCreateReference() {
-        user = new User(uid, name, email, photo, "android", Rotor.getId(), "", 0L, null);
-        presenter.sync("/users/" + uid);
-    }
-
-    @Override
-    public void onReferenceChanged(User user) {
-        if (!omitMoreChanges) {
-            omitMoreChanges = true;
-            presenter.sayHello(user);
-            ChatRepository.defineUser(user);
-            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
-                        ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
-                        ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                    startService();
-                } else {
-                    String[] perm = new String[]{
-                            Manifest.permission.ACCESS_FINE_LOCATION,
-                            Manifest.permission.ACCESS_COARSE_LOCATION,
-                            Manifest.permission.CAMERA
-                    };
-                    ActivityCompat.requestPermissions(this, perm, LOCATION_REQUEST_CODE);
-                }
-            } else {
-                startService();
-            }
-        }
-    }
-
-    @Override
-    public User onUpdateReference() {
-        return user;
-    }
-
-    @Override
-    public void onDestroyReference() {
-
-    }
-
-    @Override
-    public void progress(int value) {
-
     }
 
     private void startService() {
@@ -227,5 +182,55 @@ public class LoginGoogleActivity extends AppCompatActivity implements LoginGoogl
         } else {
             finish();
         }
+    }
+
+    @Override
+    public void onCreateUser() {
+        user = new User(uid, name, email, photo, "android", Rotor.getId(), "", 0L, null);
+        presenter.syncProfile("/users/" + uid);
+    }
+
+    @Override
+    public void onUserChanged(User user) {
+        this.user = user;
+        if (!this.user.getToken().equals(Rotor.getId())) {
+            this.user.setToken(Rotor.getId());
+            presenter.syncProfile("/users/" + this.user.getUid());
+        } else if (!omitMoreChanges) {
+            omitMoreChanges = true;
+            presenter.sayHello(user);
+            ChatRepository.defineUser(user);
+            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                        ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                        ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                    startService();
+                } else {
+                    String[] perm = new String[]{
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION,
+                            Manifest.permission.CAMERA
+                    };
+                    ActivityCompat.requestPermissions(this, perm, LOCATION_REQUEST_CODE);
+                }
+            } else {
+                startService();
+            }
+        }
+    }
+
+    @Override
+    public User onUpdateUser() {
+        return user;
+    }
+
+    @Override
+    public void onDestroyUser() {
+
+    }
+
+    @Override
+    public void userProgress(int value) {
+
     }
 }

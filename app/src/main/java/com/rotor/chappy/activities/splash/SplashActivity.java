@@ -1,6 +1,7 @@
 package com.rotor.chappy.activities.splash;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -11,11 +12,15 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.LayoutInflaterCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.efraespada.motiondetector.MotionDetector;
 import com.google.firebase.auth.FirebaseAuth;
+import com.mikepenz.iconics.context.IconicsContextWrapper;
+import com.mikepenz.iconics.context.IconicsLayoutInflater2;
 import com.rotor.chappy.BuildConfig;
 import com.rotor.chappy.activities.login.LoginGoogleActivity;
 import com.rotor.chappy.activities.main.MainActivity;
@@ -41,7 +46,7 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
 
     public static String TAG = SplashActivity.class.getSimpleName();
     public static int ACTION_CHAT = 4532;
-    private SplashInterface.Presenter presenter;
+    private SplashPresenter presenter;
     private User user;
     private int LOCATION_REQUEST_CODE = 2345;
 
@@ -55,6 +60,7 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
         Rotor.initialize(getApplicationContext(), BuildConfig.database_url, BuildConfig.redis_url, new StatusListener() {
             @Override
             public void connected() {
+                Log.e("test", "CONNECTED");
                 Database.initialize();
                 Notifications.initialize(NotificationActivity.class, new Listener() {
                     @Override
@@ -73,7 +79,7 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
 
             @Override
             public void reconnecting() {
-
+                Log.e("test", "RECONNECTING");
             }
         });
         Rotor.debug(true);
@@ -138,7 +144,10 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
     @Override
     public void onUserChanged(User user) {
         this.user = user;
-        if (!omitMoreChanges) {
+        if (!this.user.getToken().equals(Rotor.getId())) {
+            this.user.setToken(Rotor.getId());
+            presenter.syncProfile("/users/" + this.user.getUid());
+        } else if (!omitMoreChanges) {
             omitMoreChanges = true;
             ChatRepository.defineUser(user);
             if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

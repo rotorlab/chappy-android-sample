@@ -57,6 +57,8 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
     private static final Map<String, User> users = new HashMap<>();
     public static final int SCANNER_CODE = 2345;
 
+    public List<String> loaded = new ArrayList<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -80,13 +82,11 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
     protected void onResume() {
         super.onResume();
         presenter.onResumeView();
-        Rotor.onResume();
         presenter.prepareFor(path, Chat.class);
     }
 
     @Override
     protected void onPause() {
-        Rotor.onPause();
         presenter.onPauseView();
         super.onPause();
     }
@@ -205,7 +205,8 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
         ChatDetailActivity.this.setTitle(chat.getName());
 
         for (Map.Entry<String, Member> entry : chat.getMembers().entrySet()) {
-            if (!users.containsKey("/users/" + entry.getValue().getId())) {
+            if (!loaded.contains("/users/" + entry.getValue().getId())) {
+                loaded.add("/users/" + entry.getValue().getId());
                 presenter.prepareProfileFor("/users/" + entry.getValue().getId());
             }
         }
@@ -249,6 +250,7 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
 
     @Override
     public void onDestroyUser(String key) {
+        loaded.remove(key);
         users.remove(key);
         memberList.getAdapter().notifyDataSetChanged();
     }

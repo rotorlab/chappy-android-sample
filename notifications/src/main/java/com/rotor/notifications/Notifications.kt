@@ -2,8 +2,6 @@ package com.rotor.notifications
 
 import android.content.Context
 import android.support.v4.app.NotificationCompat
-import com.nostra13.universalimageloader.core.ImageLoader
-import com.nostra13.universalimageloader.core.ImageLoaderConfiguration
 import com.rotor.core.Builder
 import com.rotor.core.Rotor
 import com.rotor.core.interfaces.BuilderFace
@@ -15,14 +13,13 @@ import org.json.JSONObject
 import java.util.*
 import kotlin.collections.HashMap
 import android.graphics.Bitmap
-import android.view.View
-import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener
 import android.support.v4.app.NotificationManagerCompat
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NO_HISTORY
+import android.graphics.drawable.Drawable
 import android.os.Build
 import android.util.Log
 import com.google.gson.Gson
@@ -33,12 +30,14 @@ import com.rotor.notifications.interfaces.Listener
 import com.rotor.notifications.interfaces.Server
 import com.rotor.notifications.request.NotificationGetter
 import com.rotor.notifications.request.NotificationSender
+import com.squareup.picasso.Picasso
 import com.stringcare.library.SC
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
+import java.lang.Exception
 import kotlin.collections.ArrayList
 
 
@@ -71,12 +70,6 @@ class Notifications {
             loader = ClazzLoader<T>(clazz)
             this.listener = listener
 
-            loadCachedNotifications()
-
-            val config = ImageLoaderConfiguration.Builder(Rotor.context).build()
-            ImageLoader.getInstance().init(config)
-
-
             Rotor.prepare(Builder.NOTIFICATION, object: BuilderFace {
                 override fun onMessageReceived(jsonObject: JSONObject) {
                     try {
@@ -105,6 +98,8 @@ class Notifications {
             if (notificationStatusListener != null) {
                 notificationStatusListener!!.ready()
             }
+
+            loadCachedNotifications()
         }
 
         @JvmStatic fun listener(notificationStatusListener: NotificationRouterActivity.NotificationsStatus) {
@@ -163,7 +158,7 @@ class Notifications {
                     val newOpens = ArrayList<String>()
                     if (ref.sender.id.equals(Rotor.id)) {
                         for (receiver in ref.receivers.values) {
-                            if (receiver.viewed != docker!!.notifications!![identifier]!!.receivers[receiver.id]!!.viewed || (receiver.viewed != null && Rotor.id.equals(receiver.id))) {
+                            if (receiver.viewed != docker!!.notifications!![identifier]!!.receivers[receiver.id]!!.viewed) {
                                 newOpens.add(receiver.id)
                             }
                             if (receiver.viewed != null) {
@@ -175,18 +170,14 @@ class Notifications {
                     docker!!.notifications!![identifier] = ref
                     val gson = Gson()
                     ReferenceUtils.addElement(NOTIFICATION, gson.toJson(docker!!))
-                    if (!ref.sender.id.equals(Rotor.id)) {
-                        show(identifier)
-                    }
+
                     if (created) {
                         created = false
                         var rece: ArrayList<Receiver> = arrayListOf()
                         rece.addAll(ref.receivers.values)
                         sendNotification(identifier, rece)
-                    } else if (ref.receivers.containsKey(Rotor.id)
-                            && ref.receivers[Rotor.id]!!.viewed != null
-                            && !ref.sender!!.id!!.equals(Rotor.id)) {
-
+                    } else if (ref.receivers.containsKey(Rotor.id) && ref.receivers[Rotor.id]!!.viewed != null
+                            && !ref.sender.id.equals(Rotor.id)) {
                         val notificationManager = NotificationManagerCompat.from(Rotor.context!!)
                         val idNumber = ref.id.toLong()
                         notificationManager.cancel(idNumber.toInt())
@@ -194,7 +185,16 @@ class Notifications {
                         docker!!.notifications!!.remove(identifier)
                         Database.unlisten(identifier)
                         ReferenceUtils.addElement(NOTIFICATION, gson.toJson(docker!!))
-                    } else if (ref.sender.id.equals(Rotor.id) && listener != null) {
+                    } else if (ref.receivers.containsKey(Rotor.id) && ref.receivers[Rotor.id]!!.viewed != null
+                            && ref.sender.id.equals(Rotor.id)) {
+                        val notificationManager = NotificationManagerCompat.from(Rotor.context!!)
+                        val idNumber = ref.id.toLong()
+                        notificationManager.cancel(idNumber.toInt())
+                    } else if (ref.receivers.containsKey(Rotor.id) && ref.receivers[Rotor.id]!!.viewed == null) {
+                        show(identifier)
+                    }
+
+                    if (ref.sender.id.equals(Rotor.id) && listener != null) {
                         for (r in newOpens) {
                             listener!!.opened(r, docker!!.notifications!![identifier]!!)
                         }
@@ -267,13 +267,20 @@ class Notifications {
                 val content = notification!!.content
 
                 content?.let {
-                    if (content.photo != null) {
-                        val imageLoader = ImageLoader.getInstance()
-                        imageLoader.loadImage(content.photo, object : SimpleImageLoadingListener() {
-                            override fun onLoadingComplete(imageUri: String, view: View, loadedImage: Bitmap) {
-                                interShow(identifier, content, loadedImage)
+                    if (content.photoSmall != null) {
+                        Picasso.Builder(Rotor.context!!).build().load(content.photoSmall).into(object: com.squareup.picasso.Target {
+                            override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {
+                                // noyhing to do here
                             }
-                        })
+
+                            override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
+                                // noyhing to do here
+                            }
+
+                            override fun onBitmapLoaded(bitmap: Bitmap?, from: Picasso.LoadedFrom?) {
+                                interShow(identifier, content, bitmap)
+                            }
+                        });
                     } else {
                         interShow(identifier, content, null)
                     }

@@ -75,6 +75,8 @@ class JobRotorService : JobService() {
         return Service.START_STICKY
     }
 
+
+
     private fun startConnection() {
         Rotor.notConnected()
         if (client == null) {

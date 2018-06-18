@@ -43,7 +43,7 @@ dependencies {
         transitive = true
     }*/
     implementation 'com.google.code.gson:gson:2.8.2'
-    implementation 'com.nostra13.universalimageloader:universal-image-loader:1.9.5'
+    implementation 'com.squareup.picasso:picasso:2.71828'
     implementation "com.stringcare:library:0.7"
 
     implementation 'org.apache.commons:commons-lang3:3.6'
