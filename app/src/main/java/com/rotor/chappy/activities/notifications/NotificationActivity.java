@@ -8,7 +8,7 @@ import com.rotor.chappy.BuildConfig;
 import com.rotor.chappy.activities.splash.SplashActivity;
 import com.rotor.chappy.activities.chat.ChatActivity;
 import com.rotor.core.Rotor;
-import com.rotor.core.interfaces.StatusListener;
+import com.rotor.core.interfaces.REvent;
 import com.rotor.database.Database;
 import com.rotor.notifications.NotificationRouterActivity;
 import com.rotor.notifications.Notifications;
@@ -25,7 +25,7 @@ public class NotificationActivity extends NotificationRouterActivity {
 
     @Override
     public void onCreate() {
-        Rotor.initialize(getApplicationContext(), BuildConfig.database_url, BuildConfig.redis_url, new StatusListener() {
+        Rotor.initialize(getApplicationContext(), BuildConfig.database_url, BuildConfig.redis_url, new REvent() {
             @Override
             public void connected() {
                 Database.initialize();

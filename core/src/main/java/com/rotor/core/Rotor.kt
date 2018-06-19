@@ -8,7 +8,7 @@ import android.content.Context.MODE_PRIVATE
 import android.content.Intent
 import android.provider.Settings
 import android.util.Log
-import com.rotor.core.interfaces.StatusListener
+import com.rotor.core.interfaces.REvent
 import com.google.gson.Gson
 import com.rotor.core.interfaces.BuilderFace
 import org.json.JSONObject
@@ -30,7 +30,7 @@ class Rotor {
         @JvmStatic var id: String ? = null
         @JvmStatic var urlServer: String ? = null
         @JvmStatic var urlRedis: String ? = null
-        lateinit var statusListener: StatusListener
+        lateinit var REvent: REvent
         private var jobId = 0
         private var serviceComponent: ComponentName ? = null
 
@@ -39,25 +39,25 @@ class Rotor {
         var initialize: Boolean = false
         var builders: HashMap<Builder, BuilderFace> ? = null
 
-        @JvmStatic fun initialize(context: Context, urlServer: String, redisServer: String, statusListener: StatusListener) {
-            Companion.context = context
-            Companion.urlServer = urlServer
-            Companion.urlRedis = redisServer
-            Companion.statusListener = statusListener
-            if (Companion.builders == null) {
-                Companion.builders = HashMap<Builder, BuilderFace>()
+        @JvmStatic fun initialize(context: Context, urlServer: String, redisServer: String, REvent: REvent) {
+            this@Companion.context = context
+            this@Companion.urlServer = urlServer
+            this@Companion.urlRedis = redisServer
+            this@Companion.REvent = REvent
+            if (builders == null) {
+                builders = HashMap<Builder, BuilderFace>()
             }
-            Companion.debug = false
-            Companion.gson = Gson()
+            debug = false
+            gson = Gson()
             val shared = context.getSharedPreferences(PREF_CONFIG, MODE_PRIVATE)
-            Companion.id = shared.getString(PREF_ID, null)
-            if (Companion.id == null) {
-                Companion.id = generateNewId()
+            id = shared.getString(PREF_ID, null)
+            if (id == null) {
+                id = generateNewId()
             }
 
             serviceComponent = ComponentName(context, JobRotorService::class.java)
 
-            Companion.initialize = false
+            initialize = false
 
             stop()
             start()
@@ -87,30 +87,22 @@ class Rotor {
             scheduleJob()
         }
 
-        @JvmStatic fun onResume() {
-            // start()
-        }
-
-        @JvmStatic fun onPause() {
-            //stop()
-        }
-
         @JvmStatic fun onMessageReceived(jsonObject: JSONObject) {
-            if (Companion.builders != null) {
-                for (face in Companion.builders!!.values) {
+            if (builders != null) {
+                for (face in builders!!.values) {
                     face.onMessageReceived(jsonObject)
                 }
             }
         }
 
         @JvmStatic fun prepare(type: Builder, face: BuilderFace) {
-            if (Companion.builders != null) {
-                Companion.builders!![type] = face
+            if (builders != null) {
+                builders!![type] = face
             }
         }
 
         @JvmStatic fun debug(debug: Boolean) {
-            Companion.debug = debug
+            this@Companion.debug = debug
         }
 
         fun scheduleJob() {
@@ -127,12 +119,12 @@ class Rotor {
 
         internal fun connected() {
             initialize = true
-            statusListener.connected()
+            REvent.connected()
         }
 
         internal fun notConnected() {
             initialize = false
-            statusListener.reconnecting()
+            REvent.reconnecting()
         }
 
         fun isConnected() : Boolean {

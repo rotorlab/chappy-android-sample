@@ -2,7 +2,6 @@ package com.rotor.database
 
 import android.os.Handler
 import android.util.Log
-import cc.duduhuo.util.digest.Digest
 import com.efraespada.jsondiff.JSONDiff
 import com.rotor.core.Builder
 import com.rotor.core.Rotor
@@ -80,12 +79,12 @@ class Database  {
 
         @JvmStatic fun <T> listen(database: String, path: String, reference: Reference<T>) {
             if (pathMap == null) {
-                Log.e(TAG, "Use Database.initialize(Context context, String urlServer, String token, StatusListener) before create real time references")
+                Log.e(TAG, "Use Database.initialize(Context context, String urlServer, String token, REvent) before create real time references")
                 return
             }
 
             if (!Rotor.isConnected()) {
-                Rotor.statusListener.reconnecting()
+                Rotor.REvent.reconnecting()
                 return
             }
 
