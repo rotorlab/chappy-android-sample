@@ -6,12 +6,15 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.Intent
+import android.os.Build
 import android.provider.Settings
 import android.util.Log
-import com.rotor.core.interfaces.REvent
+import com.rotor.core.interfaces.RStatus
 import com.google.gson.Gson
 import com.rotor.core.interfaces.BuilderFace
+import com.rotor.core.interfaces.RScreen
 import org.json.JSONObject
+import java.util.ArrayList
 
 /**
  * Created by efraespada on 11/03/2018.
@@ -30,20 +33,22 @@ class Rotor {
         @JvmStatic var id: String ? = null
         @JvmStatic var urlServer: String ? = null
         @JvmStatic var urlRedis: String ? = null
-        lateinit var REvent: REvent
+        lateinit var RStatus: RStatus
         private var jobId = 0
         private var serviceComponent: ComponentName ? = null
+
+        private val list = ArrayList<RScreen>()
 
         var gson: Gson? = null
         var debug: Boolean? = null
         var initialize: Boolean = false
         var builders: HashMap<Builder, BuilderFace> ? = null
 
-        @JvmStatic fun initialize(context: Context, urlServer: String, redisServer: String, REvent: REvent) {
+        @JvmStatic fun initialize(context: Context, urlServer: String, redisServer: String, RStatus: RStatus) {
             this@Companion.context = context
             this@Companion.urlServer = urlServer
             this@Companion.urlRedis = redisServer
-            this@Companion.REvent = REvent
+            this@Companion.RStatus = RStatus
             if (builders == null) {
                 builders = HashMap<Builder, BuilderFace>()
             }
@@ -107,6 +112,9 @@ class Rotor {
 
         fun scheduleJob() {
             val builder = JobInfo.Builder(jobId++, serviceComponent!!)
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                builder.setPeriodic(5000)
+            }
             builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
 
             Log.d(TAG, "Scheduling job")
@@ -119,16 +127,46 @@ class Rotor {
 
         internal fun connected() {
             initialize = true
-            REvent.connected()
+            for (entry in list) {
+                if (entry.isActive) {
+                    entry.connected()
+                }
+            }
+            RStatus.ready()
         }
 
         internal fun notConnected() {
             initialize = false
-            REvent.reconnecting()
+            for (entry in list) {
+                if (entry.isActive) {
+                    entry.disconnected()
+                }
+            }
         }
 
-        fun isConnected() : Boolean {
-            return initialize
+        @JvmStatic fun isConnected() : Boolean {
+            if (NetworkUtil.getConnectivityStatus(Rotor.context!!).equals(NetworkUtil.NETWORK_STATUS_NOT_CONNECTED) && initialize) {
+                stop()
+            } else if (!NetworkUtil.getConnectivityStatus(Rotor.context!!).equals(NetworkUtil.NETWORK_STATUS_NOT_CONNECTED) && !initialize) {
+                start()
+            }
+            return !NetworkUtil.getConnectivityStatus(Rotor.context!!).equals(NetworkUtil.NETWORK_STATUS_NOT_CONNECTED) && initialize
+        }
+
+        @JvmStatic fun screens() : ArrayList<RScreen> {
+            return list
+        }
+
+        fun onResume() {
+            for (face in builders!!.entries) {
+                face.value.onResume()
+            }
+        }
+
+        fun onPause() {
+            for (face in builders!!.entries) {
+                face.value.onPause()
+            }
         }
 
     }

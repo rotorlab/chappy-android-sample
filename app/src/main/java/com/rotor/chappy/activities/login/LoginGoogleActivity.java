@@ -21,6 +21,7 @@ import com.rotor.chappy.activities.main.MainActivity;
 import com.rotor.chappy.model.Location;
 import com.rotor.chappy.model.User;
 import com.rotor.chappy.services.ChatRepository;
+import com.rotor.core.RAppCompatActivity;
 import com.rotor.core.Rotor;
 import com.rotor.database.Database;
 
@@ -32,7 +33,7 @@ import java.util.List;
 /**
  * Demonstrate Firebase Authentication using a Google ID Token.
  */
-public class LoginGoogleActivity extends AppCompatActivity implements LoginGoogleInterface.View<User> {
+public class LoginGoogleActivity extends RAppCompatActivity implements LoginGoogleInterface.View<User> {
 
     private static final String TAG = "GoogleActivity";
     private static final int RC_SIGN_IN = 9001;
@@ -96,18 +97,6 @@ public class LoginGoogleActivity extends AppCompatActivity implements LoginGoogl
     @Override
     public void sayHello(User user) {
 
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Rotor.onResume();
-    }
-
-    @Override
-    protected void onPause() {
-        Rotor.onPause();
-        super.onPause();
     }
 
     @Override
@@ -231,6 +220,16 @@ public class LoginGoogleActivity extends AppCompatActivity implements LoginGoogl
 
     @Override
     public void userProgress(int value) {
+
+    }
+
+    @Override
+    public void connected() {
+
+    }
+
+    @Override
+    public void disconnected() {
 
     }
 }

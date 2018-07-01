@@ -33,6 +33,7 @@ import com.rotor.chappy.R;
 import com.rotor.chappy.activities.login.LoginGoogleActivity;
 import com.rotor.chappy.activities.main.MainActivity;
 import com.rotor.chappy.model.User;
+import com.rotor.core.RAppCompatActivity;
 import com.stringcare.library.SC;
 
 import net.glxn.qrgen.android.QRCode;
@@ -41,7 +42,7 @@ import net.glxn.qrgen.android.QRCode;
  * Created by efraespada on 27/02/2018.
  */
 
-public class ProfileActivity extends AppCompatActivity implements ProfileInterface.View {
+public class ProfileActivity extends RAppCompatActivity implements ProfileInterface.View {
 
     public static String TAG = ProfileActivity.class.getSimpleName();
     private ProfilePresenter presenter;
@@ -187,5 +188,15 @@ public class ProfileActivity extends AppCompatActivity implements ProfileInterfa
     @Override
     public void userProgress(int value) {
         // nothing to do here
+    }
+
+    @Override
+    public void connected() {
+
+    }
+
+    @Override
+    public void disconnected() {
+
     }
 }

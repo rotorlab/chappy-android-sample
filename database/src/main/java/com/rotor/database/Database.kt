@@ -4,8 +4,10 @@ import android.os.Handler
 import android.util.Log
 import com.efraespada.jsondiff.JSONDiff
 import com.rotor.core.Builder
+import com.rotor.core.NetworkUtil
 import com.rotor.core.Rotor
 import com.rotor.core.interfaces.BuilderFace
+import com.rotor.core.interfaces.RScreen
 import com.rotor.database.abstr.Reference
 import com.rotor.database.interfaces.QueryCallback
 import com.rotor.database.models.KReference
@@ -33,17 +35,33 @@ class Database  {
     companion object {
 
         private val TAG: String = Database::class.java.simpleName!!
-        @JvmStatic private var pathMap: HashMap<String, KReference<*>> ? = null
         val api by lazy {
             ReferenceUtils.service(Rotor.urlServer!!)
         }
 
         @JvmStatic fun initialize() {
-            pathMap.let {
-                pathMap = HashMap()
-            }
-
             Rotor.prepare(Builder.DATABASE, object: BuilderFace {
+                override fun onResume() {
+                    val status = !NetworkUtil.getConnectivityStatus(Rotor.context!!).equals(NetworkUtil.NETWORK_STATUS_NOT_CONNECTED)
+                    for (screen in Rotor.screens()) {
+                        if (screen.isActive) {
+                            for (ref in screen.holders()) {
+                                val refe = ref.value!! as KReference<*>
+                                refe.loadCachedReference()
+                            }
+                            if (!status) {
+                                screen.disconnected()
+                            } else {
+                                screen.connected()
+                            }
+                        }
+                    }
+                }
+
+                override fun onPause() {
+                    // nothing to do here
+                }
+
                 override fun onMessageReceived(jsonObject: JSONObject) {
                     try {
                         if (jsonObject.has("data")) {
@@ -52,20 +70,20 @@ class Database  {
                                 val info = data.getString("info")
                                 val path = data.getString(PATH)
                                 if (ACTION_NEW_OBJECT.equals(info)) {
-                                    if (pathMap!!.containsKey(path)) {
+                                    if (contains(path)) {
                                         val handler = Handler()
                                         handler.postDelayed({ sync(path) }, 200)
                                     }
                                 } else if (ACTION_REFERENCE_REMOVED.equals(info)) {
-                                    if (pathMap!!.containsKey(path)) {
+                                    if (contains(path)) {
                                         val handler = Handler()
                                         handler.postDelayed({ removePrim(path) }, 200)
                                     }
                                 }
                             } else if (data.has(PATH)) {
                                 val path = data.getString(PATH)
-                                if (pathMap!!.containsKey(path)) {
-                                    pathMap!![path]!!.onMessageReceived(data)
+                                if (contains(path)) {
+                                    getCurrentReference(path)!!.onMessageReceived(data)
                                 }
                             }
                         }
@@ -78,33 +96,31 @@ class Database  {
         }
 
         @JvmStatic fun <T> listen(database: String, path: String, reference: Reference<T>) {
-            if (pathMap == null) {
-                Log.e(TAG, "Use Database.initialize(Context context, String urlServer, String token, REvent) before create real time references")
-                return
+            var objectReference: KReference<T> ? = null
+            var rScreen: RScreen ? = null
+            for (screen in Rotor.screens()) {
+                if (screen.isActive()) {
+                    rScreen = screen
+                }
+                if (screen.hasPath(path) && screen.isActive()) {
+                    objectReference = screen.holders().get(path) as KReference<T>?
+                    break
+                }
             }
 
-            if (!Rotor.isConnected()) {
-                Rotor.REvent.reconnecting()
-                return
+            if (objectReference == null && rScreen != null) {
+                Log.d(TAG, "Creating reference: $path")
+
+                objectReference = KReference<T>(Rotor.context!!, database, path, reference, Date().time)
+
+                rScreen!!.addPath(path, objectReference)
+                objectReference.loadCachedReference()
+
+                syncWithServer(path)
+            } else if (objectReference != null) {
+                objectReference.loadCachedReference()
             }
 
-            val blowerCreation = Date().time
-
-            if (pathMap!!.containsKey(path)) {
-                Log.d(TAG, "Listener already added for: $path")
-                pathMap!![path]!!.addBlower(blowerCreation, reference)
-                pathMap!![path]!!.loadCachedReference()
-                return
-            }
-
-            Log.d(TAG, "Creating reference: $path")
-
-            val objectReference = KReference<T>(Rotor.context!!, database, path, reference, Date().time)
-            pathMap!![path] = objectReference
-
-            objectReference.loadCachedReference()
-
-            syncWithServer(path)
         }
 
         @JvmStatic fun sha1(value: String) : String {
@@ -116,8 +132,8 @@ class Database  {
             if (content == null) {
                 content = PrimaryReferece.EMPTY_OBJECT
             }
-
-            api.createReference(CreateListener("listen_reference", pathMap!!.get(path)!!.databaseName, path, Rotor.id!!, OS, sha1(content), content.length))
+            val ref = getCurrentReference(path)
+            api.createReference(CreateListener("listen_reference", ref!!.databaseName, path, Rotor.id!!, OS, sha1(content), content.length))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
@@ -131,35 +147,33 @@ class Database  {
         }
 
         @JvmStatic fun unlisten(path: String) {
-            if (pathMap!!.containsKey(path)) {
-                api.removeListener(RemoveListener("unlisten_reference", pathMap!!.get(path)!!.databaseName, path, Rotor.id!!))
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(
-                                { result ->
-                                    result.status?.let {
-                                        Log.e(TAG, result.status)
-                                    }
-                                },
-                                { error -> error.printStackTrace() }
-                        )
-            }
+            val ref = getCurrentReference(path)
+            api.removeListener(RemoveListener("unlisten_reference", ref!!.databaseName, path, Rotor.id!!))
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                            { result ->
+                                result.status?.let {
+                                    Log.e(TAG, result.status)
+                                }
+                            },
+                            { error -> error.printStackTrace() }
+                    )
         }
 
         @JvmStatic fun remove(path: String) {
-            if (pathMap!!.containsKey(path)) {
-                api.removeReference(RemoveReference("remove_reference", pathMap!!.get(path)!!.databaseName, path, Rotor.id!!))
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(
-                                { result ->
-                                    result.status?.let {
-                                        Log.e(TAG, result.status)
-                                    }
-                                },
-                                { error -> error.printStackTrace() }
-                        )
-            }
+            val ref = getCurrentReference(path)
+            api.removeReference(RemoveReference("remove_reference", ref!!.databaseName, path, Rotor.id!!))
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                            { result ->
+                                result.status?.let {
+                                    Log.e(TAG, result.status)
+                                }
+                            },
+                            { error -> error.printStackTrace() }
+                    )
         }
 
         @JvmStatic private fun refreshToServer(path: String, differences: String, len: Int, clean: Boolean) {
@@ -167,7 +181,9 @@ class Database  {
                 return
             }
 
-            api.refreshToServer(UpdateToServer("update_reference", pathMap!!.get(path)!!.databaseName, path, Rotor.id!!, "android", differences, len, clean))
+            val ref = getCurrentReference(path)
+
+            api.refreshToServer(UpdateToServer("update_reference", ref!!.databaseName, path, Rotor.id!!, "android", differences, len, clean))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
@@ -186,7 +202,9 @@ class Database  {
                 return
             }
 
-            api.refreshFromServer(UpdateFromServer("update_reference_from", pathMap!!.get(path)!!.databaseName, path, Rotor.id!!, "android", content))
+            val ref = getCurrentReference(path)
+
+            api.refreshFromServer(UpdateFromServer("update_reference_from", ref!!.databaseName, path, Rotor.id!!, "android", content))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
@@ -204,29 +222,36 @@ class Database  {
         }
 
         @JvmStatic fun sync(path: String, clean: Boolean) {
-            if (pathMap!!.containsKey(path)) {
-                val result = pathMap!![path]!!.getDifferences(clean)
-                val diff = result[1] as String
-                val len = result[0] as Int
-                if (!EMPTY_OBJECT.equals(diff)) {
-                    refreshToServer(path, diff, len, clean)
-                } else {
-                    val blower = pathMap!![path]!!.getLastest()
-                    val value = pathMap!![path]!!.getReferenceAsString()
-                    if (value.equals(EMPTY_OBJECT) || value.equals(NULL)) {
-                        blower.onCreate()
+            for (entry in Rotor.screens()) {
+                if (entry.isActive && entry.hasPath(path)) {
+                    val refe = entry.holders().get(path) as KReference<*>
+                    val result = refe.getDifferences(clean)
+                    val diff = result[1] as String
+                    val len = result[0] as Int
+                    if (!EMPTY_OBJECT.equals(diff)) {
+                        refreshToServer(path, diff, len, clean)
+                    } else {
+                        val blower = refe.getLastest()
+                        val value = refe.getReferenceAsString()
+                        if (value.equals(EMPTY_OBJECT) || value.equals(NULL)) {
+                            blower.onCreate()
+                        }
                     }
                 }
             }
         }
 
         @JvmStatic fun removePrim(path: String) {
-            if (pathMap!!.containsKey(path)) {
-                pathMap!![path]!!.remove()
-                pathMap!!.remove(path)
-                ReferenceUtils.removeElement(path)
-                Database.unlisten(path)
+            for (entry in Rotor.screens()) {
+                if (entry.hasPath(path)) {
+                    val refe = entry.holders().get(path) as KReference<*>
+                    refe.remove()
+                    entry.holders().remove(path)
+                }
             }
+
+            ReferenceUtils.removeElement(path)
+            Database.unlisten(path)
         }
 
         @JvmStatic fun query(database: String, path: String, query: String, mask: String, callback: QueryCallback) {
@@ -240,6 +265,25 @@ class Database  {
                             },
                             { error -> error.printStackTrace() })
 
+        }
+
+        @JvmStatic fun getCurrentReference(path: String) : KReference<*> ? {
+            for (entry in Rotor.screens()) {
+                if (entry.hasPath(path) && entry.isActive) {
+                    val refe = entry.holders().get(path) as KReference<*>
+                    return refe
+                }
+            }
+            return null
+        }
+
+        @JvmStatic fun contains(path: String) : Boolean {
+            for (entry in Rotor.screens()) {
+                if (entry.hasPath(path) && entry.isActive) {
+                    return true
+                }
+            }
+            return false
         }
     }
 

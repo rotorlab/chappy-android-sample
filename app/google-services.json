@@ -23,6 +23,14 @@
           }
         },
         {
+          "client_id": "105555060150-59tn0006svi5agmqpthrgtisbq5kdk4v.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rotor.chappy",
+            "certificate_hash": "7d6076cd8299af1396719031ec43800db94ac66a"
+          }
+        },
+        {
           "client_id": "105555060150-63r93esp6takn1dbuof7i23dbse32e5t.apps.googleusercontent.com",
           "client_type": 3
         }

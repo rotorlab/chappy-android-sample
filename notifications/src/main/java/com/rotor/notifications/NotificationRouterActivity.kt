@@ -2,12 +2,13 @@ package com.rotor.notifications
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import com.rotor.core.RAppCompatActivity
 import com.rotor.core.Rotor
 
 /**
  * Created by efraespada on 23/03/2018.
  */
-abstract class NotificationRouterActivity : AppCompatActivity() {
+abstract class NotificationRouterActivity : RAppCompatActivity() {
 
     var enter: Boolean ? = false
 
@@ -52,15 +53,5 @@ abstract class NotificationRouterActivity : AppCompatActivity() {
     abstract fun notificationTouched(action: Int, id: String, room: String)
 
     abstract fun onCreate()
-
-    override fun onResume() {
-        super.onResume()
-        Rotor.onResume()
-    }
-
-    override fun onPause() {
-        Rotor.onPause()
-        super.onPause()
-    }
 
 }

@@ -78,7 +78,6 @@ class JobRotorService : JobService() {
 
 
     private fun startConnection() {
-        Rotor.notConnected()
         if (client == null) {
             if (url == null) {
                 url = Rotor.urlRedis
@@ -136,7 +135,6 @@ class JobRotorService : JobService() {
         if (connectedToRedis && !NetworkUtil.getConnectivityStatusString(applicationContext).equals(NetworkUtil.NETWORK_STATUS_NOT_CONNECTED)) {
             connection?.unsubscribe(Rotor.id)
         }
-        Rotor.scheduleJob()
     }
 
 

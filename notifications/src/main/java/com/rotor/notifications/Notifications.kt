@@ -71,6 +71,15 @@ class Notifications {
             this.listener = listener
 
             Rotor.prepare(Builder.NOTIFICATION, object: BuilderFace {
+
+                override fun onResume() {
+                    // nothing to do here
+                }
+
+                override fun onPause() {
+                    // nothing to do here
+                }
+
                 override fun onMessageReceived(jsonObject: JSONObject) {
                     try {
                         if (jsonObject.has("notifications")) {

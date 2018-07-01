@@ -10,28 +10,30 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.rotor.chappy.BuildConfig;
+import com.rotor.chappy.R;
 import com.rotor.chappy.activities.login.LoginGoogleActivity;
 import com.rotor.chappy.activities.main.MainActivity;
 import com.rotor.chappy.activities.notifications.NotificationActivity;
 import com.rotor.chappy.model.User;
 import com.rotor.chappy.services.ChatRepository;
+import com.rotor.core.RAppCompatActivity;
 import com.rotor.core.Rotor;
-import com.rotor.core.interfaces.REvent;
+import com.rotor.core.interfaces.RStatus;
 import com.rotor.database.Database;
 import com.rotor.notifications.Notifications;
 import com.rotor.notifications.interfaces.Listener;
 import com.rotor.notifications.model.Notification;
+import com.tapadoo.alerter.Alerter;
 
 /**
  * Created by efraespada on 27/02/2018.
  */
 
-public class SplashActivity extends AppCompatActivity implements SplashInterface.View {
+public class SplashActivity extends RAppCompatActivity implements SplashInterface.View {
 
     public static String TAG = SplashActivity.class.getSimpleName();
     public static int ACTION_CHAT = 4532;
@@ -46,10 +48,9 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
         super.onCreate(savedInstanceState);
         presenter = new SplashPresenter(this);
 
-        Rotor.initialize(getApplicationContext(), BuildConfig.database_url, BuildConfig.redis_url, new REvent() {
+        Rotor.initialize(getApplicationContext(), BuildConfig.database_url, BuildConfig.redis_url, new RStatus() {
             @Override
-            public void connected() {
-                Log.e("test", "CONNECTED");
+            public void ready() {
                 Database.initialize();
                 Notifications.initialize(NotificationActivity.class, new Listener() {
                     @Override
@@ -64,11 +65,6 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
                 });
 
                 presenter.start();
-            }
-
-            @Override
-            public void reconnecting() {
-                Log.e("test", "RECONNECTING");
             }
         });
         Rotor.debug(true);
@@ -102,13 +98,11 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
     @Override
     protected void onResume() {
         super.onResume();
-        Rotor.onResume();
         presenter.onResumeView();
     }
 
     @Override
     protected void onPause() {
-        Rotor.onPause();
         presenter.onPauseView();
         super.onPause();
     }
@@ -172,5 +166,21 @@ public class SplashActivity extends AppCompatActivity implements SplashInterface
     @Override
     public void userProgress(int value) {
         // nothing to do here
+    }
+
+    @Override
+    public void connected() {
+        Alerter.clearCurrent(SplashActivity.this);
+    }
+
+    @Override
+    public void disconnected() {
+        Alerter.create(SplashActivity.this).setTitle("Device not connected")
+                .setText("Trying to reconnect")
+                .enableProgress(true)
+                .disableOutsideTouch()
+                .enableInfiniteDuration(true)
+                .setProgressColorRes(R.color.primary)
+                .show();
     }
 }
