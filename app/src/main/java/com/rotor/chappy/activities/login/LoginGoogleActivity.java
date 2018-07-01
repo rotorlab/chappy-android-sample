@@ -224,6 +224,28 @@ public class LoginGoogleActivity extends RAppCompatActivity implements LoginGoog
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        presenter.onResumeView();
+        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            uid = user.getUid();
+            name = user.getDisplayName();
+            email = user.getEmail();
+            photo = user.getPhotoUrl().toString();
+
+            presenter.prepareProfileFor("/users/" + uid);
+            presenter.syncProfile("/users/" + uid);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        presenter.onPauseView();
+        super.onPause();
+    }
+
+    @Override
     public void connected() {
 
     }

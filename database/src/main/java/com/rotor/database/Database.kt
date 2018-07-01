@@ -39,6 +39,8 @@ class Database  {
             ReferenceUtils.service(Rotor.urlServer!!)
         }
 
+        private var lastActive: RScreen ? = null
+
         @JvmStatic fun initialize() {
             Rotor.prepare(Builder.DATABASE, object: BuilderFace {
                 override fun onResume() {
@@ -223,6 +225,9 @@ class Database  {
 
         @JvmStatic fun sync(path: String, clean: Boolean) {
             for (entry in Rotor.screens()) {
+                if (entry.isActive) {
+                    lastActive = entry
+                }
                 if (entry.isActive && entry.hasPath(path)) {
                     val refe = entry.holders().get(path) as KReference<*>
                     val result = refe.getDifferences(clean)
@@ -269,19 +274,30 @@ class Database  {
 
         @JvmStatic fun getCurrentReference(path: String) : KReference<*> ? {
             for (entry in Rotor.screens()) {
-                if (entry.hasPath(path) && entry.isActive) {
-                    val refe = entry.holders().get(path) as KReference<*>
-                    return refe
+                if (entry.isActive) {
+                    lastActive = entry
                 }
+                if (entry.hasPath(path) && entry.isActive) {
+                    return entry.holders().get(path) as KReference<*>
+                }
+            }
+            if (lastActive != null) {
+                return lastActive!!.holders().get(path) as KReference<*>
             }
             return null
         }
 
         @JvmStatic fun contains(path: String) : Boolean {
             for (entry in Rotor.screens()) {
+                if (entry.isActive) {
+                    lastActive = entry
+                }
                 if (entry.hasPath(path) && entry.isActive) {
                     return true
                 }
+            }
+            if (lastActive != null) {
+                return true
             }
             return false
         }
