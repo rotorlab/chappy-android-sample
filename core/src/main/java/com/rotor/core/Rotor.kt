@@ -29,13 +29,15 @@ class Rotor {
         internal val PREF_URL = "rotor_url"
         internal val PREF_CONFIG = "rotor_config"
 
-        var context: Context? = null
+        @JvmStatic var context: Context? = null
         @JvmStatic var id: String ? = null
         @JvmStatic var urlServer: String ? = null
         @JvmStatic var urlRedis: String ? = null
         var RStatus: RStatus ? = null
         private var jobId = 0
         private var serviceComponent: ComponentName ? = null
+
+        private val jobs = ArrayList<RJob>()
 
         private val list = ArrayList<RScreen>()
 
@@ -161,6 +163,25 @@ class Rotor {
                     face.value.onPause()
                 }
             }
+        }
+
+        @JvmStatic fun addJob(job: RJob) {
+            if (!jobs.contains(job)) {
+                job.onCreate()
+                job.startJob()
+                jobs.add(job)
+            }
+        }
+
+        @JvmStatic fun removeJob(job: RJob) {
+            if (jobs.contains(job)) {
+                job.stopJob()
+                jobs.remove(job)
+            }
+        }
+
+        @JvmStatic fun jobs() : ArrayList<RJob> {
+            return jobs
         }
 
     }

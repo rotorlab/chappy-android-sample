@@ -118,12 +118,20 @@ class JobRotorService : JobService() {
     override fun onStartJob(params: JobParameters?): Boolean {
         Log.i(TAG, "on start job: ${params!!.jobId}")
         startConnection()
+        val jobs = Rotor.jobs()
+        for (job in jobs) {
+            job.startJob()
+        }
         return true
     }
 
     override fun onStopJob(params: JobParameters?): Boolean {
         Log.i(TAG, "on stop job: ${params!!.jobId}")
         stopService()
+        val jobs = Rotor.jobs()
+        for (job in jobs) {
+            job.stopJob()
+        }
         return true
     }
 

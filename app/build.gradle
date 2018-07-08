@@ -63,7 +63,7 @@ dependencies {
     implementation 'com.nostra13.universalimageloader:universal-image-loader:1.9.5'
     implementation 'org.apache.commons:commons-lang3:3.6'
 
-    implementation 'com.efraespada:motiondetector:0.0.5'
+    // implementation 'com.efraespada:motiondetector:0.0.5'
     implementation 'me.dm7.barcodescanner:zxing:1.9.2'
     implementation 'com.github.kenglxn.QRGen:android:2.2.0'
     implementation('com.github.KingsMentor:MobileVisionBarcodeScanner:v1.2') {
@@ -104,6 +104,7 @@ dependencies {
     implementation project(":core")
     implementation project(":database")
     implementation project(":notifications")
+    implementation project(":motiondetector")
 
 }
 
