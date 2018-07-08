@@ -81,9 +81,10 @@
             android:permission="android.permission.BIND_JOB_SERVICE"
             android:exported="true"/>
 
-        <!--service
-            android:name="com.efraespada.motiondetector.MotionService"
-            android:enabled="true" /-->
+        <service
+            android:name="com.efraespada.motiondetector.MotionJob"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="true"/>
 
     </application>
 

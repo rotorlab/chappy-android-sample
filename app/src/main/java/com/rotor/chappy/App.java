@@ -58,69 +58,6 @@ public class App extends Application {
         ImageLoader.getInstance().init(config);
 
         auth = FirebaseAuth.getInstance();
-        /*
-        MotionDetector.initialize(this);
-        MotionDetector.debug(true);
-        MotionDetector.minAccuracy(30);
-        MotionDetector.start(new com.efraespada.motiondetector.Listener() {
-            @Override
-            public void locationChanged(Location location) {
-                if (auth.getCurrentUser() != null) {
-                    User user = ProfileRepository.getUser("/users/" + auth.getCurrentUser().getUid());
-                    if (user != null) {
-                        if (user.getLocations() == null) {
-                            user.setLocations(new HashMap<String, com.rotor.chappy.model.Location>());
-                        }
-                        String id = new Date().getTime() + "";
-                        com.rotor.chappy.model.Location loc = new com.rotor.chappy.model.Location();
-                        loc.setAccuracy(location.getAccuracy());
-                        loc.setLatitude(location.getLatitude());
-                        loc.setLongitude(location.getLongitude());
-                        loc.setAltitude(location.getAltitude());
-                        loc.setSpeed(location.getSpeed());
-                        loc.setSteps(user.getSteps());
-                        loc.setType(ChatRepository.getUser().getType());
-                        loc.setId(id);
-
-                        user.getLocations().put(loc.getId(), loc);
-                        ProfileRepository.setUser("/users/" + user.getUid(), user);
-                    }
-                }
-            }
-
-            @Override
-            public void accelerationChanged(float acceleration) {
-                // nothing to do here
-            }
-
-            @Override
-            public void step() {
-                if (auth.getCurrentUser() != null) {
-                    User user = ProfileRepository.getUser("/users/" + auth.getCurrentUser().getUid());
-                    if (user != null) {
-                        user.setSteps(user.getSteps() + 1);
-                        ProfileRepository.setUser("/users/" + user.getUid(), user);
-                        Database.sync("/users/" + user.getUid());
-                    }
-                }
-            }
-
-            @Override
-            public void type(String type) {
-                if (!App.this.type.equals(type)) {
-                    App.this.type = type;
-                    if (auth.getCurrentUser() != null) {
-                        User user = ProfileRepository.getUser("/users/" + auth.getCurrentUser().getUid());
-                        if (user != null) {
-                            user.setType(type);
-                            ProfileRepository.setUser("/users/" + user.getUid(), user);
-                            Database.sync("/users/" + user.getUid());
-                        }
-                    }
-                }
-            }
-        });
-        */
 
         DrawerImageLoader.init(new AbstractDrawerImageLoader() {
             @Override
