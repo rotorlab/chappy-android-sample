@@ -77,6 +77,7 @@ public class LoginGoogleActivity extends RAppCompatActivity implements LoginGoog
             IdpResponse response = IdpResponse.fromResultIntent(data);
 
             if (resultCode == RESULT_OK) {
+                /*
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                 uid = user.getUid();
                 name = user.getDisplayName();
@@ -85,6 +86,7 @@ public class LoginGoogleActivity extends RAppCompatActivity implements LoginGoog
 
                 presenter.prepareProfileFor("/users/" + uid);
                 presenter.syncProfile("/users/" + uid);
+                */
             } else {
                 // Sign in failed. If response is null the user canceled the
                 // sign-in flow using the back button. Otherwise check

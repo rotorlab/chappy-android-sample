@@ -22,8 +22,8 @@ abstract class RAppCompatActivity: AppCompatActivity(), RScreen {
     }
 
     override fun onPause() {
-        active = false
         Rotor.onPause()
+        active = false
         super.onPause()
     }
 

@@ -33,7 +33,7 @@ class Rotor {
         @JvmStatic var id: String ? = null
         @JvmStatic var urlServer: String ? = null
         @JvmStatic var urlRedis: String ? = null
-        lateinit var RStatus: RStatus
+        var RStatus: RStatus ? = null
         private var jobId = 0
         private var serviceComponent: ComponentName ? = null
 
@@ -78,18 +78,23 @@ class Rotor {
 
         fun stop() {
             try {
-                finishJob()
-                context?.stopService(Intent(context, JobRotorService::class.java))
+                (context?.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler).cancelAll()
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
 
         private fun start() {
-            val startServiceIntent = Intent(context, JobRotorService::class.java)
-            context?.startService(startServiceIntent)
+            context?.let {
+                val builder = JobInfo.Builder(jobId++, serviceComponent!!)
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                    builder.setPeriodic(5000)
+                }
+                builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
 
-            scheduleJob()
+                Log.d(TAG, "Scheduling job")
+                (it.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler).schedule(builder.build())
+            }
         }
 
         @JvmStatic fun onMessageReceived(jsonObject: JSONObject) {
@@ -110,21 +115,6 @@ class Rotor {
             this@Companion.debug = debug
         }
 
-        fun scheduleJob() {
-            val builder = JobInfo.Builder(jobId++, serviceComponent!!)
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                builder.setPeriodic(5000)
-            }
-            builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-
-            Log.d(TAG, "Scheduling job")
-            (context?.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler).schedule(builder.build())
-        }
-
-        private fun finishJob() {
-            (context?.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler).cancelAll()
-        }
-
         internal fun connected() {
             initialize = true
             for (entry in list) {
@@ -132,7 +122,7 @@ class Rotor {
                     entry.connected()
                 }
             }
-            RStatus.ready()
+            RStatus?.ready()
         }
 
         internal fun notConnected() {
@@ -158,14 +148,18 @@ class Rotor {
         }
 
         fun onResume() {
-            for (face in builders!!.entries) {
-                face.value.onResume()
+            builders?.let {
+                for (face in it.entries) {
+                    face.value.onResume()
+                }
             }
         }
 
         fun onPause() {
-            for (face in builders!!.entries) {
-                face.value.onPause()
+            builders?.let {
+                for (face in it.entries) {
+                    face.value.onPause()
+                }
             }
         }
 

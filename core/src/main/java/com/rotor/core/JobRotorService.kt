@@ -101,24 +101,7 @@ class JobRotorService : JobService() {
             connection = client!!.connectPubSub()
             connection!!.addListener(redisPubSubListener)
         }
-    }
 
-
-    override fun onStartJob(params: JobParameters?): Boolean {
-        Log.i(TAG, "on start job: ${params!!.jobId}")
-        startConnection()
-        startService()
-        return true
-    }
-
-    override fun onStopJob(params: JobParameters?): Boolean {
-        Log.i(TAG, "on stop job: ${params!!.jobId}")
-        stopService()
-        return false
-    }
-
-
-    fun startService() {
         if (!connectedToRedis && !NetworkUtil.getConnectivityStatusString(applicationContext).equals(NetworkUtil.NETWORK_STATUS_NOT_CONNECTED)) {
             if (client != null && connection != null) {
                 connection?.subscribe(Rotor.id)
@@ -129,6 +112,19 @@ class JobRotorService : JobService() {
             }
             Handler(applicationContext.mainLooper).post(task)
         }
+    }
+
+
+    override fun onStartJob(params: JobParameters?): Boolean {
+        Log.i(TAG, "on start job: ${params!!.jobId}")
+        startConnection()
+        return true
+    }
+
+    override fun onStopJob(params: JobParameters?): Boolean {
+        Log.i(TAG, "on stop job: ${params!!.jobId}")
+        stopService()
+        return true
     }
 
     fun stopService() {

@@ -41,13 +41,11 @@ public class App extends Application {
         super.onCreate();
         context = getApplicationContext();
 
-        /*
         final Fabric fabric = new Fabric.Builder(this)
                 .kits(new Crashlytics())
                 .debuggable(true)
                 .build();
         Fabric.with(fabric);
-        */
 
         DisplayImageOptions defaultOptions = new DisplayImageOptions.Builder()
             .cacheInMemory(true)

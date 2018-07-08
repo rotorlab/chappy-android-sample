@@ -61,7 +61,11 @@ class Database  {
                 }
 
                 override fun onPause() {
-                    // nothing to do here
+                    for (entry in Rotor.screens()) {
+                        if (entry.isActive) {
+                            lastActive = entry
+                        }
+                    }
                 }
 
                 override fun onMessageReceived(jsonObject: JSONObject) {
@@ -150,17 +154,19 @@ class Database  {
 
         @JvmStatic fun unlisten(path: String) {
             val ref = getCurrentReference(path)
-            api.removeListener(RemoveListener("unlisten_reference", ref!!.databaseName, path, Rotor.id!!))
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(
-                            { result ->
-                                result.status?.let {
-                                    Log.e(TAG, result.status)
-                                }
-                            },
-                            { error -> error.printStackTrace() }
-                    )
+            ref?.let {
+                api.removeListener(RemoveListener("unlisten_reference", it.databaseName, path, Rotor.id!!))
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(
+                                { result ->
+                                    result.status?.let {
+                                        Log.e(TAG, result.status)
+                                    }
+                                },
+                                { error -> error.printStackTrace() }
+                        )
+            }
         }
 
         @JvmStatic fun remove(path: String) {
@@ -224,11 +230,10 @@ class Database  {
         }
 
         @JvmStatic fun sync(path: String, clean: Boolean) {
+            var found = false
             for (entry in Rotor.screens()) {
-                if (entry.isActive) {
-                    lastActive = entry
-                }
                 if (entry.isActive && entry.hasPath(path)) {
+                    found = true
                     val refe = entry.holders().get(path) as KReference<*>
                     val result = refe.getDifferences(clean)
                     val diff = result[1] as String
@@ -240,6 +245,26 @@ class Database  {
                         val value = refe.getReferenceAsString()
                         if (value.equals(EMPTY_OBJECT) || value.equals(NULL)) {
                             blower.onCreate()
+                        }
+                    }
+                }
+            }
+
+            if (!found) {
+                for (entry in Rotor.screens()) {
+                    if (entry.hasPath(path)) {
+                        val refe = entry.holders().get(path) as KReference<*>
+                        val result = refe.getDifferences(clean)
+                        val diff = result[1] as String
+                        val len = result[0] as Int
+                        if (!EMPTY_OBJECT.equals(diff)) {
+                            refreshToServer(path, diff, len, clean)
+                        } else {
+                            val blower = refe.getLastest()
+                            val value = refe.getReferenceAsString()
+                            if (value.equals(EMPTY_OBJECT) || value.equals(NULL)) {
+                                blower.onCreate()
+                            }
                         }
                     }
                 }
@@ -273,31 +298,34 @@ class Database  {
         }
 
         @JvmStatic fun getCurrentReference(path: String) : KReference<*> ? {
+            // returns current active reference
             for (entry in Rotor.screens()) {
-                if (entry.isActive) {
-                    lastActive = entry
-                }
                 if (entry.hasPath(path) && entry.isActive) {
                     return entry.holders().get(path) as KReference<*>
                 }
             }
-            if (lastActive != null) {
+            // returns last active reference
+            if (lastActive != null && lastActive!!.holders().containsKey(path)) {
                 return lastActive!!.holders().get(path) as KReference<*>
+            }
+
+            // returns last reference (not active)
+            for (entry in Rotor.screens()) {
+                if (entry.hasPath(path)) {
+                    return entry.holders().get(path) as KReference<*>
+                }
             }
             return null
         }
 
         @JvmStatic fun contains(path: String) : Boolean {
             for (entry in Rotor.screens()) {
-                if (entry.isActive) {
-                    lastActive = entry
-                }
                 if (entry.hasPath(path) && entry.isActive) {
                     return true
                 }
             }
             if (lastActive != null) {
-                return true
+                return lastActive!!.hasPath(path)
             }
             return false
         }
