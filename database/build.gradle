@@ -6,11 +6,11 @@ apply plugin: 'com.jfrog.bintray'
 version = rotor_version
 
 android {
-    compileSdkVersion 27
+    compileSdkVersion 28
 
     defaultConfig {
-        minSdkVersion 21
-        targetSdkVersion 27
+        minSdkVersion 23
+        targetSdkVersion 28
         versionCode 2
         versionName version
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -28,7 +28,7 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation 'com.android.support:appcompat-v7:28.0.0-alpha3'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
@@ -48,8 +48,8 @@ dependencies {
     implementation 'com.google.guava:guava:22.0-android'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation "com.stringcare:library:0.7"
-    implementation "com.rotor:core:$rotor_version"
-    // implementation project(":core")
+    // implementation "com.rotor:core:$rotor_version"
+    implementation project(":core")
     implementation 'com.google.code.gson:gson:2.8.2'
 }
 repositories {

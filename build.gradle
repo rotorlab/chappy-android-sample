@@ -3,8 +3,8 @@
 buildscript {
 
     ext.stringcare_version = '0.7'
-    ext.rotor_version = '0.2'
-    ext.kotlin_version = '1.2.41'
+    ext.rotor_version = '0.3'
+    ext.kotlin_version = '1.2.50'
 
     repositories {
         jcenter()
@@ -16,7 +16,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.1.2'
+        classpath 'com.android.tools.build:gradle:3.1.3'
         classpath 'com.google.gms:google-services:3.2.0'
         classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.1"
         classpath 'com.github.dcendents:android-maven-gradle-plugin:2.0'

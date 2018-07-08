@@ -1,11 +1,8 @@
 package com.rotor.chappy.activities.chat_detail;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -26,36 +23,35 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.makeramen.roundedimageview.RoundedImageView;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.rotor.chappy.R;
-import com.rotor.chappy.activities.chat.ChatActivity;
 import com.rotor.chappy.activities.contact_scanner.ContactScannerActivity;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.Member;
-import com.rotor.chappy.model.Message;
 import com.rotor.chappy.model.User;
 import com.rotor.chappy.model.mpv.ProfilesView;
-import com.rotor.core.Rotor;
+import com.rotor.core.RAppCompatActivity;
 import com.rotor.notifications.Notifications;
 import com.rotor.notifications.model.Content;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import static com.rotor.chappy.activities.splash.SplashActivity.ACTION_CHAT;
 
-public class ChatDetailActivity extends AppCompatActivity implements ChatDetailInterface.View<Chat>, ProfilesView {
+public class ChatDetailActivity extends RAppCompatActivity implements ChatDetailInterface.View<Chat>, ProfilesView {
 
     private RecyclerView memberList;
     private Chat chat;
     private String path;
+    private String uidToAdd;
     private MaterialDialog materialDialog;
     private ChatDetailPresenter presenter;
     private static final Map<String, User> users = new HashMap<>();
     public static final int SCANNER_CODE = 2345;
+
+    public List<String> loaded = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,13 +76,14 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
     protected void onResume() {
         super.onResume();
         presenter.onResumeView();
-        Rotor.onResume();
         presenter.prepareFor(path, Chat.class);
+        if (uidToAdd != null) {
+            addUid(uidToAdd);
+        }
     }
 
     @Override
     protected void onPause() {
-        Rotor.onPause();
         presenter.onPauseView();
         super.onPause();
     }
@@ -118,30 +115,7 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
                 if (resultCode == RESULT_OK) {
                     presenter.onResumeView();
                     Bundle res = data.getExtras();
-                    String result = res.getString("uid");
-                    Member member = new Member();
-                    member.setId(result);
-                    member.setRol("basic");
-                    member.setDate(new Date().getTime());
-                    chat.addMember(member);
-                    presenter.sync(path);
-                    Log.e("UID", "result:" + result);
-
-                    if (users.containsKey("/users/" + presenter.getLoggedUid())) {
-                        User user = users.get("/users/" + presenter.getLoggedUid());
-                        Content content = new Content(ACTION_CHAT,
-                                getString(R.string.notification_message_added_to_group_title),
-                                getString(R.string.notification_message_added_to_group, chat.getName()),
-                                chat.getId(),
-                                "myChannel",
-                                "Test channel",
-                                user.getPhoto(),
-                                null);
-
-                        ArrayList<String> ids = new ArrayList<>();
-                        ids.add(result);
-                        Notifications.notify(Notifications.builder(content, ids));
-                    }
+                    uidToAdd = res.getString("uid");
                 }
                 break;
         }
@@ -194,6 +168,32 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
                 .show();
     }
 
+    public void addUid(String uid) {
+        Member member = new Member();
+        member.setId(uid);
+        member.setRol("basic");
+        member.setDate(new Date().getTime());
+        chat.addMember(member);
+        presenter.sync(path);
+        Log.e("UID", "result:" + uid);
+
+        if (users.containsKey("/users/" + presenter.getLoggedUid())) {
+            User user = users.get("/users/" + presenter.getLoggedUid());
+            Content content = new Content(ACTION_CHAT,
+                    getString(R.string.notification_message_added_to_group_title),
+                    getString(R.string.notification_message_added_to_group, chat.getName()),
+                    chat.getId(),
+                    "myChannel",
+                    "Test channel",
+                    user.getPhoto(),
+                    null);
+
+            ArrayList<String> ids = new ArrayList<>();
+            ids.add(uid);
+            Notifications.notify(Notifications.builder(content, ids));
+        }
+    }
+
     @Override
     public void onCreateReference() {
         finish();
@@ -205,7 +205,8 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
         ChatDetailActivity.this.setTitle(chat.getName());
 
         for (Map.Entry<String, Member> entry : chat.getMembers().entrySet()) {
-            if (!users.containsKey("/users/" + entry.getValue().getId())) {
+            if (!loaded.contains("/users/" + entry.getValue().getId())) {
+                loaded.add("/users/" + entry.getValue().getId());
                 presenter.prepareProfileFor("/users/" + entry.getValue().getId());
             }
         }
@@ -249,12 +250,23 @@ public class ChatDetailActivity extends AppCompatActivity implements ChatDetailI
 
     @Override
     public void onDestroyUser(String key) {
+        loaded.remove(key);
         users.remove(key);
         memberList.getAdapter().notifyDataSetChanged();
     }
 
     @Override
     public void userProgress(String key, int value) {
+
+    }
+
+    @Override
+    public void connected() {
+
+    }
+
+    @Override
+    public void disconnected() {
 
     }
 

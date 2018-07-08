@@ -6,12 +6,12 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -34,8 +34,10 @@ import com.rotor.chappy.model.Member;
 import com.rotor.chappy.model.Message;
 import com.rotor.chappy.model.User;
 import com.rotor.chappy.model.mpv.ProfilesView;
+import com.rotor.core.RAppCompatActivity;
 import com.rotor.core.Rotor;
 import com.rotor.notifications.Notifications;
+import com.tapadoo.alerter.Alerter;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 
@@ -47,7 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class ChatActivity extends AppCompatActivity implements ChatInterface.View<Chat>, ProfilesView {
+public class ChatActivity extends RAppCompatActivity implements ChatInterface.View<Chat>, ProfilesView {
 
     private RecyclerView messageList;
     private Chat chat;
@@ -89,7 +91,7 @@ public class ChatActivity extends AppCompatActivity implements ChatInterface.Vie
                 boolean handled = false;
                 if (actionId == EditorInfo.IME_ACTION_SEND) {
                     handled = true;
-                    if (messageText.length() > 0) {
+                    if (messageText.length() > 0 && chat != null && Rotor.isConnected()) {
                         sendButton.performClick();
                     }
                 }
@@ -127,7 +129,7 @@ public class ChatActivity extends AppCompatActivity implements ChatInterface.Vie
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                sendButton.setEnabled(s.toString().length() > 0 && chat != null);
+                sendButton.setEnabled(s.toString().length() > 0 && chat != null && Rotor.isConnected());
             }
 
             @Override
@@ -145,8 +147,6 @@ public class ChatActivity extends AppCompatActivity implements ChatInterface.Vie
                 Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG).setAction("Action", null).show();
             }
         });
-
-        Notifications.remove(intent.getStringExtra("path"));
     }
 
     @Override
@@ -176,16 +176,16 @@ public class ChatActivity extends AppCompatActivity implements ChatInterface.Vie
     @Override
     protected void onResume() {
         super.onResume();
-        Rotor.onResume();
         presenter.onResumeView();
         presenter.prepareFor(path, Chat.class);
         sendButton.setEnabled(messageText.getText().toString().length() > 0 && chat != null);
+        Notifications.remove(getIntent().getStringExtra("path"));
+
     }
 
     @Override
     protected void onPause() {
         presenter.onPauseView();
-        Rotor.onPause();
         super.onPause();
     }
 
@@ -272,6 +272,24 @@ public class ChatActivity extends AppCompatActivity implements ChatInterface.Vie
     @Override
     public void userProgress(String key, int value) {
         // nothing to do here
+    }
+
+    @Override
+    public void connected() {
+        Alerter.clearCurrent(ChatActivity.this);
+        sendButton.setEnabled(messageText.getText().length() > 0);
+    }
+
+    @Override
+    public void disconnected() {
+        sendButton.setEnabled(false);
+        Alerter.create(ChatActivity.this).setTitle("Device not connected")
+                .setText("Trying to reconnect")
+                .enableProgress(true)
+                .disableOutsideTouch()
+                .enableInfiniteDuration(true)
+                .setProgressColorRes(R.color.primary)
+                .show();
     }
 
     public class MessageAdapter extends RecyclerView.Adapter<VHMessages> {
