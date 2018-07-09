@@ -16,10 +16,10 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.util.*
 
-class JobRotorService : JobService() {
+class RJobService : JobService() {
 
     companion object {
-        private val TAG = JobRotorService::class.java.simpleName
+        private val TAG = RJobService::class.java.simpleName
     }
 
     internal var moment: Long = 0
@@ -118,12 +118,20 @@ class JobRotorService : JobService() {
     override fun onStartJob(params: JobParameters?): Boolean {
         Log.i(TAG, "on start job: ${params!!.jobId}")
         startConnection()
+        val jobs = Rotor.jobs()
+        for (job in jobs) {
+            job.startJob()
+        }
         return true
     }
 
     override fun onStopJob(params: JobParameters?): Boolean {
         Log.i(TAG, "on stop job: ${params!!.jobId}")
         stopService()
+        val jobs = Rotor.jobs()
+        for (job in jobs) {
+            job.stopJob()
+        }
         return true
     }
 

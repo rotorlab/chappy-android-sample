@@ -1,1 +1,1 @@
-include ':app', ':notifications', ':database', ':core'
+include ':app', ':notifications', ':database', ':core', ':motiondetector'
