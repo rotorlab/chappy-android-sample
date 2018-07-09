@@ -5,7 +5,6 @@ import android.app.job.JobScheduler
 import android.content.ComponentName
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
-import android.content.Intent
 import android.os.Build
 import android.provider.Settings
 import android.util.Log
@@ -62,7 +61,7 @@ class Rotor {
                 id = generateNewId()
             }
 
-            serviceComponent = ComponentName(context, JobRotorService::class.java)
+            serviceComponent = ComponentName(context, RJobService::class.java)
 
             initialize = false
 

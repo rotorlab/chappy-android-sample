@@ -16,10 +16,10 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.util.*
 
-class JobRotorService : JobService() {
+class RJobService : JobService() {
 
     companion object {
-        private val TAG = JobRotorService::class.java.simpleName
+        private val TAG = RJobService::class.java.simpleName
     }
 
     internal var moment: Long = 0
