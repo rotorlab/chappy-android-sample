@@ -1,0 +1,16 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.rotor.chappy.activities.main.MainActivity">
+
+    <item
+        android:id="@+id/action_chats"
+        android:checked="true"
+        android:icon="@drawable/forum"
+        android:title="Chats" />
+
+    <item
+        android:id="@+id/action_map"
+        android:icon="@drawable/map_outline"
+        android:title="Map" />
+
+</menu>

@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -32,6 +33,7 @@ import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
 import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IProfile;
+import com.rotor.chappy.App;
 import com.rotor.chappy.R;
 import com.rotor.chappy.activities.chat.ChatActivity;
 import com.rotor.chappy.activities.login.LoginGoogleActivity;
@@ -39,6 +41,7 @@ import com.rotor.chappy.activities.main.MainInterface;
 import com.rotor.chappy.activities.main.MainPresenter;
 import com.rotor.chappy.activities.profile.ProfileActivity;
 import com.rotor.chappy.adapters.ChatAdapter;
+import com.rotor.chappy.adapters.VPagerAdapter;
 import com.rotor.chappy.enums.FragmentType;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.User;
@@ -54,6 +57,7 @@ import java.util.Map;
 public class HomeActivity extends AppCompatActivity implements HomeInterface.View {
 
 
+    private VPagerAdapter adapter;
     @Override
     protected void attachBaseContext(Context context) {
         super.attachBaseContext(IconicsContextWrapper.wrap(context));
@@ -62,7 +66,12 @@ public class HomeActivity extends AppCompatActivity implements HomeInterface.Vie
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_home);
+
+        adapter = new VPagerAdapter(getSupportFragmentManager());
+        ViewPager pager = findViewById(R.id.pager);
+        pager.setAdapter(adapter);
+        App.setPager(pager);
 
     }
 

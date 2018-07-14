@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.net.Uri;
+import android.support.v4.view.ViewPager;
 import android.widget.ImageView;
 
 import com.crashlytics.android.Crashlytics;
@@ -15,6 +16,8 @@ import com.mikepenz.materialdrawer.util.DrawerImageLoader;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+import com.rotor.chappy.adapters.VPagerAdapter;
+import com.rotor.chappy.enums.FragmentType;
 import com.rotor.chappy.model.User;
 import com.rotor.chappy.services.ChatRepository;
 import com.rotor.chappy.services.ProfileRepository;
@@ -34,6 +37,9 @@ public class App extends Application {
     private static Context context;
     public static String databaseName = "database";
     public FirebaseAuth auth;
+    private static String currentChat;
+    private static String currentProfile;
+    private static ViewPager pager;
 
     public String type = "";
     @Override
@@ -86,5 +92,33 @@ public class App extends Application {
 
     public static Context context() {
         return context;
+    }
+
+    public static String getCurrentChat() {
+        return currentChat;
+    }
+
+    public static void setCurrentChat(String currentChat) {
+        App.currentChat = currentChat;
+    }
+
+    public static String getCurrentProfile() {
+        return currentProfile;
+    }
+
+    public static void setCurrentProfile(String currentProfile) {
+        App.currentProfile = currentProfile;
+    }
+
+    public static ViewPager getPager() {
+        return pager;
+    }
+
+    public static void setPager(ViewPager pager) {
+        App.pager = pager;
+    }
+
+    public static void setFragment(FragmentType type) {
+        ((VPagerAdapter) pager.getAdapter()).setFragment(type);
     }
 }

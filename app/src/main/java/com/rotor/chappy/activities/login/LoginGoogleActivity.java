@@ -17,6 +17,7 @@ import com.firebase.ui.auth.IdpResponse;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.rotor.chappy.R;
+import com.rotor.chappy.activities.home.HomeActivity;
 import com.rotor.chappy.activities.main.MainActivity;
 import com.rotor.chappy.model.Location;
 import com.rotor.chappy.model.User;
@@ -103,7 +104,7 @@ public class LoginGoogleActivity extends RAppCompatActivity implements LoginGoog
 
     @Override
     public void goMain() {
-        Intent intent = new Intent(LoginGoogleActivity.this, MainActivity.class);
+        Intent intent = new Intent(LoginGoogleActivity.this, HomeActivity.class);
         startActivity(intent);
         finish();
     }

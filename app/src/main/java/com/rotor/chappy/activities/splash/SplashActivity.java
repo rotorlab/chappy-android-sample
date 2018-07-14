@@ -15,6 +15,7 @@ import android.widget.Toast;
 
 import com.rotor.chappy.BuildConfig;
 import com.rotor.chappy.R;
+import com.rotor.chappy.activities.home.HomeActivity;
 import com.rotor.chappy.activities.login.LoginGoogleActivity;
 import com.rotor.chappy.activities.main.MainActivity;
 import com.rotor.chappy.activities.notifications.NotificationActivity;
@@ -79,7 +80,7 @@ public class SplashActivity extends RAppCompatActivity implements SplashInterfac
 
     @Override
     public void goMain() {
-        Intent intent = new Intent(SplashActivity.this, MainActivity.class);
+        Intent intent = new Intent(SplashActivity.this, HomeActivity.class);
         startActivity(intent);
         finish();
     }
