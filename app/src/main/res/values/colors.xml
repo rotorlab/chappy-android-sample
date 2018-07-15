@@ -5,6 +5,7 @@
     <color name="colorPrimaryLight">#dfb4b2</color>
     <color name="colorAccent">#03d0f4</color>
     <color name="colorBackground">#f5f5f5</color>
+    <color name="colorBackground_50">#aaf5f5f5</color>
 
     <color name="primary_text">#2a2a2a</color>
     <color name="secondary_text">#757575</color>
