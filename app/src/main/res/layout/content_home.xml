@@ -16,7 +16,6 @@
         app:layout_constraintBottom_toTopOf="@id/navigator"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginBottom="?actionBarSize"
         android:background="@color/colorBackground">
 
     </com.rotor.core.RViewPager>

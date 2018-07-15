@@ -13,4 +13,9 @@
         android:icon="@drawable/map_outline"
         android:title="Map" />
 
+    <item
+        android:id="@+id/action_profile"
+        android:icon="@drawable/account_card_details"
+        android:title="Profile" />
+
 </menu>

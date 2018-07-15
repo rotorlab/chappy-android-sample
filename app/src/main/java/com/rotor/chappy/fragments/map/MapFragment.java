@@ -61,4 +61,9 @@ public class MapFragment extends RFragment implements Frag {
     public void onPauseView() {
 
     }
+
+    @Override
+    public void onBackPressed() {
+        getActivity().finish();
+    }
 }

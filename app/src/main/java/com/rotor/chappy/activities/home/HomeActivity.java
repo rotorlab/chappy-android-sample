@@ -1,73 +1,35 @@
 package com.rotor.chappy.activities.home;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.Fragment;
-import android.support.v4.view.ViewPager;
+import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
-import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.EditText;
 
-import com.afollestad.materialdialogs.DialogAction;
-import com.afollestad.materialdialogs.MaterialDialog;
-import com.firebase.ui.auth.AuthUI;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.mikepenz.google_material_typeface_library.GoogleMaterial;
+import com.ittianyu.bottomnavigationviewex.BottomNavigationViewEx;
 import com.mikepenz.iconics.context.IconicsContextWrapper;
-import com.mikepenz.materialdrawer.AccountHeader;
-import com.mikepenz.materialdrawer.AccountHeaderBuilder;
-import com.mikepenz.materialdrawer.Drawer;
-import com.mikepenz.materialdrawer.DrawerBuilder;
-import com.mikepenz.materialdrawer.model.DividerDrawerItem;
-import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
-import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
-import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
-import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
-import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 import com.rotor.chappy.App;
 import com.rotor.chappy.R;
-import com.rotor.chappy.activities.chat.ChatActivity;
-import com.rotor.chappy.activities.login.LoginGoogleActivity;
-import com.rotor.chappy.activities.main.MainInterface;
-import com.rotor.chappy.activities.main.MainPresenter;
-import com.rotor.chappy.activities.profile.ProfileActivity;
-import com.rotor.chappy.adapters.ChatAdapter;
-import com.rotor.chappy.adapters.VPagerAdapter;
-import com.rotor.chappy.enums.FragmentType;
 import com.rotor.chappy.fragments.chat.ChatFragment;
 import com.rotor.chappy.fragments.chats.ChatsFragment;
 import com.rotor.chappy.fragments.map.MapFragment;
-import com.rotor.chappy.model.Chat;
-import com.rotor.chappy.model.User;
-import com.rotor.chappy.model.mpv.ProfilesView;
-import com.rotor.core.RAppCompatActivity;
+
+import com.rotor.chappy.fragments.profile.ProfileFragment;
 import com.rotor.core.RFragment;
 import com.rotor.core.RViewPager;
-import com.tapadoo.alerter.Alerter;
 
-import org.apache.commons.lang3.StringEscapeUtils;
-
-import java.util.HashMap;
-import java.util.Map;
-
-public class HomeActivity extends AppCompatActivity implements HomeInterface.View {
-
+public class HomeActivity extends AppCompatActivity {
 
     private RFragment[] fragments = {
             ChatsFragment.instance(),
             ChatFragment.instance(),
-            MapFragment.instance()
+            MapFragment.instance(),
+            ProfileFragment.instance()
     };
+
+    private RViewPager pager;
+    private BottomNavigationViewEx navigationViewEx;
 
     @Override
     protected void attachBaseContext(Context context) {
@@ -79,7 +41,7 @@ public class HomeActivity extends AppCompatActivity implements HomeInterface.Vie
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        RViewPager pager = findViewById(R.id.pager);
+        pager = findViewById(R.id.pager);
         pager.init(this);
         App.setPager(pager);
 
@@ -88,17 +50,32 @@ public class HomeActivity extends AppCompatActivity implements HomeInterface.Vie
         }
 
         pager.setFragment(ChatsFragment.class);
+
+        navigationViewEx = findViewById(R.id.navigator);
+        navigationViewEx.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                int id = item.getItemId();
+                switch (id) {
+                    case R.id.action_chats:
+                        App.setFragment(ChatsFragment.class);
+                        break;
+
+                    case R.id.action_map:
+                        App.setFragment(MapFragment.class);
+                        break;
+
+                    case R.id.action_profile:
+                        App.setFragment(ProfileFragment.class);
+                        break;
+                }
+                return false;
+            }
+        });
     }
 
-
-
     @Override
-    public void goTo(FragmentType fragmentType) {
-
-    }
-
-    @Override
-    public void logout() {
-
+    public void onBackPressed() {
+        pager.onBackPressed();
     }
 }

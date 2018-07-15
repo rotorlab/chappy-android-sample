@@ -17,8 +17,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.rotor.chappy.App;
 import com.rotor.chappy.R;
 import com.rotor.chappy.enums.FragmentType;
+import com.rotor.chappy.fragments.chats.ChatsFragment;
 import com.rotor.chappy.interfaces.Frag;
 import com.rotor.chappy.model.Message;
 import com.rotor.core.RFragment;
@@ -125,6 +127,12 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
     }
 
     @Override
+    public void onBackPressed() {
+        App.setFragment(ChatsFragment.class);
+        App.setCurrentChat(null);
+    }
+
+    @Override
     public void connected() {
         Alerter.clearCurrent(getActivity());
         sendButton.setEnabled(messageText.getText().length() > 0);
@@ -158,7 +166,9 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
 
     @Override
     public void chatDeleted() {
-        // TODO go out from here
+        onBackPressed();
     }
+
+
 
 }

@@ -36,12 +36,12 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.VHMessag
     @Override
     public void onBindViewHolder(@NonNull VHMessages holder, int position) {
         Chat chat = fragment.presenter.chat();
-        Message[] messages = (Message[]) chat.getMessages().values().toArray();
+        Message[] messages = (Message[]) chat.getMessages().values().toArray(new Message[0]);
 
         Message message = messages[(messages.length - 1) - position];
 
-        if (fragment.presenter.users().containsKey("/users/" + message.getAuthor())) {
-            User user = fragment.presenter.users().get("/users/" + message.getAuthor());
+        if (fragment.presenter.users().containsKey(message.getAuthor())) {
+            User user = fragment.presenter.users().get(message.getAuthor());
             holder.author.setText(user.getName() + ":");
             holder.message.setText(StringEscapeUtils.unescapeJava(message.getText()));
 

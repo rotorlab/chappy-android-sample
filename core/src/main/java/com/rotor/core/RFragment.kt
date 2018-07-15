@@ -16,6 +16,8 @@ abstract class RFragment: Fragment(), RScreen {
 
     abstract fun onPauseView()
 
+    abstract fun onBackPressed()
+
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewed = true

@@ -49,4 +49,8 @@ class RViewPager(context: Context, attributes: AttributeSet?): ViewPager(context
         return adapter
     }
 
+    fun onBackPressed() {
+        fragments().get(currentItem).onBackPressed()
+    }
+
 }

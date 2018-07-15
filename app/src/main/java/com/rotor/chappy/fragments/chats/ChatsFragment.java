@@ -62,6 +62,11 @@ public class ChatsFragment extends RFragment implements Frag, ChatsInterface.Vie
     }
 
     @Override
+    public void onBackPressed() {
+        getActivity().finish();
+    }
+
+    @Override
     public void connected() {
 
     }

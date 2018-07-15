@@ -109,8 +109,17 @@ class Database  {
                     rScreen = screen
                 }
                 if (screen.hasPath(path) && screen.isActive()) {
-                    objectReference = screen.holders().get(path) as KReference<T>?
-                    break
+
+                    /**
+                     * Notifications Exception:
+                     * Rotor Notifications is always active and only can control notifications objects "/notifications/.."
+                     */
+
+                    if ((rScreen != null && rScreen::class.java.simpleName.equals("Notifications") && path.contains("/notifications/")) ||
+                            (rScreen == null || !rScreen::class.java.simpleName.equals("Notifications"))) {
+                                objectReference = screen.holders().get(path) as KReference<T>?
+                                break
+                    }
                 }
             }
 

@@ -7,7 +7,6 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.rotor.chappy.App;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.Member;
-import com.rotor.chappy.model.Message;
 import com.rotor.chappy.model.User;
 import com.rotor.database.Database;
 import com.rotor.database.abstr.Reference;
@@ -89,6 +88,7 @@ public class ChatPresenter implements ChatInterface.Presenter {
             @Override
             public void onChanged(@NonNull User ref) {
                 users.put(ref.getUid(), ref);
+                view.adapter.notifyDataSetChanged();
             }
 
             @Nullable
