@@ -36,24 +36,29 @@ public class ChatsFragment extends RFragment implements Frag, ChatsInterface.Vie
         super.onViewCreated(view, savedInstanceState);
         chats = new HashMap<>();
         presenter = new ChatsPresenter(this);
-        presenter.start();
 
         list = getActivity().findViewById(R.id.chats_list);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getActivity().getApplicationContext());
         list.setLayoutManager(mLayoutManager);
 
-        list.setAdapter(new ChatAdapter(this) {
+        adapter = new ChatAdapter(this) {
             @Override
             public void onChatClicked(Chat chat) {
                 presenter.goToChat(chat);
             }
-        });
+        };
+
+        list.setAdapter(adapter);
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
+    public void onResumeView() {
         presenter.start();
+    }
+
+    @Override
+    public void onPauseView() {
+
     }
 
     @Override
@@ -92,7 +97,8 @@ public class ChatsFragment extends RFragment implements Frag, ChatsInterface.Vie
 
     @Override
     public void chatChanged(Chat chat) {
-        chats.put(chat.getId(), chat);
+        // chats.put(chat.getId(), chat);
+        adapter.notifyDataSetChanged();
     }
 
     @Override

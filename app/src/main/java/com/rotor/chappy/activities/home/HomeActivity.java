@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -43,10 +44,15 @@ import com.rotor.chappy.activities.profile.ProfileActivity;
 import com.rotor.chappy.adapters.ChatAdapter;
 import com.rotor.chappy.adapters.VPagerAdapter;
 import com.rotor.chappy.enums.FragmentType;
+import com.rotor.chappy.fragments.chat.ChatFragment;
+import com.rotor.chappy.fragments.chats.ChatsFragment;
+import com.rotor.chappy.fragments.map.MapFragment;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.User;
 import com.rotor.chappy.model.mpv.ProfilesView;
 import com.rotor.core.RAppCompatActivity;
+import com.rotor.core.RFragment;
+import com.rotor.core.RViewPager;
 import com.tapadoo.alerter.Alerter;
 
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -57,7 +63,12 @@ import java.util.Map;
 public class HomeActivity extends AppCompatActivity implements HomeInterface.View {
 
 
-    private VPagerAdapter adapter;
+    private RFragment[] fragments = {
+            ChatsFragment.instance(),
+            ChatFragment.instance(),
+            MapFragment.instance()
+    };
+
     @Override
     protected void attachBaseContext(Context context) {
         super.attachBaseContext(IconicsContextWrapper.wrap(context));
@@ -68,11 +79,15 @@ public class HomeActivity extends AppCompatActivity implements HomeInterface.Vie
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        adapter = new VPagerAdapter(getSupportFragmentManager());
-        ViewPager pager = findViewById(R.id.pager);
-        pager.setAdapter(adapter);
+        RViewPager pager = findViewById(R.id.pager);
+        pager.init(this);
         App.setPager(pager);
 
+        for (RFragment fragment : fragments) {
+            pager.add(fragment);
+        }
+
+        pager.setFragment(ChatsFragment.class);
     }
 
 

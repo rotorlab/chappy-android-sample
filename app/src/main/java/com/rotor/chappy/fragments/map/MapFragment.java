@@ -26,6 +26,8 @@ public class MapFragment extends RFragment implements Frag {
         super.onViewCreated(view, savedInstanceState);
     }
 
+
+
     @Override
     public void connected() {
 
@@ -48,5 +50,15 @@ public class MapFragment extends RFragment implements Frag {
 
     public static MapFragment instance() {
         return new MapFragment();
+    }
+
+    @Override
+    public void onResumeView() {
+
+    }
+
+    @Override
+    public void onPauseView() {
+
     }
 }

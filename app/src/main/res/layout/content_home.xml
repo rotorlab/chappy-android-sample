@@ -8,7 +8,7 @@
     tools:context=".activities.home.HomeActivity"
     tools:showIn="@layout/activity_home">
 
-    <android.support.v4.view.ViewPager
+    <com.rotor.core.RViewPager
         android:id="@+id/pager"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -19,7 +19,7 @@
         android:layout_marginBottom="?actionBarSize"
         android:background="@color/colorBackground">
 
-    </android.support.v4.view.ViewPager>
+    </com.rotor.core.RViewPager>
 
     <com.ittianyu.bottomnavigationviewex.BottomNavigationViewEx
         android:id="@+id/navigator"

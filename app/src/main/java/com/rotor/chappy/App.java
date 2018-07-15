@@ -21,6 +21,7 @@ import com.rotor.chappy.enums.FragmentType;
 import com.rotor.chappy.model.User;
 import com.rotor.chappy.services.ChatRepository;
 import com.rotor.chappy.services.ProfileRepository;
+import com.rotor.core.RViewPager;
 import com.rotor.database.Database;
 
 import java.util.Date;
@@ -39,7 +40,7 @@ public class App extends Application {
     public FirebaseAuth auth;
     private static String currentChat;
     private static String currentProfile;
-    private static ViewPager pager;
+    private static RViewPager pager;
 
     public String type = "";
     @Override
@@ -110,15 +111,15 @@ public class App extends Application {
         App.currentProfile = currentProfile;
     }
 
-    public static ViewPager getPager() {
+    public static RViewPager getPager() {
         return pager;
     }
 
-    public static void setPager(ViewPager pager) {
+    public static void setPager(RViewPager pager) {
         App.pager = pager;
     }
 
-    public static void setFragment(FragmentType type) {
-        ((VPagerAdapter) pager.getAdapter()).setFragment(type);
+    public static <T> void setFragment(Class<T> tClass) {
+        pager.setFragment(tClass);
     }
 }

@@ -2,39 +2,52 @@ package com.rotor.core
 
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.view.View
 import com.rotor.core.interfaces.RScreen
 import java.util.HashMap
 
 abstract class RFragment: Fragment(), RScreen {
 
     private var active = false
+    private var viewed = false
     private lateinit var map: HashMap<String, Any>
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    abstract fun onResumeView()
+
+    abstract fun onPauseView()
+
+    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        viewed = true
         map = java.util.HashMap()
         Rotor.screens().add(this)
     }
 
-    override fun onResume() {
-        super.onResume()
+    fun onResumeFragment() {
         active = true
         Rotor.onResume()
+        onResumeView()
     }
 
-    override fun onPause() {
+    fun onPauseFragment() {
         Rotor.onPause()
         active = false
-        super.onPause()
+        onPauseView()
     }
 
-    override fun onDestroy() {
+    override fun onDestroyView() {
         Rotor.screens().remove(this)
-        super.onDestroy()
+        viewed = false
+        super.onDestroyView()
     }
+
 
     override fun isActive(): Boolean {
         return active
+    }
+
+    fun viewed(): Boolean {
+        return viewed
     }
 
     override fun addPath(path: String, obj: Any): Boolean {

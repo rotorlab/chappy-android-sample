@@ -115,9 +115,13 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
+    public void onResumeView() {
         presenter.start();
+    }
+
+    @Override
+    public void onPauseView() {
+
     }
 
     @Override
@@ -156,4 +160,5 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
     public void chatDeleted() {
         // TODO go out from here
     }
+
 }

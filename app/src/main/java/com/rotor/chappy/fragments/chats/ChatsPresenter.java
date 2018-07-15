@@ -9,6 +9,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.gson.internal.LinkedTreeMap;
 import com.rotor.chappy.App;
 import com.rotor.chappy.enums.FragmentType;
+import com.rotor.chappy.fragments.chat.ChatFragment;
 import com.rotor.chappy.model.Chat;
 import com.rotor.database.Database;
 import com.rotor.database.abstr.Reference;
@@ -54,7 +55,7 @@ public class ChatsPresenter implements ChatsInterface.Presenter {
     @Override
     public void goToChat(Chat chat) {
         App.setCurrentChat(chat.getId());
-        App.setFragment(FragmentType.CHAT);
+        App.setFragment(ChatFragment.class);
     }
 
     @Override
