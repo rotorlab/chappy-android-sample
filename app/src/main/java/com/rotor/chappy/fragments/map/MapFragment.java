@@ -18,10 +18,11 @@ import com.rotor.chappy.enums.FragmentType;
 import com.rotor.chappy.interfaces.Frag;
 import com.rotor.core.RFragment;
 
-public class MapFragment extends RFragment implements Frag, OnMapReadyCallback {
+public class MapFragment extends RFragment implements Frag, OnMapReadyCallback, MapInterface.View {
 
     private MapView mapView;
     private GoogleMap map;
+    private MapPresenter presenter;
 
     @Nullable
     @Override
@@ -32,6 +33,7 @@ public class MapFragment extends RFragment implements Frag, OnMapReadyCallback {
     @Override
     public void onViewCreated(@Nullable View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        presenter = new MapPresenter(this);
         if (view != null) {
             mapView = view.findViewById(R.id.map);
             mapView.onCreate(savedInstanceState);
@@ -67,6 +69,7 @@ public class MapFragment extends RFragment implements Frag, OnMapReadyCallback {
     @Override
     public void onResumeView() {
         mapView.onResume();
+        presenter.start();
     }
 
     @Override
@@ -102,5 +105,10 @@ public class MapFragment extends RFragment implements Frag, OnMapReadyCallback {
             return;
         }
         map.setMyLocationEnabled(true);
+    }
+
+    @Override
+    public void updateUI() {
+
     }
 }
