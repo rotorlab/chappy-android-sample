@@ -3,6 +3,7 @@ package com.rotor.database
 import android.os.Handler
 import android.util.Log
 import com.efraespada.jsondiff.JSONDiff
+import com.google.gson.Gson
 import com.rotor.core.Builder
 import com.rotor.core.NetworkUtil
 import com.rotor.core.Rotor
@@ -293,16 +294,21 @@ class Database  {
             Database.unlisten(path)
         }
 
-        @JvmStatic fun query(database: String, path: String, query: String, mask: String, callback: QueryCallback) {
+        @JvmStatic fun <T> query(database: String, path: String, query: String, mask: String, callback: QueryCallback<T>, klass: Class<T>) {
             api.query(Rotor.id!!, database, path, query, mask)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
                             { result ->
-                                callback.response(result)
+                                val gson = Gson()
+                                val string = gson.toJson(result);
+                                val obj: T = gson.fromJson(string, klass)
+                                callback.response(obj)
 
                             },
-                            { error -> error.printStackTrace() })
+                            { error ->
+                                error.printStackTrace()
+                            })
 
         }
 

@@ -6,11 +6,13 @@ import android.util.Log;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
 import com.rotor.chappy.App;
 import com.rotor.chappy.enums.FragmentType;
 import com.rotor.chappy.fragments.chat.ChatFragment;
 import com.rotor.chappy.model.Chat;
+import com.rotor.chappy.model.ResponseId;
 import com.rotor.database.Database;
 import com.rotor.database.abstr.Reference;
 import com.rotor.database.interfaces.QueryCallback;
@@ -36,19 +38,19 @@ public class ChatsPresenter implements ChatsInterface.Presenter {
         if (user == null) {
             // TODO add logout
         } else {
+            ResponseId.Id mask = new ResponseId.Id();
             Database.query(App.databaseName,"/chats/*",
                     "{\"members\": { \"" + user.getUid() + "\": { \"id\": \"" + user.getUid() + "\" } } }",
-                    "{ \"id\": \"\" }",
-                    new QueryCallback() {
-
+                    new Gson().toJson(mask),
+                    new QueryCallback<ResponseId>() {
                         @Override
-                        public void response(List<LinkedTreeMap<String, String>> list) {
-                            for(LinkedTreeMap m : list) {
-                                listenChat((String) m.get("id"));
+                        public void response(ResponseId response) {
+                            for (ResponseId.Id responseId : response.getIds()) {
+                                listenChat(responseId.getUserId());
                             }
                         }
 
-                    });
+                    }, ResponseId.class);
         }
     }
 

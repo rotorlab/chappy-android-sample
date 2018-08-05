@@ -33,6 +33,10 @@ interface Server {
 
     @Headers("Content-Type: application/json")
     @GET("/")
-    fun query(@Query("token") token: String, @Query("database") database: String, @Query("path") path: String, @Query("query") query: String, @Query("mask") mask: String) : Observable<List<LinkedTreeMap<String, String>>>
+    fun query(@Query("token") token: String,
+                  @Query("database") database: String,
+                  @Query("path") path: String,
+                  @Query("query") query: String,
+                  @Query("mask") mask: String) : Observable<Any>
 
 }

@@ -8,6 +8,7 @@ import com.google.gson.internal.LinkedTreeMap;
 import com.rotor.chappy.App;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.Member;
+import com.rotor.chappy.model.ResponseId;
 import com.rotor.chappy.model.User;
 import com.rotor.chappy.model.mpv.ProfilePresenter;
 import com.rotor.chappy.model.mpv.ProfilesView;
@@ -48,18 +49,25 @@ public class MainPresenter implements MainInterface.Presenter<Chat>, ProfilePres
             Database.query(App.databaseName,"/chats/*",
                     "{\"members\": { \"" + user.getUid() + "\": { \"id\": \"" + user.getUid() + "\" } } }",
                     "{ \"id\": \"\" }",
-                    new QueryCallback() {
+                    new QueryCallback<ResponseId>() {
 
                         @Override
-                        public void response(List<LinkedTreeMap<String, String>> list) {
+                        public void response(ResponseId response) {
+
+
+                            /*
+
+
                             for(LinkedTreeMap m : list) {
                                 String id = (String) m.get("id");
                                 Log.e("ROTOR", "chats found: " + id);
                                 prepareFor("/chats/" + id, Chat.class);
                             }
+
+                             */
                         }
 
-                    });
+                    }, ResponseId.class);
         }
     }
 

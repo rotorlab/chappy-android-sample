@@ -12,6 +12,8 @@ import com.rotor.chappy.fragments.chats.ChatsFragment;
 import com.rotor.chappy.fragments.chats.ChatsInterface;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.Member;
+import com.rotor.chappy.model.ResponseId;
+import com.rotor.chappy.model.ResponseUsersMap;
 import com.rotor.chappy.model.User;
 import com.rotor.database.Database;
 import com.rotor.database.abstr.Reference;
@@ -51,23 +53,22 @@ public class MapPresenter implements MapInterface.Presenter {
                                     "\"id\": \"\"" +
                                 "}" +
                             "} }",
-                    new QueryCallback() {
+                    new QueryCallback<ResponseUsersMap>() {
 
                         @Override
-                        public void response(List<LinkedTreeMap<String, String>> list) {
-                            for(LinkedTreeMap m : list) {
-                                LinkedTreeMap c = (LinkedTreeMap) m.get("members");
-                                Member[] members = (Member[]) c.values().toArray(new Member[0]);
-                                for (Member member : members) {
-                                    if (!asked.contains(member.getId())) {
-                                        asked.add(member.getId());
-                                        listenUser(member.getId());
+                        public void response(ResponseUsersMap response) {
+                            for (ResponseUsersMap.UsersMapChat chat : response.getChats()) {
+
+                                for (Map.Entry<String, ResponseUsersMap.UsersMapChat.Member> entry : chat.getMembers().entrySet()) {
+                                    if (!asked.contains(entry.getValue().getUserId())) {
+                                        asked.add(entry.getValue().getUserId());
+                                        listenUser(entry.getValue().getUserId());
                                     }
                                 }
                             }
                         }
 
-                    });
+                    }, ResponseUsersMap.class);
         }
     }
 
