@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.net.Uri;
+import android.support.v4.view.ViewPager;
 import android.widget.ImageView;
 
 import com.crashlytics.android.Crashlytics;
@@ -15,9 +16,12 @@ import com.mikepenz.materialdrawer.util.DrawerImageLoader;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+import com.rotor.chappy.adapters.VPagerAdapter;
+import com.rotor.chappy.enums.FragmentType;
 import com.rotor.chappy.model.User;
 import com.rotor.chappy.services.ChatRepository;
 import com.rotor.chappy.services.ProfileRepository;
+import com.rotor.core.RViewPager;
 import com.rotor.database.Database;
 
 import java.util.Date;
@@ -34,12 +38,16 @@ public class App extends Application {
     private static Context context;
     public static String databaseName = "database";
     public FirebaseAuth auth;
+    private static String currentChat;
+    private static String currentProfile;
+    private static RViewPager pager;
 
     public String type = "";
     @Override
     public void onCreate() {
         super.onCreate();
         context = getApplicationContext();
+
         final Fabric fabric = new Fabric.Builder(this)
                 .kits(new Crashlytics())
                 .debuggable(true)
@@ -57,67 +65,6 @@ public class App extends Application {
         ImageLoader.getInstance().init(config);
 
         auth = FirebaseAuth.getInstance();
-        MotionDetector.initialize(this);
-        MotionDetector.debug(true);
-        MotionDetector.minAccuracy(30);
-        MotionDetector.start(new com.efraespada.motiondetector.Listener() {
-            @Override
-            public void locationChanged(Location location) {
-                if (auth.getCurrentUser() != null) {
-                    User user = ProfileRepository.getUser("/users/" + auth.getCurrentUser().getUid());
-                    if (user != null) {
-                        if (user.getLocations() == null) {
-                            user.setLocations(new HashMap<String, com.rotor.chappy.model.Location>());
-                        }
-                        String id = new Date().getTime() + "";
-                        com.rotor.chappy.model.Location loc = new com.rotor.chappy.model.Location();
-                        loc.setAccuracy(location.getAccuracy());
-                        loc.setLatitude(location.getLatitude());
-                        loc.setLongitude(location.getLongitude());
-                        loc.setAltitude(location.getAltitude());
-                        loc.setSpeed(location.getSpeed());
-                        loc.setSteps(user.getSteps());
-                        loc.setType(ChatRepository.getUser().getType());
-                        loc.setId(id);
-
-                        user.getLocations().put(loc.getId(), loc);
-                        ProfileRepository.setUser("/users/" + user.getUid(), user);
-                    }
-                }
-            }
-
-            @Override
-            public void accelerationChanged(float acceleration) {
-                // nothing to do here
-            }
-
-            @Override
-            public void step() {
-                if (auth.getCurrentUser() != null) {
-                    User user = ProfileRepository.getUser("/users/" + auth.getCurrentUser().getUid());
-                    if (user != null) {
-                        user.setSteps(user.getSteps() + 1);
-                        ProfileRepository.setUser("/users/" + user.getUid(), user);
-                        Database.sync("/users/" + user.getUid());
-                    }
-                }
-            }
-
-            @Override
-            public void type(String type) {
-                if (!App.this.type.equals(type)) {
-                    App.this.type = type;
-                    if (auth.getCurrentUser() != null) {
-                        User user = ProfileRepository.getUser("/users/" + auth.getCurrentUser().getUid());
-                        if (user != null) {
-                            user.setType(type);
-                            ProfileRepository.setUser("/users/" + user.getUid(), user);
-                            Database.sync("/users/" + user.getUid());
-                        }
-                    }
-                }
-            }
-        });
 
         DrawerImageLoader.init(new AbstractDrawerImageLoader() {
             @Override
@@ -146,5 +93,33 @@ public class App extends Application {
 
     public static Context context() {
         return context;
+    }
+
+    public static String getCurrentChat() {
+        return currentChat;
+    }
+
+    public static void setCurrentChat(String currentChat) {
+        App.currentChat = currentChat;
+    }
+
+    public static String getCurrentProfile() {
+        return currentProfile;
+    }
+
+    public static void setCurrentProfile(String currentProfile) {
+        App.currentProfile = currentProfile;
+    }
+
+    public static RViewPager getPager() {
+        return pager;
+    }
+
+    public static void setPager(RViewPager pager) {
+        App.pager = pager;
+    }
+
+    public static <T> void setFragment(Class<T> tClass) {
+        pager.setFragment(tClass);
     }
 }

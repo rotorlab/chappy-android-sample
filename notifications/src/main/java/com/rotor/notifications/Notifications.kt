@@ -2,8 +2,6 @@ package com.rotor.notifications
 
 import android.content.Context
 import android.support.v4.app.NotificationCompat
-import com.nostra13.universalimageloader.core.ImageLoader
-import com.nostra13.universalimageloader.core.ImageLoaderConfiguration
 import com.rotor.core.Builder
 import com.rotor.core.Rotor
 import com.rotor.core.interfaces.BuilderFace
@@ -15,17 +13,17 @@ import org.json.JSONObject
 import java.util.*
 import kotlin.collections.HashMap
 import android.graphics.Bitmap
-import android.view.View
-import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener
 import android.support.v4.app.NotificationManagerCompat
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NO_HISTORY
+import android.graphics.drawable.Drawable
 import android.os.Build
 import android.util.Log
 import com.google.gson.Gson
+import com.rotor.core.interfaces.RScreen
 import com.rotor.database.utils.ReferenceUtils
 import com.rotor.notifications.data.NotificationDocker
 import com.rotor.notifications.interfaces.ClazzLoader
@@ -33,19 +31,21 @@ import com.rotor.notifications.interfaces.Listener
 import com.rotor.notifications.interfaces.Server
 import com.rotor.notifications.request.NotificationGetter
 import com.rotor.notifications.request.NotificationSender
+import com.squareup.picasso.Picasso
 import com.stringcare.library.SC
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
+import java.lang.Exception
 import kotlin.collections.ArrayList
 
 
 /**
  * Created by efraespada on 18/03/2018.
  */
-class Notifications {
+class Notifications: RScreen {
 
     companion object {
 
@@ -58,6 +58,10 @@ class Notifications {
         private val TAG: String = Notifications::class.java.simpleName!!
         private var loader: ClazzLoader<*> ? = null
         private var notificationStatusListener: NotificationRouterActivity.NotificationsStatus ? = null
+        private var toRemove: ArrayList<RemNot> = ArrayList()
+        private var toCheck: ArrayList<RemNot> = ArrayList()
+
+        private var map: java.util.HashMap<String, Any>? = null
 
         val api by lazy {
             service(Rotor.urlServer!!)
@@ -68,16 +72,34 @@ class Notifications {
 
             Database.initialize()
 
+            var found = false
+            for (screens in Rotor.screens()) {
+                if (screens is Notifications) {
+                    found = true
+                    break
+                }
+            }
+            if (!found) {
+                Rotor.screens().add(Notifications())
+            }
+
+            if (map == null) {
+                map = java.util.HashMap()
+            }
+
             loader = ClazzLoader<T>(clazz)
             this.listener = listener
 
-            loadCachedNotifications()
-
-            val config = ImageLoaderConfiguration.Builder(Rotor.context).build()
-            ImageLoader.getInstance().init(config)
-
-
             Rotor.prepare(Builder.NOTIFICATION, object: BuilderFace {
+
+                override fun onResume() {
+                    // nothing to do here
+                }
+
+                override fun onPause() {
+                    // nothing to do here
+                }
+
                 override fun onMessageReceived(jsonObject: JSONObject) {
                     try {
                         if (jsonObject.has("notifications")) {
@@ -105,6 +127,8 @@ class Notifications {
             if (notificationStatusListener != null) {
                 notificationStatusListener!!.ready()
             }
+
+            loadCachedNotifications()
         }
 
         @JvmStatic fun listener(notificationStatusListener: NotificationRouterActivity.NotificationsStatus) {
@@ -161,9 +185,12 @@ class Notifications {
                     Log.e(TAG, "notification returned")
                     var readCount = 0
                     val newOpens = ArrayList<String>()
+                    if (ref.sender == null) {
+                        return
+                    }
                     if (ref.sender.id.equals(Rotor.id)) {
                         for (receiver in ref.receivers.values) {
-                            if (receiver.viewed != docker!!.notifications!![identifier]!!.receivers[receiver.id]!!.viewed || (receiver.viewed != null && Rotor.id.equals(receiver.id))) {
+                            if (receiver.viewed != docker!!.notifications!![identifier]!!.receivers[receiver.id]!!.viewed) {
                                 newOpens.add(receiver.id)
                             }
                             if (receiver.viewed != null) {
@@ -175,34 +202,29 @@ class Notifications {
                     docker!!.notifications!![identifier] = ref
                     val gson = Gson()
                     ReferenceUtils.addElement(NOTIFICATION, gson.toJson(docker!!))
-                    if (!ref.sender.id.equals(Rotor.id)) {
-                        show(identifier)
-                    }
+
                     if (created) {
                         created = false
-                        var rece: ArrayList<Receiver> = arrayListOf()
+                        val rece: ArrayList<Receiver> = arrayListOf()
                         rece.addAll(ref.receivers.values)
                         sendNotification(identifier, rece)
-                    } else if (ref.receivers.containsKey(Rotor.id)
-                            && ref.receivers[Rotor.id]!!.viewed != null
-                            && !ref.sender!!.id!!.equals(Rotor.id)) {
+                    } else if (ref.receivers.containsKey(Rotor.id) && ref.receivers[Rotor.id]!!.viewed != null
+                            && !ref.sender.id.equals(Rotor.id)) {
 
-                        val notificationManager = NotificationManagerCompat.from(Rotor.context!!)
-                        val idNumber = ref.id.toLong()
-                        notificationManager.cancel(idNumber.toInt())
+                        internRemoveNotification(RemNot(docker!!.notifications!![identifier]!!, false))
+                    } else if (ref.receivers.containsKey(Rotor.id) && ref.receivers[Rotor.id]!!.viewed != null
+                            && ref.sender.id.equals(Rotor.id)) {
+                        internRemoveNotification(RemNot(docker!!.notifications!![identifier]!!, true))
+                    } else if (ref.receivers.containsKey(Rotor.id) && ref.receivers[Rotor.id]!!.viewed == null) {
+                        show(identifier)
+                    }
 
-                        docker!!.notifications!!.remove(identifier)
-                        Database.unlisten(identifier)
-                        ReferenceUtils.addElement(NOTIFICATION, gson.toJson(docker!!))
-                    } else if (ref.sender.id.equals(Rotor.id) && listener != null) {
+                    if (ref.sender.id.equals(Rotor.id) && listener != null) {
                         for (r in newOpens) {
                             listener!!.opened(r, docker!!.notifications!![identifier]!!)
                         }
                         if (readCount == docker!!.notifications!![identifier]!!.receivers.size) {
-                            val notificationManager = NotificationManagerCompat.from(Rotor.context!!)
-                            val idNumber = docker!!.notifications!![identifier]!!.id.toLong()
-                            notificationManager.cancel(idNumber.toInt())
-                            Database.remove(identifier)
+                            internRemoveNotification(RemNot(docker!!.notifications!![identifier]!!, true))
                         }
                     }
                 }
@@ -224,17 +246,55 @@ class Notifications {
                         docker!!.notifications != null && docker!!.notifications!!.containsKey(identifier) &&
                         docker!!.notifications!![identifier]!!.sender.id.equals(Rotor.id)) {
 
-                        listener?.let {
-                            it.removed(docker!!.notifications!![identifier]!!)
-                        }
-                        docker!!.notifications!!.remove(identifier)
-                        Database.unlisten(identifier)
-                        val gson = Gson()
-                        ReferenceUtils.addElement(NOTIFICATION, gson.toJson(docker!!))
+                        internRemoveNotification(RemNot(docker!!.notifications!![identifier]!!, false))
                     }
                 }
 
             })
+        }
+
+        private fun internRemoveNotification(rem: RemNot ?) {
+            rem?.let {
+                if (!toCheck.contains(it)) {
+                    toCheck.add(it)
+                }
+                if (!toRemove.contains(it)) {
+                    toRemove.add(it)
+                }
+            }
+
+            for (i in toRemove) {
+                var number = i.notification.id
+                number = number.substring(number.length - 5, number.length)
+
+                val identifier = NOTIFICATION + i.notification.id
+                val notificationManager = NotificationManagerCompat.from(Rotor.context!!)
+                if (isNotificationVisible(i.notification)) {
+                    notificationManager.cancel(number.toInt())
+                } else {
+                    toCheck.remove(i)
+                    Database.unlisten(identifier)
+                    val gson = Gson()
+                    ReferenceUtils.addElement(NOTIFICATION, gson.toJson(docker!!))
+                    listener?.removed(docker!!.notifications!![identifier]!!)
+                    docker!!.notifications!!.remove(identifier)
+                    if (i.remove) {
+                        Database.remove(identifier)
+                    }
+                }
+            }
+            toRemove.clear()
+            toRemove.addAll(toCheck)
+        }
+
+        private fun isNotificationVisible(notification: Notification) : Boolean {
+            val notificationManager = Rotor.context!!.getSystemService(NotificationManager::class.java)
+            val visibleIds = ArrayList<Int>()
+            for (status in notificationManager.activeNotifications) {
+                visibleIds.add(status.id)
+            }
+            val i = notification.id.substring(notification.id.length - 5, notification.id.length).toInt()
+            return visibleIds.contains(i)
         }
 
         @JvmStatic fun remove(value: String) : Boolean {
@@ -256,24 +316,32 @@ class Notifications {
                     deleted = true
                 }
             }
+            internRemoveNotification(null)
             return deleted
         }
 
         @JvmStatic fun show(id: String) {
-            var identifier = if (!id.contains("notifications")) NOTIFICATION + id else id
-            if (docker!!.notifications!!.containsKey(identifier)) {
+            val identifier = if (!id.contains("notifications")) NOTIFICATION + id else id
+            if (docker!!.notifications!!.containsKey(identifier) && !isNotificationVisible(docker!!.notifications!![identifier]!!)) {
                 val notification = docker!!.notifications!![identifier]
 
                 val content = notification!!.content
 
                 content?.let {
-                    if (content.photo != null) {
-                        val imageLoader = ImageLoader.getInstance()
-                        imageLoader.loadImage(content.photo, object : SimpleImageLoadingListener() {
-                            override fun onLoadingComplete(imageUri: String, view: View, loadedImage: Bitmap) {
-                                interShow(identifier, content, loadedImage)
+                    if (content.photoSmall != null) {
+                        Picasso.Builder(Rotor.context!!).build().load(content.photoSmall).into(object: com.squareup.picasso.Target {
+                            override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {
+                                // noyhing to do here
                             }
-                        })
+
+                            override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
+                                // noyhing to do here
+                            }
+
+                            override fun onBitmapLoaded(bitmap: Bitmap?, from: Picasso.LoadedFrom?) {
+                                interShow(identifier, content, bitmap)
+                            }
+                        });
                     } else {
                         interShow(identifier, content, null)
                     }
@@ -307,7 +375,7 @@ class Notifications {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
                 if (content.channel != null && content.channelDescription != null) {
-                    val name = content.channel
+                    val name = content.room
                     val description = content.channelDescription
                     val importance = NotificationManager.IMPORTANCE_DEFAULT
                     var channel: NotificationChannel ? = null
@@ -335,7 +403,8 @@ class Notifications {
             }
 
             val notificationManager = NotificationManagerCompat.from(Rotor.context!!)
-            val idNumber = id.split("/")[2].toLong()
+            var idNumber = id.split("/")[2]
+            idNumber = idNumber.substring(idNumber.length - 5, idNumber.length)
             notificationManager.notify(idNumber.toInt(), mBuilder.build())
         }
 
@@ -400,6 +469,48 @@ class Notifications {
                     )
         }
 
+    }
+
+    override fun isActive(): Boolean {
+        return true
+    }
+
+    override fun addPath(path: String, obj: Any): Boolean {
+        if (!map!!.contains(path)) {
+            map!!.put(path, obj)
+            return true
+        } else {
+            return false
+        }
+    }
+
+    override fun removePath(path: String): Boolean {
+        if (map!!.contains(path)) {
+            map!!.remove(path)
+            return true
+        } else {
+            return false
+        }
+    }
+
+    override fun hasPath(path: String): Boolean {
+        return map!!.contains(path)
+    }
+
+    override fun holders(): java.util.HashMap<String, Any> {
+        return map!!
+    }
+
+    override fun connected() {
+        // nothing to do here
+    }
+
+    override fun disconnected() {
+        // nothing to do here
+    }
+
+    class RemNot(val notification: Notification, val remove: Boolean) {
+        // nothing to do here
     }
 }
 

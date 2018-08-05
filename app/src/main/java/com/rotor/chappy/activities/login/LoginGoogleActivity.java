@@ -17,11 +17,14 @@ import com.firebase.ui.auth.IdpResponse;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.rotor.chappy.R;
+import com.rotor.chappy.activities.home.HomeActivity;
 import com.rotor.chappy.activities.main.MainActivity;
 import com.rotor.chappy.model.Location;
 import com.rotor.chappy.model.User;
 import com.rotor.chappy.services.ChatRepository;
+import com.rotor.core.RAppCompatActivity;
 import com.rotor.core.Rotor;
+import com.rotor.database.Database;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -31,7 +34,7 @@ import java.util.List;
 /**
  * Demonstrate Firebase Authentication using a Google ID Token.
  */
-public class LoginGoogleActivity extends AppCompatActivity implements LoginGoogleInterface.View<User> {
+public class LoginGoogleActivity extends RAppCompatActivity implements LoginGoogleInterface.View<User> {
 
     private static final String TAG = "GoogleActivity";
     private static final int RC_SIGN_IN = 9001;
@@ -75,14 +78,16 @@ public class LoginGoogleActivity extends AppCompatActivity implements LoginGoogl
             IdpResponse response = IdpResponse.fromResultIntent(data);
 
             if (resultCode == RESULT_OK) {
+                /*
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                 uid = user.getUid();
                 name = user.getDisplayName();
                 email = user.getEmail();
                 photo = user.getPhotoUrl().toString();
 
-                presenter.prepareFor("/users/" + uid, User.class);
-                presenter.sync("/users/" + uid);
+                presenter.prepareProfileFor("/users/" + uid);
+                presenter.syncProfile("/users/" + uid);
+                */
             } else {
                 // Sign in failed. If response is null the user canceled the
                 // sign-in flow using the back button. Otherwise check
@@ -99,58 +104,13 @@ public class LoginGoogleActivity extends AppCompatActivity implements LoginGoogl
 
     @Override
     public void goMain() {
-        Intent intent = new Intent(LoginGoogleActivity.this, MainActivity.class);
+        Intent intent = new Intent(LoginGoogleActivity.this, HomeActivity.class);
         startActivity(intent);
         finish();
     }
 
-    @Override
-    public void onCreateReference() {
-        user = new User(uid, name, email, photo, "android", Rotor.getId(), "", 0L, null);
-        presenter.sync("/users/" + uid);
-    }
-
-    @Override
-    public void onReferenceChanged(User user) {
-        if (!omitMoreChanges) {
-            omitMoreChanges = true;
-            presenter.sayHello(user);
-            ChatRepository.defineUser(user);
-            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
-                        ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
-                        ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                    startService();
-                } else {
-                    String[] perm = new String[]{
-                            Manifest.permission.ACCESS_FINE_LOCATION,
-                            Manifest.permission.ACCESS_COARSE_LOCATION,
-                            Manifest.permission.CAMERA
-                    };
-                    ActivityCompat.requestPermissions(this, perm, LOCATION_REQUEST_CODE);
-                }
-            } else {
-                startService();
-            }
-        }
-    }
-
-    @Override
-    public User onUpdateReference() {
-        return user;
-    }
-
-    @Override
-    public void onDestroyReference() {
-
-    }
-
-    @Override
-    public void progress(int value) {
-
-    }
-
     private void startService() {
+        /*
         MotionDetector.start(new com.efraespada.motiondetector.Listener() {
             @Override
             public void locationChanged(android.location.Location location) {
@@ -186,6 +146,7 @@ public class LoginGoogleActivity extends AppCompatActivity implements LoginGoogl
                 ChatRepository.getUser().setType(type);
             }
         });
+        */
 
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
@@ -194,6 +155,7 @@ public class LoginGoogleActivity extends AppCompatActivity implements LoginGoogl
                 presenter.goMain();
             }
         }, 3000);
+
     }
 
 
@@ -212,5 +174,87 @@ public class LoginGoogleActivity extends AppCompatActivity implements LoginGoogl
         } else {
             finish();
         }
+    }
+
+    @Override
+    public void onCreateUser() {
+        user = new User(uid, name, email, photo, "android", Rotor.getId(), "", 0L, null);
+        presenter.syncProfile("/users/" + uid);
+    }
+
+    @Override
+    public void onUserChanged(User user) {
+        this.user = user;
+        if (!this.user.getToken().equals(Rotor.getId())) {
+            this.user.setToken(Rotor.getId());
+            presenter.syncProfile("/users/" + this.user.getUid());
+        } else if (!omitMoreChanges) {
+            omitMoreChanges = true;
+            presenter.sayHello(user);
+            ChatRepository.defineUser(user);
+            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                        ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                        ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                    startService();
+                } else {
+                    String[] perm = new String[]{
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION,
+                            Manifest.permission.CAMERA
+                    };
+                    ActivityCompat.requestPermissions(this, perm, LOCATION_REQUEST_CODE);
+                }
+            } else {
+                startService();
+            }
+        }
+    }
+
+    @Override
+    public User onUpdateUser() {
+        return user;
+    }
+
+    @Override
+    public void onDestroyUser() {
+
+    }
+
+    @Override
+    public void userProgress(int value) {
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        presenter.onResumeView();
+        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            uid = user.getUid();
+            name = user.getDisplayName();
+            email = user.getEmail();
+            photo = user.getPhotoUrl().toString();
+
+            presenter.prepareProfileFor("/users/" + uid);
+            presenter.syncProfile("/users/" + uid);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        presenter.onPauseView();
+        super.onPause();
+    }
+
+    @Override
+    public void connected() {
+
+    }
+
+    @Override
+    public void disconnected() {
+
     }
 }

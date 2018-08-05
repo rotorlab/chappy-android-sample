@@ -40,14 +40,16 @@ import com.rotor.chappy.adapters.ChatAdapter;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.User;
 import com.rotor.chappy.model.mpv.ProfilesView;
+import com.rotor.core.RAppCompatActivity;
 import com.rotor.core.Rotor;
+import com.tapadoo.alerter.Alerter;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class MainActivity extends AppCompatActivity implements MainInterface.View<Chat>, ProfilesView {
+public class MainActivity extends RAppCompatActivity implements MainInterface.View<Chat>, ProfilesView {
 
     private MaterialDialog materialDialog;
     private RecyclerView chatsList;
@@ -99,7 +101,6 @@ public class MainActivity extends AppCompatActivity implements MainInterface.Vie
     protected void onResume() {
         super.onResume();
         presenter.onResumeView();
-        Rotor.onResume();
         presenter.prepareChatsFor();
         if (chatsList != null) {
             chatsList.getAdapter().notifyDataSetChanged();
@@ -108,7 +109,6 @@ public class MainActivity extends AppCompatActivity implements MainInterface.Vie
 
     @Override
     protected void onPause() {
-        Rotor.onPause();
         presenter.onPauseView();
         super.onPause();
     }
@@ -316,5 +316,21 @@ public class MainActivity extends AppCompatActivity implements MainInterface.Vie
     @Override
     public void userProgress(String key, int value) {
         // nothing to do here
+    }
+
+    @Override
+    public void connected() {
+        Alerter.clearCurrent(MainActivity.this);
+    }
+
+    @Override
+    public void disconnected() {
+        Alerter.create(MainActivity.this).setTitle("Device not connected")
+                .setText("Trying to reconnect")
+                .enableProgress(true)
+                .disableOutsideTouch()
+                .enableInfiniteDuration(true)
+                .setProgressColorRes(R.color.primary)
+                .show();
     }
 }
