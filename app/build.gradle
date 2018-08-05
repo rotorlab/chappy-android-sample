@@ -34,8 +34,8 @@ android {
         device {
             applicationId "com.rotor.chappy"
             versionNameSuffix "-device"
-            buildConfigField "String", "database_url", "\"http://192.168.1.130:1508/\""
-            buildConfigField "String", "redis_url", "\"redis://192.168.1.130\""
+            buildConfigField "String", "database_url", "\"http://192.168.1.171:1508/\""
+            buildConfigField "String", "redis_url", "\"redis://192.168.1.171\""
             dimension "origin"
         }
     }
@@ -47,16 +47,16 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     implementation 'com.android.support:appcompat-v7:27.1.1'
-    implementation 'com.android.support.constraint:constraint-layout:1.1.0'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.2'
     implementation 'com.android.support:design:27.1.1'
     testImplementation 'junit:junit:4.12'
     implementation 'com.afollestad.material-dialogs:core:0.9.6.0'
 
-    implementation 'com.google.firebase:firebase-core:16.0.0'
-    implementation 'com.google.firebase:firebase-auth:16.0.1'
+    implementation 'com.google.firebase:firebase-core:16.0.1'
+    implementation 'com.google.firebase:firebase-auth:16.0.2'
     implementation 'com.firebaseui:firebase-ui-auth:3.3.1'
     implementation 'com.google.android.gms:play-services-auth:15.0.1'
-    implementation 'com.crashlytics.sdk.android:crashlytics:2.9.3'
+    implementation 'com.crashlytics.sdk.android:crashlytics:2.9.4'
 
     implementation 'com.makeramen:roundedimageview:2.3.0'
     implementation 'com.nostra13.universalimageloader:universal-image-loader:1.9.5'
