@@ -1,6 +1,8 @@
 package com.rotor.chappy.model.map;
 
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.v7.app.AppCompatActivity;
@@ -62,14 +64,12 @@ public class PersonRender extends DefaultClusterRenderer<PersonItem> {
     @Override
     protected void onBeforeClusterRendered(final Cluster<PersonItem> cluster, final MarkerOptions markerOptions) {
         super.onBeforeClusterRendered(cluster, markerOptions);
-        final List<Drawable> profilePhotos = new ArrayList<Drawable>(Math.min(4, cluster.getSize()));
+        final List<Bitmap> profilePhotos = new ArrayList<Bitmap>(Math.min(4, cluster.getSize()));
         final int width = mDimension;
         final int height = mDimension;
 
         for (final PersonItem p : cluster.getItems()) {
-            BitmapDrawable drawable = new BitmapDrawable(activity.getResources(), p.getImage());
-            drawable.setBounds(0, 0, width, height);
-            profilePhotos.add(drawable);
+            profilePhotos.add(p.getImage());
 
             if (profilePhotos.size() == 4 || cluster.getSize() == profilePhotos.size()) {
                 clusterRendered(cluster, profilePhotos, height, width, markerOptions);
@@ -83,13 +83,28 @@ public class PersonRender extends DefaultClusterRenderer<PersonItem> {
         return cluster.getSize() > 1;
     }
 
-    private void clusterRendered(Cluster<PersonItem> cluster, List<Drawable> images, int height, int width, MarkerOptions markerOptions) {
-        MultiDrawable multiDrawable = new MultiDrawable(images);
-        multiDrawable.setBounds(0, 0, width, height);
+    private void clusterRendered(Cluster<PersonItem> cluster, List<Bitmap> images, int height, int width, MarkerOptions markerOptions) {
+        Bitmap aux = null;
+        for (int i = 0; i < images.size(); i++) {
+            if (aux == null) {
+                aux = images.get(i);
+            } else {
+                aux = overlay(images.get(i), aux, height, i);
+            }
+        }
 
-        mClusterImageView.setImageDrawable(multiDrawable);
+        mClusterImageView.setImageBitmap(aux);
         Bitmap icon = mClusterIconGenerator.makeIcon(String.valueOf(cluster.getSize()));
         markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon));
+    }
+
+    public static Bitmap overlay(Bitmap bmp1, Bitmap bmp2, int height, int index) {
+        int med = bmp1.getWidth();
+        Bitmap bmOverlay = Bitmap.createBitmap(med * (index + 1), height, bmp1.getConfig());
+        Canvas canvas = new Canvas(bmOverlay);
+        canvas.drawBitmap(bmp1, new Matrix(), null);
+        canvas.drawBitmap(bmp2, med * (index - 1), 0, null);
+        return bmOverlay;
     }
 
 }

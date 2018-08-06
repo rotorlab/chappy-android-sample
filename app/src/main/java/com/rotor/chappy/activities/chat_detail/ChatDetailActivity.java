@@ -30,6 +30,8 @@ import com.rotor.core.RAppCompatActivity;
 import com.rotor.notifications.Notifications;
 import com.rotor.notifications.model.Content;
 
+import org.apache.commons.lang3.StringEscapeUtils;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -254,7 +256,7 @@ public class ChatDetailActivity extends RAppCompatActivity implements ChatDetail
 
     @Override
     public void updateUI() {
-        setTitle(presenter.chat().getName());
+        setTitle(StringEscapeUtils.unescapeJava(presenter.chat().getName()));
         memberList.getAdapter().notifyDataSetChanged();
     }
 }
