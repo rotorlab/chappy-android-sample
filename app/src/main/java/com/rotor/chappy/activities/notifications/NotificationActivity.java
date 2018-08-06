@@ -5,7 +5,7 @@ import android.support.annotation.NonNull;
 import android.widget.Toast;
 
 import com.rotor.chappy.BuildConfig;
-import com.rotor.chappy.activities.chat.ChatActivity;
+import com.rotor.chappy.activities.home.HomeActivity;
 import com.rotor.chappy.activities.splash.SplashActivity;
 import com.rotor.core.Rotor;
 import com.rotor.core.interfaces.RStatus;
@@ -48,7 +48,7 @@ public class NotificationActivity extends NotificationRouterActivity {
     @Override
     public void notificationTouched(int action, @NonNull String id, @NonNull String room) {
         if (action == SplashActivity.ACTION_CHAT) {
-            Intent intent = new Intent(this, ChatActivity.class);
+            Intent intent = new Intent(this, HomeActivity.class);
             intent.putExtra("path", room);
             intent.putExtra("notification", id);
             startActivity(intent);

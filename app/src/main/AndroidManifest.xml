@@ -39,23 +39,10 @@
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="adjustResize">
         </activity>
-
-        <activity
-            android:name=".activities.main.MainActivity"
-            android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:windowSoftInputMode="adjustResize">
-        </activity>
-
+        
         <activity
             android:name=".activities.home.HomeActivity"
             android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:windowSoftInputMode="adjustResize">
-        </activity>
-
-        <activity
-            android:name=".activities.chat.ChatActivity"
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="adjustResize">
         </activity>

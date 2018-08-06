@@ -41,7 +41,7 @@ public class Chat {
 
     public Chat(String name) {
         Date date = new Date();
-        id = Long.valueOf(date.getTime()).toString();
+        id = String.valueOf(date.getTime());
         creation = date.getTime();
         this.name = name;
         members = new HashMap<>();
