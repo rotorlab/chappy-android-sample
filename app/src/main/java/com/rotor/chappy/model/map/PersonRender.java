@@ -15,6 +15,7 @@ import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.google.maps.android.ui.IconGenerator;
+import com.makeramen.roundedimageview.RoundedImageView;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
@@ -29,23 +30,28 @@ public class PersonRender extends DefaultClusterRenderer<PersonItem> {
     private AppCompatActivity activity;
     private final IconGenerator mIconGenerator = new IconGenerator(App.context());
     private final IconGenerator mClusterIconGenerator = new IconGenerator(App.context());
-    private final ImageView mImageView;
-    private final ImageView mClusterImageView;
+    private final RoundedImageView mImageView;
+    private final RoundedImageView mClusterImageView;
     private final int mDimension;
 
     public PersonRender(AppCompatActivity activity, GoogleMap map, ClusterManager<PersonItem> clusterManager) {
         super(activity, map, clusterManager);
         this.activity = activity;
-        View multiProfile = activity.getLayoutInflater().inflate(R.layout.multi_profile, null);
-        mClusterIconGenerator.setContentView(multiProfile);
-        mClusterImageView = (ImageView) multiProfile.findViewById(R.id.image);
 
-        mImageView = new ImageView(activity);
+        View multiProfile = activity.getLayoutInflater().inflate(R.layout.multi_profile, null);
+        mClusterImageView = (RoundedImageView) multiProfile.findViewById(R.id.image);
+        mClusterIconGenerator.setContentView(multiProfile);
+
+        View profile = activity.getLayoutInflater().inflate(R.layout.person_profile, null);
+        mImageView = (RoundedImageView) profile.findViewById(R.id.image);
+        mIconGenerator.setContentView(profile);
+
+        // mImageView = new RoundedImageView(activity);
         mDimension = (int) activity.getResources().getDimension(R.dimen.custom_profile_image);
-        mImageView.setLayoutParams(new ViewGroup.LayoutParams(mDimension, mDimension));
-        int padding = (int) activity.getResources().getDimension(R.dimen.custom_profile_padding);
-        mImageView.setPadding(padding, padding, padding, padding);
-        mIconGenerator.setContentView(mImageView);
+        //mImageView.setLayoutParams(new ViewGroup.LayoutParams(mDimension, mDimension));
+        //int padding = (int) activity.getResources().getDimension(R.dimen.custom_profile_padding);
+        //mImageView.setPadding(padding, padding, padding, padding);
+        //mIconGenerator.setContentView(mImageView);
     }
 
     @Override

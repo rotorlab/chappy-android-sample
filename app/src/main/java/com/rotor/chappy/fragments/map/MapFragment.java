@@ -1,6 +1,7 @@
 package com.rotor.chappy.fragments.map;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -9,15 +10,21 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterItem;
@@ -26,6 +33,9 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 import com.rotor.chappy.R;
+import com.rotor.chappy.activities.home.HomeActivity;
+import com.rotor.chappy.activities.login.LoginGoogleActivity;
+import com.rotor.chappy.activities.main.MainActivity;
 import com.rotor.chappy.enums.FragmentType;
 import com.rotor.chappy.interfaces.Frag;
 import com.rotor.chappy.model.Location;
@@ -64,6 +74,7 @@ public class MapFragment extends RFragment implements Frag, OnMapReadyCallback, 
             mapView.onCreate(savedInstanceState);
             mapView.getMapAsync(this);
         }
+        setHasOptionsMenu(true);
     }
 
 

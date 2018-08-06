@@ -20,19 +20,17 @@ public interface ChatsInterface {
 
         HashMap<String, Chat> chats();
 
+        void askGroupName();
+
     }
 
     interface View {
 
         void openChat(Chat chat);
-
-        void chatCreated();
-
+        
         void chatChanged(Chat chat);
 
-        Chat getChat(String id);
-
-        void chatDeleted(Chat chat);
+        void askGroupName();
 
     }
 

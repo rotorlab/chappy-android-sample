@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 
 import com.ittianyu.bottomnavigationviewex.BottomNavigationViewEx;
@@ -19,7 +20,7 @@ import com.rotor.chappy.fragments.profile.ProfileFragment;
 import com.rotor.core.RFragment;
 import com.rotor.core.RViewPager;
 
-public class HomeActivity extends AppCompatActivity {
+public class HomeActivity extends AppCompatActivity implements HomeInterface.View {
 
     private RFragment[] fragments = {
             ChatsFragment.instance(),
@@ -78,4 +79,5 @@ public class HomeActivity extends AppCompatActivity {
     public void onBackPressed() {
         pager.onBackPressed();
     }
+
 }

@@ -58,7 +58,8 @@ public class ChatsPresenter implements ChatsInterface.Presenter {
 
     @Override
     public void createChat(Chat chat) {
-
+        chats.put(chat.getId(), chat);
+        listenChat(chat.getId());
     }
 
     @Override
@@ -107,5 +108,10 @@ public class ChatsPresenter implements ChatsInterface.Presenter {
     @Override
     public HashMap<String, Chat> chats() {
         return chats;
+    }
+
+    @Override
+    public void askGroupName() {
+        view.askGroupName();
     }
 }
