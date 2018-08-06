@@ -1,8 +1,9 @@
-package com.rotor.chappy.model;
+package com.rotor.chappy.model.query;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,6 +38,8 @@ public class ResponseUsersMap {
 
         public UsersMapChat() {
             this.userId = "";
+            this.members = new HashMap<>();
+            members.put("*", new Member());
         }
 
         public String getUserId() {

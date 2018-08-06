@@ -1,5 +1,6 @@
 package com.rotor.chappy.fragments.map;
 
+import com.rotor.chappy.model.Location;
 import com.rotor.chappy.model.User;
 
 import java.util.HashMap;
@@ -19,6 +20,8 @@ public interface MapInterface {
     interface View {
 
         void updateUI();
+
+        void goToPosition(Location location);
 
     }
 

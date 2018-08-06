@@ -58,6 +58,7 @@ dependencies {
     implementation 'com.firebaseui:firebase-ui-auth:3.3.1'
     implementation 'com.google.android.gms:play-services-auth:15.0.1'
     implementation 'com.crashlytics.sdk.android:crashlytics:2.9.4'
+    implementation 'com.google.maps.android:android-maps-utils:0.5'
 
     implementation 'com.tapadoo.android:alerter:2.0.6'
     implementation 'com.makeramen:roundedimageview:2.3.0'

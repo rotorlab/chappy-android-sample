@@ -1,25 +1,19 @@
 package com.rotor.chappy.activities.main;
 
-import android.util.Log;
-
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.gson.internal.LinkedTreeMap;
 import com.rotor.chappy.App;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.Member;
-import com.rotor.chappy.model.ResponseId;
-import com.rotor.chappy.model.User;
+import com.rotor.chappy.model.query.ResponseId;
 import com.rotor.chappy.model.mpv.ProfilePresenter;
 import com.rotor.chappy.model.mpv.ProfilesView;
-import com.rotor.chappy.model.mpv.ReferenceView;
 import com.rotor.chappy.services.ChatRepository;
 import com.rotor.chappy.services.ProfileRepository;
 import com.rotor.database.Database;
 import com.rotor.database.interfaces.QueryCallback;
 
 import java.util.Date;
-import java.util.List;
 
 public class MainPresenter implements MainInterface.Presenter<Chat>, ProfilePresenter {
 

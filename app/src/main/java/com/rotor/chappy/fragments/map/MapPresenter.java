@@ -5,15 +5,9 @@ import android.support.annotation.Nullable;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.gson.internal.LinkedTreeMap;
 import com.rotor.chappy.App;
-import com.rotor.chappy.fragments.chat.ChatFragment;
-import com.rotor.chappy.fragments.chats.ChatsFragment;
-import com.rotor.chappy.fragments.chats.ChatsInterface;
-import com.rotor.chappy.model.Chat;
-import com.rotor.chappy.model.Member;
-import com.rotor.chappy.model.ResponseId;
-import com.rotor.chappy.model.ResponseUsersMap;
+import com.rotor.chappy.model.query.QueryUsersMap;
+import com.rotor.chappy.model.query.ResponseUsersMap;
 import com.rotor.chappy.model.User;
 import com.rotor.database.Database;
 import com.rotor.database.abstr.Reference;
@@ -21,9 +15,7 @@ import com.rotor.database.interfaces.QueryCallback;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class MapPresenter implements MapInterface.Presenter {
 
@@ -45,36 +37,28 @@ public class MapPresenter implements MapInterface.Presenter {
         if (user == null) {
             // TODO add logout
         } else {
-            Database.query(App.databaseName,"/chats/*",
-                    "{\"members\": { \"*\": { \"id\": \"" + user.getUid() + "\" } } }",
-                    "{ \"id\": \"\"," +
-                            "\"members\": {" +
-                                "\"*\": {" +
-                                    "\"id\": \"\"" +
-                                "}" +
-                            "} }",
-                    new QueryCallback<ResponseUsersMap>() {
-
-                        @Override
-                        public void response(ResponseUsersMap response) {
-                            for (ResponseUsersMap.UsersMapChat chat : response.getChats()) {
-
-                                for (Map.Entry<String, ResponseUsersMap.UsersMapChat.Member> entry : chat.getMembers().entrySet()) {
-                                    if (!asked.contains(entry.getValue().getUserId())) {
-                                        asked.add(entry.getValue().getUserId());
-                                        listenUser(entry.getValue().getUserId());
-                                    }
-                                }
+            QueryUsersMap query = new QueryUsersMap(user.getUid());
+            ResponseUsersMap.UsersMapChat mask = new ResponseUsersMap.UsersMapChat();
+            Database.query(App.databaseName,"/chats/*", query, mask, new QueryCallback<ResponseUsersMap>() {
+                @Override
+                public void response(ResponseUsersMap response) {
+                    for (ResponseUsersMap.UsersMapChat chat : response.getChats()) {
+                        for (Map.Entry<String, ResponseUsersMap.UsersMapChat.Member> entry : chat.getMembers().entrySet()) {
+                            if (!asked.contains(entry.getValue().getUserId())) {
+                                asked.add(entry.getValue().getUserId());
+                                listenUser(entry.getValue().getUserId());
                             }
                         }
+                    }
+                }
 
-                    }, ResponseUsersMap.class);
+            }, ResponseUsersMap.class);
         }
     }
 
     @Override
     public void listenUser(final String id) {
-        Database.listen("database", "/users/" + id, new Reference<User>(User.class) {
+        Database.listen(App.databaseName, "/users/" + id, new Reference<User>(User.class) {
 
             @Override
             public void onCreate() {

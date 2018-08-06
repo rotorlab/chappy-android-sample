@@ -2,23 +2,19 @@ package com.rotor.chappy.fragments.chats;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.gson.Gson;
-import com.google.gson.internal.LinkedTreeMap;
 import com.rotor.chappy.App;
-import com.rotor.chappy.enums.FragmentType;
 import com.rotor.chappy.fragments.chat.ChatFragment;
 import com.rotor.chappy.model.Chat;
-import com.rotor.chappy.model.ResponseId;
+import com.rotor.chappy.model.query.ResponseId;
 import com.rotor.database.Database;
 import com.rotor.database.abstr.Reference;
 import com.rotor.database.interfaces.QueryCallback;
 
 import java.util.HashMap;
-import java.util.List;
 
 public class ChatsPresenter implements ChatsInterface.Presenter {
 

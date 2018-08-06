@@ -1,4 +1,4 @@
-package com.rotor.chappy.model;
+package com.rotor.chappy.model.query;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;

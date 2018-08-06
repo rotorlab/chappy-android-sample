@@ -294,6 +294,11 @@ class Database  {
             Database.unlisten(path)
         }
 
+        @JvmStatic fun <T> query(database: String, path: String, query: Any, mask: Any, callback: QueryCallback<T>, klass: Class<T>) {
+            val gson = Gson();
+            query(database, path, gson.toJson(query), gson.toJson(mask), callback, klass)
+        }
+
         @JvmStatic fun <T> query(database: String, path: String, query: String, mask: String, callback: QueryCallback<T>, klass: Class<T>) {
             api.query(Rotor.id!!, database, path, query, mask)
                     .subscribeOn(Schedulers.io())
