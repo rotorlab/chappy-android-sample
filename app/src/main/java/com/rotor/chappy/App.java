@@ -3,29 +3,17 @@ package com.rotor.chappy;
 import android.app.Application;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.location.Location;
 import android.net.Uri;
-import android.support.v4.view.ViewPager;
 import android.widget.ImageView;
 
 import com.crashlytics.android.Crashlytics;
-import com.efraespada.motiondetector.MotionDetector;
 import com.google.firebase.auth.FirebaseAuth;
 import com.mikepenz.materialdrawer.util.AbstractDrawerImageLoader;
 import com.mikepenz.materialdrawer.util.DrawerImageLoader;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
-import com.rotor.chappy.adapters.VPagerAdapter;
-import com.rotor.chappy.enums.FragmentType;
-import com.rotor.chappy.model.User;
-import com.rotor.chappy.services.ChatRepository;
-import com.rotor.chappy.services.ProfileRepository;
 import com.rotor.core.RViewPager;
-import com.rotor.database.Database;
-
-import java.util.Date;
-import java.util.HashMap;
 
 import io.fabric.sdk.android.Fabric;
 

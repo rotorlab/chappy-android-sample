@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -41,7 +40,6 @@ import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.User;
 import com.rotor.chappy.model.mpv.ProfilesView;
 import com.rotor.core.RAppCompatActivity;
-import com.rotor.core.Rotor;
 import com.tapadoo.alerter.Alerter;
 
 import org.apache.commons.lang3.StringEscapeUtils;

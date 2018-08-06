@@ -9,10 +9,6 @@ import android.widget.TextView;
 
 import com.rotor.chappy.model.Chat;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 /**
  * Created by efraespada on 17/06/2017.
  */

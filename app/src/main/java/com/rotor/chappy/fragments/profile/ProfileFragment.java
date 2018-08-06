@@ -4,21 +4,12 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.EditorInfo;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -29,27 +20,17 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.makeramen.roundedimageview.RoundedImageView;
 import com.nostra13.universalimageloader.core.ImageLoader;
-import com.rotor.chappy.App;
 import com.rotor.chappy.R;
 import com.rotor.chappy.enums.FragmentType;
-import com.rotor.chappy.fragments.chat.ChatInterface;
-import com.rotor.chappy.fragments.chat.ChatPresenter;
-import com.rotor.chappy.fragments.chat.MessageAdapter;
-import com.rotor.chappy.fragments.chats.ChatsFragment;
 import com.rotor.chappy.interfaces.Frag;
 import com.rotor.chappy.model.Location;
-import com.rotor.chappy.model.Message;
 import com.rotor.chappy.model.User;
 import com.rotor.core.RFragment;
-import com.rotor.core.Rotor;
 import com.stringcare.library.SC;
 import com.tapadoo.alerter.Alerter;
 
 import net.glxn.qrgen.android.QRCode;
 
-import org.apache.commons.lang3.StringEscapeUtils;
-
-import java.util.Date;
 import java.util.Map;
 
 public class ProfileFragment extends RFragment implements Frag, ProfileInterface.View, OnMapReadyCallback {

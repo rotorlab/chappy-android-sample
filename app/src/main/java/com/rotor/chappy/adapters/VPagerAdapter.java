@@ -3,7 +3,6 @@ package com.rotor.chappy.adapters;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v4.view.ViewPager;
 
 import com.rotor.chappy.App;
 import com.rotor.chappy.enums.FragmentType;
@@ -11,7 +10,6 @@ import com.rotor.chappy.fragments.chat.ChatFragment;
 import com.rotor.chappy.fragments.chats.ChatsFragment;
 import com.rotor.chappy.fragments.map.MapFragment;
 import com.rotor.chappy.interfaces.Frag;
-import com.rotor.core.RFragment;
 
 public class VPagerAdapter extends FragmentStatePagerAdapter {
 

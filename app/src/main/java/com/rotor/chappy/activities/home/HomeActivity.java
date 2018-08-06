@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 
 import com.ittianyu.bottomnavigationviewex.BottomNavigationViewEx;
@@ -15,7 +14,6 @@ import com.rotor.chappy.R;
 import com.rotor.chappy.fragments.chat.ChatFragment;
 import com.rotor.chappy.fragments.chats.ChatsFragment;
 import com.rotor.chappy.fragments.map.MapFragment;
-
 import com.rotor.chappy.fragments.profile.ProfileFragment;
 import com.rotor.core.RFragment;
 import com.rotor.core.RViewPager;

@@ -10,14 +10,12 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.widget.Toast;
 
 import com.rotor.chappy.BuildConfig;
 import com.rotor.chappy.R;
 import com.rotor.chappy.activities.home.HomeActivity;
 import com.rotor.chappy.activities.login.LoginGoogleActivity;
-import com.rotor.chappy.activities.main.MainActivity;
 import com.rotor.chappy.activities.notifications.NotificationActivity;
 import com.rotor.chappy.model.User;
 import com.rotor.chappy.services.ChatRepository;

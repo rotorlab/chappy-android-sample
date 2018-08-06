@@ -5,17 +5,9 @@ import android.support.annotation.Nullable;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.rotor.chappy.App;
-import com.rotor.chappy.fragments.chat.ChatFragment;
-import com.rotor.chappy.fragments.chat.ChatInterface;
-import com.rotor.chappy.model.Chat;
-import com.rotor.chappy.model.Member;
 import com.rotor.chappy.model.User;
 import com.rotor.database.Database;
 import com.rotor.database.abstr.Reference;
-
-import java.util.ArrayList;
-import java.util.HashMap;
 
 public class ProfilePresenter implements ProfileInterface.Presenter {
 

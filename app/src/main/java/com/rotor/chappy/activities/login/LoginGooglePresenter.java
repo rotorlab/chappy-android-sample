@@ -2,11 +2,7 @@ package com.rotor.chappy.activities.login;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.rotor.chappy.model.User;
-import com.rotor.chappy.model.mpv.ProfilesView;
-import com.rotor.chappy.services.ChatRepository;
 import com.rotor.chappy.services.ProfileRepository;
-import com.rotor.core.Rotor;
-import com.rotor.database.Database;
 
 public class LoginGooglePresenter implements LoginGoogleInterface.Presenter<User> {
 

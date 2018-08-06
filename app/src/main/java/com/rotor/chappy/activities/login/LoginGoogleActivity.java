@@ -9,26 +9,19 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 
-import com.efraespada.motiondetector.MotionDetector;
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.IdpResponse;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.rotor.chappy.R;
 import com.rotor.chappy.activities.home.HomeActivity;
-import com.rotor.chappy.activities.main.MainActivity;
-import com.rotor.chappy.model.Location;
 import com.rotor.chappy.model.User;
 import com.rotor.chappy.services.ChatRepository;
 import com.rotor.core.RAppCompatActivity;
 import com.rotor.core.Rotor;
-import com.rotor.database.Database;
 
 import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 
 /**

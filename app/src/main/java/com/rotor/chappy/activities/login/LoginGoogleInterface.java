@@ -2,8 +2,6 @@ package com.rotor.chappy.activities.login;
 
 import com.rotor.chappy.model.mpv.ProfilePresenter;
 import com.rotor.chappy.model.mpv.ProfileView;
-import com.rotor.chappy.model.mpv.ReferencePresenter;
-import com.rotor.chappy.model.mpv.ReferenceView;
 
 public interface LoginGoogleInterface {
 

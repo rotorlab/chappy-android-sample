@@ -4,11 +4,11 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.rotor.chappy.App;
+import com.rotor.chappy.model.User;
 import com.rotor.chappy.model.mpv.BasePresenter;
 import com.rotor.chappy.model.mpv.MapReferenceView;
 import com.rotor.chappy.model.mpv.ReferenceView;
 import com.rotor.chappy.model.mpv.RelationView;
-import com.rotor.chappy.model.User;
 import com.rotor.database.Database;
 import com.rotor.database.abstr.Reference;
 

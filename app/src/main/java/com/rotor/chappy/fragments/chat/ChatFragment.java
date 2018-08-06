@@ -22,14 +22,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.firebase.ui.auth.AuthUI;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.rotor.chappy.App;
 import com.rotor.chappy.R;
 import com.rotor.chappy.activities.chat_detail.ChatDetailActivity;
 import com.rotor.chappy.activities.home.HomeActivity;
-import com.rotor.chappy.activities.login.LoginGoogleActivity;
 import com.rotor.chappy.enums.FragmentType;
 import com.rotor.chappy.fragments.chats.ChatsFragment;
 import com.rotor.chappy.interfaces.Frag;

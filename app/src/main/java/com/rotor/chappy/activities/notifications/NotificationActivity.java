@@ -5,8 +5,8 @@ import android.support.annotation.NonNull;
 import android.widget.Toast;
 
 import com.rotor.chappy.BuildConfig;
-import com.rotor.chappy.activities.splash.SplashActivity;
 import com.rotor.chappy.activities.chat.ChatActivity;
+import com.rotor.chappy.activities.splash.SplashActivity;
 import com.rotor.core.Rotor;
 import com.rotor.core.interfaces.RStatus;
 import com.rotor.database.Database;

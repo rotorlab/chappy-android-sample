@@ -5,7 +5,6 @@ import android.content.Intent;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.Member;
 import com.rotor.chappy.model.User;
-import com.rotor.chappy.model.mpv.ReferenceView;
 
 import java.util.Map;
 

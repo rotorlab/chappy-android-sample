@@ -9,10 +9,6 @@ import com.rotor.chappy.App;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.Member;
 import com.rotor.chappy.model.User;
-import com.rotor.chappy.model.mpv.ProfilePresenter;
-import com.rotor.chappy.model.mpv.ProfilesView;
-import com.rotor.chappy.services.ChatRepository;
-import com.rotor.chappy.services.ProfileRepository;
 import com.rotor.database.Database;
 import com.rotor.database.abstr.Reference;
 

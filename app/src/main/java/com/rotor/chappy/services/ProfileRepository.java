@@ -6,14 +6,10 @@ import android.support.annotation.Nullable;
 import com.rotor.chappy.App;
 import com.rotor.chappy.model.Location;
 import com.rotor.chappy.model.User;
-import com.rotor.chappy.model.mpv.BasePresenter;
-import com.rotor.chappy.model.mpv.MapReferenceView;
 import com.rotor.chappy.model.mpv.ProfilePresenter;
 import com.rotor.chappy.model.mpv.ProfileView;
 import com.rotor.chappy.model.mpv.ProfilesView;
-import com.rotor.chappy.model.mpv.ReferenceView;
 import com.rotor.chappy.model.mpv.RelationProfilesView;
-import com.rotor.chappy.model.mpv.RelationView;
 import com.rotor.database.Database;
 import com.rotor.database.abstr.Reference;
 

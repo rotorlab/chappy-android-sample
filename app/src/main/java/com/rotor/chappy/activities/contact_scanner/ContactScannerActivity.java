@@ -12,7 +12,6 @@ import com.google.android.gms.vision.barcode.Barcode;
 import com.rotor.chappy.R;
 import com.stringcare.library.SC;
 
-
 import java.util.List;
 
 import xyz.belvi.mobilevisionbarcodescanner.BarcodeRetriever;

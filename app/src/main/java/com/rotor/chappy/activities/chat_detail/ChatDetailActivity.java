@@ -24,17 +24,14 @@ import com.makeramen.roundedimageview.RoundedImageView;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.rotor.chappy.R;
 import com.rotor.chappy.activities.contact_scanner.ContactScannerActivity;
-import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.Member;
 import com.rotor.chappy.model.User;
-import com.rotor.chappy.model.mpv.ProfilesView;
 import com.rotor.core.RAppCompatActivity;
 import com.rotor.notifications.Notifications;
 import com.rotor.notifications.model.Content;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -47,8 +44,6 @@ public class ChatDetailActivity extends RAppCompatActivity implements ChatDetail
     private MaterialDialog materialDialog;
     private ChatDetailPresenter presenter;
     public static final int SCANNER_CODE = 2345;
-
-    public List<String> loaded = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
