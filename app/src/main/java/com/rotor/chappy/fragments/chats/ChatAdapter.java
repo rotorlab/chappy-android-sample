@@ -9,6 +9,8 @@ import android.widget.TextView;
 
 import com.rotor.chappy.model.Chat;
 
+import org.apache.commons.lang3.StringEscapeUtils;
+
 /**
  * Created by efraespada on 17/06/2017.
  */
@@ -39,7 +41,7 @@ public abstract class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewH
                 onChatClicked(chat);
             }
         });
-        holder.name.setText(chat.getName());
+        holder.name.setText(StringEscapeUtils.unescapeJava(chat.getName()));
     }
 
     @Override

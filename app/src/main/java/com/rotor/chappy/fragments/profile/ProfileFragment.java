@@ -148,7 +148,7 @@ public class ProfileFragment extends RFragment implements Frag, ProfileInterface
     }
 
     private void moveToLocation() {
-        if (presenter.user() != null) {
+        if (presenter.user() != null && map != null) {
             long last = 0;
             Location location = null;
             User user = presenter.user();
