@@ -19,7 +19,7 @@ import com.rotor.chappy.R;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PersonRender extends DefaultClusterRenderer<PersonItem> {
+public class PersonRender extends RClusterRender<PersonItem> {
 
     private AppCompatActivity activity;
     private final IconGenerator mIconGenerator = new IconGenerator(App.context());

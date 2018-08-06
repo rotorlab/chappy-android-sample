@@ -195,6 +195,7 @@ public class MapFragment extends RFragment implements Frag, OnMapReadyCallback, 
                 }
             }
         }
+        mClusterManager.cluster();
     }
 
     @Override

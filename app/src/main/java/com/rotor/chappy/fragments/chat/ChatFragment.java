@@ -130,7 +130,6 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
     public void onResumeView() {
         presenter.start();
         ((HomeActivity)getActivity()).setSupportActionBar(toolbar);
-        toolbar.setTitle(StringEscapeUtils.unescapeJava(presenter.chat().getName()));
     }
 
     @Override
