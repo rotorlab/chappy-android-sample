@@ -65,14 +65,12 @@ public class ProfileFragment extends RFragment implements Frag, ProfileInterface
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateRView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_profile, container, false);
     }
 
     @Override
-    public void onViewCreated(@Nullable View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
+    public void onRViewCreated(@Nullable View view, @Nullable Bundle savedInstanceState) {
         if (view != null) {
             profile = view.findViewById(R.id.image);
             name = view.findViewById(R.id.name);

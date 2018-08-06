@@ -1,15 +1,37 @@
 package com.rotor.chappy.activities.chat_detail;
 
-import com.rotor.chappy.model.mpv.ReferencePresenter;
+import android.content.Intent;
+
+import com.rotor.chappy.model.Chat;
+import com.rotor.chappy.model.Member;
+import com.rotor.chappy.model.User;
 import com.rotor.chappy.model.mpv.ReferenceView;
+
+import java.util.Map;
 
 public interface ChatDetailInterface {
 
-    interface Presenter<T> extends ReferencePresenter<T> {
+    interface Presenter {
+
+        void start(Intent intent);
+
+        Chat chat();
+
+        Map<String, User> users();
+
+        Map<String, Member> members();
+
+        void listenUser(String id);
+
+        String userId();
+
+        void sync();
 
     }
 
-    interface View<T> extends ReferenceView<T> {
+    interface View<T> {
+
+        void updateUI();
 
     }
 }

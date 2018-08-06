@@ -26,11 +26,11 @@ public interface ChatsInterface {
 
     interface View {
 
-        void openChat(Chat chat);
-        
         void chatChanged(Chat chat);
 
         void askGroupName();
+
+        ChatsPresenter presenter();
 
     }
 

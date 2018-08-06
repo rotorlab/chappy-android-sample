@@ -80,4 +80,15 @@ public class HomeActivity extends AppCompatActivity implements HomeInterface.Vie
         pager.onBackPressed();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        App.getPager().resumeLastActiveFragment();
+    }
+
+    @Override
+    protected void onPause() {
+        App.getPager().pauseActiveFragment();
+        super.onPause();
+    }
 }

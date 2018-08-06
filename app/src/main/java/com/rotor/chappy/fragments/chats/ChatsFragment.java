@@ -30,7 +30,6 @@ import com.rotor.chappy.interfaces.Frag;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.Member;
 import com.rotor.chappy.model.Message;
-import com.rotor.chappy.services.ChatRepository;
 import com.rotor.core.RFragment;
 
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -40,24 +39,24 @@ import java.util.HashMap;
 
 public class ChatsFragment extends RFragment implements Frag, ChatsInterface.View {
 
-    public ChatsPresenter presenter;
-    private RecyclerView list;
+    private Toolbar toolbar;
+    private ChatsPresenter presenter;
     private ChatAdapter adapter;
     private MaterialDialog materialDialog;
 
-
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateRView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_chats, container, false);
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
+    public void onRViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         presenter = new ChatsPresenter(this);
 
-        list = getActivity().findViewById(R.id.chats_list);
+        toolbar = view.findViewById(R.id.toolbar);
+
+        RecyclerView list = view.findViewById(R.id.chats_list);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getActivity().getApplicationContext());
         list.setLayoutManager(mLayoutManager);
 
@@ -75,12 +74,13 @@ public class ChatsFragment extends RFragment implements Frag, ChatsInterface.Vie
     @Override
     public void onResumeView() {
         presenter.start();
-        ((HomeActivity)getActivity()).setSupportActionBar((Toolbar) getActivity().findViewById(R.id.toolbar));
+        ((HomeActivity)getActivity()).setSupportActionBar(toolbar);
+        toolbar.setTitle("Chats");
     }
 
     @Override
     public void onPauseView() {
-
+        // nothing to do here
     }
 
     @Override
@@ -90,12 +90,12 @@ public class ChatsFragment extends RFragment implements Frag, ChatsInterface.Vie
 
     @Override
     public void connected() {
-
+        // nothing to do here
     }
 
     @Override
     public void disconnected() {
-
+        // nothing to do here
     }
 
     @Override
@@ -110,11 +110,6 @@ public class ChatsFragment extends RFragment implements Frag, ChatsInterface.Vie
 
     public static ChatsFragment instance() {
         return new ChatsFragment();
-    }
-
-    @Override
-    public void openChat(Chat chat) {
-
     }
 
     @Override
@@ -198,4 +193,8 @@ public class ChatsFragment extends RFragment implements Frag, ChatsInterface.Vie
                 .show();
     }
 
+    @Override
+    public ChatsPresenter presenter() {
+        return presenter;
+    }
 }

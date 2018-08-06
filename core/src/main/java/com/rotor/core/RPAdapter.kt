@@ -15,7 +15,7 @@ class RPAdapter(val pager: RViewPager, fragmentManager: FragmentManager): Fragme
         return pager.fragments().size
     }
 
-    fun <T> setFragment(clazz: Class<T>) {
+    fun <T> setFragment(clazz: Class<T>, transition: Boolean) {
         val current = pager.currentItem
         var next: Int = -1
         var currentFragment: RFragment ? = null
@@ -31,11 +31,8 @@ class RPAdapter(val pager: RViewPager, fragmentManager: FragmentManager): Fragme
         }
         currentFragment?.onPauseFragment()
         if (next > -1) {
-            pager.currentItem = next
+            pager.setCurrentItem(next, transition)
         }
-        val handler = Handler()
-        handler.postDelayed(Runnable {
-            nextFragment?.onResumeFragment()
-        }, 100)
+        nextFragment?.onResumeFragment()
     }
 }

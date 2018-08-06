@@ -11,6 +11,8 @@ class RViewPager(context: Context, attributes: AttributeSet?): ViewPager(context
 
     val fragments: ArrayList<RFragment> = ArrayList()
 
+    var lastPaused = -1
+
     constructor(context: Context) : this(context, null) {
 
     }
@@ -42,7 +44,11 @@ class RViewPager(context: Context, attributes: AttributeSet?): ViewPager(context
     }
 
     fun <T> setFragment(clazz: Class<T>) {
-        adapter.setFragment(clazz)
+        setFragment(clazz, false)
+    }
+
+    fun <T> setFragment(clazz: Class<T>, transition: Boolean) {
+        adapter.setFragment(clazz, transition)
     }
 
     fun adapter() : RPAdapter {
@@ -51,6 +57,20 @@ class RViewPager(context: Context, attributes: AttributeSet?): ViewPager(context
 
     fun onBackPressed() {
         fragments().get(currentItem).onBackPressed()
+    }
+
+    fun pauseActiveFragment() {
+        if (lastPaused == -1) {
+            lastPaused = currentItem
+            fragments().get(lastPaused).onPauseFragment()
+        }
+    }
+
+    fun resumeLastActiveFragment() {
+        if (lastPaused != -1) {
+            fragments().get(lastPaused).onResumeFragment()
+            lastPaused = -1
+        }
     }
 
 }

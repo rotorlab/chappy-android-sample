@@ -60,13 +60,12 @@ public class MapFragment extends RFragment implements Frag, OnMapReadyCallback, 
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateRView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_map, container, false);
     }
 
     @Override
-    public void onViewCreated(@Nullable View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
+    public void onRViewCreated(@Nullable View view, @Nullable Bundle savedInstanceState) {
         presenter = new MapPresenter(this);
         markers = new HashMap<>();
         if (view != null) {

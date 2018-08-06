@@ -40,15 +40,12 @@ import java.util.Map;
 
 import static com.rotor.chappy.activities.splash.SplashActivity.ACTION_CHAT;
 
-public class ChatDetailActivity extends RAppCompatActivity implements ChatDetailInterface.View<Chat>, ProfilesView {
+public class ChatDetailActivity extends RAppCompatActivity implements ChatDetailInterface.View {
 
     private RecyclerView memberList;
-    private Chat chat;
-    private String path;
     private String uidToAdd;
     private MaterialDialog materialDialog;
     private ChatDetailPresenter presenter;
-    private static final Map<String, User> users = new HashMap<>();
     public static final int SCANNER_CODE = 2345;
 
     public List<String> loaded = new ArrayList<>();
@@ -60,11 +57,7 @@ public class ChatDetailActivity extends RAppCompatActivity implements ChatDetail
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        Intent intent = getIntent();
-
-        presenter = new ChatDetailPresenter(this, this);
-
-        path = "/chats/" + intent.getStringExtra("path").replaceAll(" ", "_");
+        presenter = new ChatDetailPresenter(this);
 
         memberList = findViewById(R.id.member_list);
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
@@ -75,18 +68,12 @@ public class ChatDetailActivity extends RAppCompatActivity implements ChatDetail
     @Override
     protected void onResume() {
         super.onResume();
-        presenter.onResumeView();
-        presenter.prepareFor(path, Chat.class);
+        presenter.start(getIntent());
         if (uidToAdd != null) {
             addUid(uidToAdd);
         }
     }
 
-    @Override
-    protected void onPause() {
-        presenter.onPauseView();
-        super.onPause();
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -97,14 +84,12 @@ public class ChatDetailActivity extends RAppCompatActivity implements ChatDetail
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_add_contact) {
             Intent intent = new Intent(this, ContactScannerActivity.class);
             startActivityForResult(intent, SCANNER_CODE);
             return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -113,7 +98,6 @@ public class ChatDetailActivity extends RAppCompatActivity implements ChatDetail
         switch(requestCode) {
             case SCANNER_CODE:
                 if (resultCode == RESULT_OK) {
-                    presenter.onResumeView();
                     Bundle res = data.getExtras();
                     uidToAdd = res.getString("uid");
                 }
@@ -138,12 +122,12 @@ public class ChatDetailActivity extends RAppCompatActivity implements ChatDetail
                     public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                         final EditText message = dialog.getCustomView().findViewById(R.id.etName);
                         if (!TextUtils.isEmpty(message.getText()))
-                            if (users.containsKey("/users/" + presenter.getLoggedUid())) {
-                                User user = users.get("/users/" + presenter.getLoggedUid());
+                            if (presenter.members().containsKey(presenter.userId())) {
+                                User user = presenter.users().get(presenter.userId());
                                 Content content = new Content(ACTION_CHAT,
-                                        chat.getName(),
+                                        presenter.chat().getName(),
                                         user.getName() + ": " + message.getText().toString(),
-                                        chat.getId(),
+                                        presenter.chat().getId(),
                                         "myChannel",
                                         "Test channel",
                                         user.getPhoto(),
@@ -173,16 +157,16 @@ public class ChatDetailActivity extends RAppCompatActivity implements ChatDetail
         member.setId(uid);
         member.setRol("basic");
         member.setDate(new Date().getTime());
-        chat.addMember(member);
-        presenter.sync(path);
+        presenter.chat().addMember(member);
+        presenter.sync();
         Log.e("UID", "result:" + uid);
 
-        if (users.containsKey("/users/" + presenter.getLoggedUid())) {
-            User user = users.get("/users/" + presenter.getLoggedUid());
+        if (presenter.users().containsKey(presenter.userId())) {
+            User user = presenter.users().get(presenter.userId());
             Content content = new Content(ACTION_CHAT,
                     getString(R.string.notification_message_added_to_group_title),
-                    getString(R.string.notification_message_added_to_group, chat.getName()),
-                    chat.getId(),
+                    getString(R.string.notification_message_added_to_group, presenter.chat().getName()),
+                    presenter.chat().getId(),
                     "myChannel",
                     "Test channel",
                     user.getPhoto(),
@@ -192,72 +176,6 @@ public class ChatDetailActivity extends RAppCompatActivity implements ChatDetail
             ids.add(uid);
             Notifications.notify(Notifications.builder(content, ids));
         }
-    }
-
-    @Override
-    public void onCreateReference() {
-        finish();
-    }
-
-    @Override
-    public void onReferenceChanged(Chat chat) {
-        ChatDetailActivity.this.chat = chat;
-        ChatDetailActivity.this.setTitle(chat.getName());
-
-        for (Map.Entry<String, Member> entry : chat.getMembers().entrySet()) {
-            if (!loaded.contains("/users/" + entry.getValue().getId())) {
-                loaded.add("/users/" + entry.getValue().getId());
-                presenter.prepareProfileFor("/users/" + entry.getValue().getId());
-            }
-        }
-
-        ChatDetailActivity.this.setTitle(chat.getName());
-
-        memberList.getAdapter().notifyDataSetChanged();
-    }
-
-    @Override
-    public Chat onUpdateReference() {
-        return ChatDetailActivity.this.chat;
-    }
-
-    @Override
-    public void onDestroyReference() {
-        chat = null;
-        finish();
-    }
-
-    @Override
-    public void progress(int value) {
-
-    }
-
-    @Override
-    public void onCreateUser(String key) {
-        // should not be called
-    }
-
-    @Override
-    public void onUserChanged(String key, User user) {
-        users.put(key, user);
-        memberList.getAdapter().notifyDataSetChanged();
-    }
-
-    @Override
-    public User onUpdateUser(String key) {
-        return users.get(key);
-    }
-
-    @Override
-    public void onDestroyUser(String key) {
-        loaded.remove(key);
-        users.remove(key);
-        memberList.getAdapter().notifyDataSetChanged();
-    }
-
-    @Override
-    public void userProgress(String key, int value) {
-
     }
 
     @Override
@@ -287,17 +205,16 @@ public class ChatDetailActivity extends RAppCompatActivity implements ChatDetail
         @Override
         public void onBindViewHolder(@NonNull VHMember holder, int position) {
             List<Member> members = new ArrayList<>();
-            for (Map.Entry<String, Member> entry : chat.getMembers().entrySet()) {
+            for (Map.Entry<String, Member> entry : presenter.chat().getMembers().entrySet()) {
                 members.add(entry.getValue());
             }
             final Member member = members.get(position);
 
-            if (users.containsKey("/users/" + member.getId())) {
-                final User user = users.get("/users/" + member.getId());
+            if (presenter.users().containsKey(member.getId())) {
+                final User user = presenter.users().get(member.getId());
                 holder.name.setText(user.getName());
                 ImageLoader.getInstance().displayImage(user.getPhoto(), holder.image);
-
-                if (user.getUid().equals(presenter.getLoggedUid())) {
+                if (user.getUid().equals(presenter.userId())) {
                     holder.name.setText(getString(R.string.name_me));
                     holder.dm.setVisibility(View.GONE);
                     holder.dm.setOnClickListener(null);
@@ -316,10 +233,10 @@ public class ChatDetailActivity extends RAppCompatActivity implements ChatDetail
 
         @Override
         public int getItemCount() {
-            if (chat == null || chat.getMembers() == null) {
+            if (presenter.chat() == null || presenter.chat().getMembers() == null) {
                 return 0;
             } else {
-                return chat.getMembers().size();
+                return presenter.chat().getMembers().size();
             }
         }
     }
@@ -340,4 +257,9 @@ public class ChatDetailActivity extends RAppCompatActivity implements ChatDetail
         }
     }
 
+    @Override
+    public void updateUI() {
+        setTitle(presenter.chat().getName());
+        memberList.getAdapter().notifyDataSetChanged();
+    }
 }

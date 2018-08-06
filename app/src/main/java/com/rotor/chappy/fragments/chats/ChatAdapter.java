@@ -35,7 +35,7 @@ public abstract class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewH
 
     @Override
     public void onBindViewHolder(ChatAdapter.ViewHolder holder, int position) {
-        final Chat chat = (Chat) fragment.presenter.chats().values().toArray()[position];
+        final Chat chat = (Chat) fragment.presenter().chats().values().toArray()[position];
 
         holder.content.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -48,7 +48,7 @@ public abstract class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewH
 
     @Override
     public int getItemCount() {
-        return fragment.presenter.chats().size();
+        return fragment.presenter().chats().size();
     }
 
 

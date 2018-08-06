@@ -1,15 +1,20 @@
 package com.rotor.chappy.fragments.chat;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
@@ -17,11 +22,18 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.firebase.ui.auth.AuthUI;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.rotor.chappy.App;
 import com.rotor.chappy.R;
+import com.rotor.chappy.activities.chat_detail.ChatDetailActivity;
+import com.rotor.chappy.activities.home.HomeActivity;
+import com.rotor.chappy.activities.login.LoginGoogleActivity;
 import com.rotor.chappy.enums.FragmentType;
 import com.rotor.chappy.fragments.chats.ChatsFragment;
 import com.rotor.chappy.interfaces.Frag;
+import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.Message;
 import com.rotor.core.RFragment;
 import com.rotor.core.Rotor;
@@ -33,6 +45,7 @@ import java.util.Date;
 
 public class ChatFragment extends RFragment implements Frag, ChatInterface.View {
 
+    private Toolbar toolbar;
     public ChatPresenter presenter;
     public MessageAdapter adapter;
     private RecyclerView messageList;
@@ -43,23 +56,23 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateRView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_chat, container, false);
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
+    public void onRViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         presenter = new ChatPresenter(this);
 
-        messageList = getActivity().findViewById(com.rotor.chappy.R.id.messages_list);
+        toolbar = view.findViewById(R.id.toolbar);
+        messageList = view.findViewById(com.rotor.chappy.R.id.messages_list);
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity().getApplicationContext());
         linearLayoutManager.setReverseLayout(true);
         messageList.setLayoutManager(linearLayoutManager);
         adapter = new MessageAdapter(this);
         messageList.setAdapter(adapter);
 
-        messageText = getActivity().findViewById(com.rotor.chappy.R.id.message_text);
+        messageText = view.findViewById(com.rotor.chappy.R.id.message_text);
         messageText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
@@ -74,7 +87,7 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
             }
         });
 
-        sendButton = getActivity().findViewById(com.rotor.chappy.R.id.send_button);
+        sendButton = view.findViewById(com.rotor.chappy.R.id.send_button);
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -114,16 +127,19 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
         });
 
         sendButton.setEnabled(messageText.getText().toString().length() > 0 && presenter.chat() != null);
+        setHasOptionsMenu(true);
     }
 
     @Override
     public void onResumeView() {
         presenter.start();
+        ((HomeActivity)getActivity()).setSupportActionBar(toolbar);
+        toolbar.setTitle(presenter.chat().getName());
     }
 
     @Override
     public void onPauseView() {
-
+        // nothing to do here
     }
 
     @Override
@@ -169,6 +185,28 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
         onBackPressed();
     }
 
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_chat, menu);
+    }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.action_remove) {
+            presenter.remove();
+            return true;
+        } else if (id == R.id.action_detail) {
+            Intent intent = new Intent(getActivity(), ChatDetailActivity.class);
+            intent.putExtra("path", presenter.chat().getId());
+            startActivity(intent);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
+    @Override
+    public void updateUI(Chat chat) {
+        getActivity().setTitle(chat.getName());
+    }
 }

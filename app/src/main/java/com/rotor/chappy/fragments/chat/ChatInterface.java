@@ -12,13 +12,15 @@ public interface ChatInterface {
 
         void start();
 
-        void listenChat(String id);
+        void listenChat();
 
         void listenUser(String id);
 
         void updateChat();
 
         Chat chat();
+
+        void remove();
 
         HashMap<String, User> users();
 
@@ -27,6 +29,8 @@ public interface ChatInterface {
     }
 
     interface View {
+
+        void updateUI(Chat chat);
 
         void chatDeleted();
 

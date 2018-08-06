@@ -32,13 +32,13 @@ public class ChatPresenter implements ChatInterface.Presenter {
     @Override
     public void start() {
         if (App.getCurrentChat() != null) {
-            listenChat(App.getCurrentChat());
+            listenChat();
         }
     }
 
     @Override
-    public void listenChat(final String id) {
-        Database.listen("database", "/chats/" + id, new Reference<Chat>(Chat.class) {
+    public void listenChat() {
+        Database.listen("database", "/chats/" + App.getCurrentChat(), new Reference<Chat>(Chat.class) {
 
             @Override
             public void onCreate() {
@@ -54,6 +54,7 @@ public class ChatPresenter implements ChatInterface.Presenter {
                         listenUser(member.getId());
                     }
                 }
+                view.updateUI(chat);
                 view.adapter.notifyDataSetChanged();
             }
 
@@ -65,6 +66,7 @@ public class ChatPresenter implements ChatInterface.Presenter {
 
             @Override
             public void onDestroy() {
+                view.chatDeleted();
                 chat = null;
             }
 
@@ -130,4 +132,10 @@ public class ChatPresenter implements ChatInterface.Presenter {
     public FirebaseAuth getUser() {
         return mAuth;
     }
+
+    @Override
+    public void remove() {
+        Database.remove("/chats/" + chat.getId());
+    }
+
 }

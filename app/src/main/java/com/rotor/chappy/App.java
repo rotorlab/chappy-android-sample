@@ -120,6 +120,11 @@ public class App extends Application {
     }
 
     public static <T> void setFragment(Class<T> tClass) {
-        pager.setFragment(tClass);
+        pager.setFragment(tClass, false);
     }
+
+    public static <T> void setFragment(Class<T> tClass, boolean transition) {
+        pager.setFragment(tClass, transition);
+    }
+
 }

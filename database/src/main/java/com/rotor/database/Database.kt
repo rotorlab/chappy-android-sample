@@ -26,6 +26,7 @@ import io.reactivex.schedulers.Schedulers
 import org.apache.commons.lang3.StringEscapeUtils
 import org.json.JSONObject
 import java.util.*
+import kotlin.collections.ArrayList
 
 
 /**
@@ -282,14 +283,17 @@ class Database  {
         }
 
         @JvmStatic fun removePrim(path: String) {
+            val toRemove = ArrayList<KReference<*>>()
             for (entry in Rotor.screens()) {
                 if (entry.hasPath(path)) {
                     val refe = entry.holders().get(path) as KReference<*>
-                    refe.remove()
+                    toRemove.add(refe)
                     entry.holders().remove(path)
                 }
             }
-
+            for (reference in toRemove) {
+                reference.remove()
+            }
             ReferenceUtils.removeElement(path)
             Database.unlisten(path)
         }
