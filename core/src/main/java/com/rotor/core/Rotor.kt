@@ -88,10 +88,11 @@ class Rotor {
         private fun start() {
             context?.let {
                 val builder = JobInfo.Builder(jobId++, serviceComponent!!)
+                /*
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
                     builder.setPeriodic(5000)
-                }
-                builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
+                }*/
+                builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
 
                 Log.d(TAG, "Scheduling job")
                 (it.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler).schedule(builder.build())

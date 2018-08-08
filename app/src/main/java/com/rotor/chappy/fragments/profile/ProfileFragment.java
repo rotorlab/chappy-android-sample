@@ -152,11 +152,13 @@ public class ProfileFragment extends RFragment implements Frag, ProfileInterface
             long last = 0;
             Location location = null;
             User user = presenter.user();
-            for (Map.Entry<String, Location> entry : user.getLocations().entrySet()) {
-                long time = Long.valueOf(entry.getKey());
-                if (time > last) {
-                    last = time;
-                    location = entry.getValue();
+            if (user.getLocations() != null) {
+                for (Map.Entry<String, Location> entry : user.getLocations().entrySet()) {
+                    long time = Long.parseLong(entry.getKey());
+                    if (time > last) {
+                        last = time;
+                        location = entry.getValue();
+                    }
                 }
             }
             if (location != null) {

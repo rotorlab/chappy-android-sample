@@ -85,7 +85,9 @@ public class ChatsFragment extends RFragment implements Frag, ChatsInterface.Vie
 
     @Override
     public void onBackPressed() {
-        getActivity().finish();
+        if (getActivity() != null) {
+            getActivity().finish();
+        }
     }
 
     @Override
@@ -130,7 +132,7 @@ public class ChatsFragment extends RFragment implements Frag, ChatsInterface.Vie
         } else if (id == R.id.action_create_group) {
             askGroupName();
             return true;
-        } else if (id == R.id.action_sign_out) {
+        } else if (id == R.id.action_sign_out && getActivity() != null) {
             AuthUI.getInstance()
                     .signOut(getActivity())
                     .addOnCompleteListener(new OnCompleteListener<Void>() {
@@ -154,43 +156,45 @@ public class ChatsFragment extends RFragment implements Frag, ChatsInterface.Vie
             materialDialog = null;
         }
 
-        materialDialog = new MaterialDialog.Builder(getActivity())
-                .title(com.rotor.chappy.R.string.askIdGroupName)
-                .customView(R.layout.input_group_name, true)
-                .positiveText(com.rotor.chappy.R.string.agree)
-                .negativeText(com.rotor.chappy.R.string.disagree)
-                .cancelable(false)
-                .onPositive(new MaterialDialog.SingleButtonCallback() {
-                    @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                        final EditText name = dialog.getCustomView().findViewById(R.id.etName);
-                        if (!TextUtils.isEmpty(name.getText())) {
-                            long creation = new Date().getTime();
-                            Chat chat = new Chat();
-                            chat.setCreation(creation);
-                            chat.setId(String.valueOf(creation));
-                            chat.setName(StringEscapeUtils.escapeJava(name.getText().toString()));
-                            chat.setMembers(new HashMap<String, Member>());
-                            chat.setMessages(new HashMap<String, Message>());
-                            Member member = new Member();
-                            member.setDate(new Date().getTime());
-                            member.setId(FirebaseAuth.getInstance().getUid());
-                            member.setRol("admin");
-                            chat.addMember(member);
-                            presenter.createChat(chat);
+        if (getActivity() != null) {
+            materialDialog = new MaterialDialog.Builder(getActivity())
+                    .title(com.rotor.chappy.R.string.askIdGroupName)
+                    .customView(R.layout.input_group_name, true)
+                    .positiveText(com.rotor.chappy.R.string.agree)
+                    .negativeText(com.rotor.chappy.R.string.disagree)
+                    .cancelable(false)
+                    .onPositive(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            final EditText name = dialog.getCustomView().findViewById(R.id.etName);
+                            if (!TextUtils.isEmpty(name.getText())) {
+                                long creation = new Date().getTime();
+                                Chat chat = new Chat();
+                                chat.setCreation(creation);
+                                chat.setId(String.valueOf(creation));
+                                chat.setName(StringEscapeUtils.escapeJava(name.getText().toString()));
+                                chat.setMembers(new HashMap<String, Member>());
+                                chat.setMessages(new HashMap<String, Message>());
+                                Member member = new Member();
+                                member.setDate(new Date().getTime());
+                                member.setId(FirebaseAuth.getInstance().getUid());
+                                member.setRol("admin");
+                                chat.addMember(member);
+                                presenter.createChat(chat);
+                                dialog.dismiss();
+                                materialDialog = null;
+                            }
+                        }
+                    })
+                    .onNegative(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                             dialog.dismiss();
                             materialDialog = null;
                         }
-                    }
-                })
-                .onNegative(new MaterialDialog.SingleButtonCallback() {
-                    @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                        dialog.dismiss();
-                        materialDialog = null;
-                    }
-                })
-                .show();
+                    })
+                    .show();
+        }
     }
 
     @Override
