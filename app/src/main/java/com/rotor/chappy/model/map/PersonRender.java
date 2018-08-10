@@ -73,7 +73,7 @@ public class PersonRender extends RClusterRender<PersonItem> {
 
     @Override
     protected boolean shouldRenderAsCluster(Cluster<PersonItem> cluster) {
-        return cluster.getSize() > 1;
+        return cluster.getSize() > 4;
     }
 
 }

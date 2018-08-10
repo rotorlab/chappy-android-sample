@@ -9,6 +9,7 @@ import com.google.gson.Gson;
 import com.rotor.chappy.App;
 import com.rotor.chappy.fragments.chat.ChatFragment;
 import com.rotor.chappy.model.Chat;
+import com.rotor.chappy.model.query.QueryId;
 import com.rotor.chappy.model.query.ResponseId;
 import com.rotor.database.Database;
 import com.rotor.database.abstr.Reference;
@@ -34,10 +35,11 @@ public class ChatsPresenter implements ChatsInterface.Presenter {
         if (user == null) {
             // TODO add logout
         } else {
+            QueryId queryId = new QueryId(user.getUid());
             ResponseId.Id mask = new ResponseId.Id();
             Database.query(App.databaseName,"/chats/*",
-                    "{\"members\": { \"" + user.getUid() + "\": { \"id\": \"" + user.getUid() + "\" } } }",
-                    new Gson().toJson(mask),
+                    queryId,
+                    mask,
                     new QueryCallback<ResponseId>() {
                         @Override
                         public void response(ResponseId response) {
