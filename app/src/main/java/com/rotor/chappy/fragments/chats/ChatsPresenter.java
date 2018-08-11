@@ -5,7 +5,6 @@ import android.support.annotation.Nullable;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.gson.Gson;
 import com.rotor.chappy.App;
 import com.rotor.chappy.fragments.chat.ChatFragment;
 import com.rotor.chappy.model.Chat;

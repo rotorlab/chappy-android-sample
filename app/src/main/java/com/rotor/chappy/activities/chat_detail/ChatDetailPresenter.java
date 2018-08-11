@@ -17,14 +17,13 @@ import java.util.Map;
 
 public class ChatDetailPresenter implements ChatDetailInterface.Presenter {
 
-    private ChatDetailInterface.View<Chat> view;
-    private boolean visible;
+    private ChatDetailInterface.View view;
     private FirebaseAuth mAuth;
     private Chat chat;
     private HashMap<String, User> users;
     private HashMap<String, Member> members;
 
-    public ChatDetailPresenter(ChatDetailInterface.View<Chat> view) {
+    public ChatDetailPresenter(ChatDetailInterface.View view) {
         this.view = view;
         this.mAuth = FirebaseAuth.getInstance();
         this.members = new HashMap<>();

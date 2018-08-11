@@ -58,6 +58,31 @@
                         android:textStyle="bold"
                         tools:text="Hi!" />
 
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="30dp"
+                        android:orientation="horizontal"
+                        android:layout_gravity="center_horizontal"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:layout_width="25dp"
+                            android:layout_height="25dp"
+                            android:src="@drawable/walk"
+                            android:layout_marginEnd="7dp"/>
+
+                        <TextView
+                            android:id="@+id/steps"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="7dp"
+                            android:textColor="@color/secondary_text"
+                            style="@style/Base.TextAppearance.AppCompat.Body1"
+                            android:textStyle="bold"
+                            tools:text="0" />
+
+                    </LinearLayout>
+
                     <ImageView
                         android:id="@+id/user_qr"
                         android:layout_width="wrap_content"

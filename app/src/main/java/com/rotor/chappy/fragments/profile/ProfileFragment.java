@@ -31,8 +31,6 @@ import com.tapadoo.alerter.Alerter;
 
 import net.glxn.qrgen.android.QRCode;
 
-import java.util.Map;
-
 public class ProfileFragment extends RFragment implements Frag, ProfileInterface.View, OnMapReadyCallback {
 
     public ProfilePresenter presenter;
@@ -43,6 +41,7 @@ public class ProfileFragment extends RFragment implements Frag, ProfileInterface
     private RoundedImageView profile;
     private ImageView qr;
     private TextView name;
+    private TextView steps;
 
     @Nullable
     @Override
@@ -56,6 +55,7 @@ public class ProfileFragment extends RFragment implements Frag, ProfileInterface
             profile = view.findViewById(R.id.image);
             name = view.findViewById(R.id.name);
             qr = view.findViewById(R.id.user_qr);
+            steps = view.findViewById(R.id.steps);
 
             mapView = view.findViewById(R.id.map);
             mapView.onCreate(savedInstanceState);
@@ -129,6 +129,7 @@ public class ProfileFragment extends RFragment implements Frag, ProfileInterface
     public void userUpdated() {
         ImageLoader.getInstance().displayImage(presenter.user().getPhoto(), profile);
         name.setText(presenter.user().getName());
+        steps.setText(presenter.user().getSteps().toString());
         Bitmap myBitmap = QRCode.from(SC.encryptString(presenter.user().getUid())).withColor(0xFF000000, 0x00FFFFFF).withSize(350, 350).bitmap();
         qr.setImageBitmap(myBitmap);
 
@@ -149,20 +150,12 @@ public class ProfileFragment extends RFragment implements Frag, ProfileInterface
 
     private void moveToLocation() {
         if (presenter.user() != null && map != null) {
-            long last = 0;
-            Location location = null;
             User user = presenter.user();
-            if (user.getLocations() != null) {
-                for (Map.Entry<String, Location> entry : user.getLocations().entrySet()) {
-                    long time = Long.parseLong(entry.getKey());
-                    if (time > last) {
-                        last = time;
-                        location = entry.getValue();
-                    }
-                }
-            }
-            if (location != null) {
+            if (user != null && user.getLocations() != null) {
+                final Location location = user.getLastLocation();
+                if (location == null) return;
                 map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 15f));
+
             }
         }
     }

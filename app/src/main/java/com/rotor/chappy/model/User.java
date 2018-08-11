@@ -131,4 +131,19 @@ public class User {
         this.type = type;
     }
 
+    public Location getLastLocation() {
+        Location location = null;
+        if (locations != null) {
+            long last = 0;
+            for (Map.Entry<String, Location> entry : locations.entrySet()) {
+                long time = Long.parseLong(entry.getKey());
+                if (time > last) {
+                    last = time;
+                    location = entry.getValue();
+                }
+            }
+        }
+        return location;
+    }
+
 }

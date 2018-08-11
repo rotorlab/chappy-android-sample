@@ -1,21 +1,20 @@
 package com.rotor.chappy.activities.login;
 
-import com.rotor.chappy.model.mpv.ProfilePresenter;
-import com.rotor.chappy.model.mpv.ProfileView;
+import com.rotor.chappy.model.User;
 
 public interface LoginGoogleInterface {
 
-    interface Presenter<T> extends ProfilePresenter {
+    interface Presenter {
 
-        void sayHello(T user);
+        void start();
 
         void goMain();
 
+        User user();
+
     }
 
-    interface View<T> extends ProfileView {
-
-        void sayHello(T user);
+    interface View {
 
         void goMain();
 

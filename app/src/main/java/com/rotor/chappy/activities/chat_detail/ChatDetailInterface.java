@@ -28,7 +28,7 @@ public interface ChatDetailInterface {
 
     }
 
-    interface View<T> {
+    interface View {
 
         void updateUI();
 

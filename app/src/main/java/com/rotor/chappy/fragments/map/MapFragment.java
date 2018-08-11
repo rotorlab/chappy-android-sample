@@ -149,7 +149,8 @@ public class MapFragment extends RFragment implements Frag, OnMapReadyCallback, 
         for (final Map.Entry<String, User> entry : users.entrySet()) {
             if (!markers.containsKey(entry.getKey())) {
                 if (!entry.getValue().getLocations().isEmpty()) {
-                    final Location location = entry.getValue().getLocations().entrySet().iterator().next().getValue();
+                    final Location location = entry.getValue().getLastLocation();
+                    if (location == null) return;
                     final PersonItem item = new PersonItem();
                     item.setId(entry.getValue().getUid());
                     item.setName(entry.getValue().getName());

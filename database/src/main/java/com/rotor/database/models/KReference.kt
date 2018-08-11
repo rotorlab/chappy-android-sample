@@ -2,6 +2,7 @@ package com.rotor.database.models
 
 import android.content.Context
 import com.google.common.reflect.TypeToken
+import com.rotor.database.Database
 import com.rotor.database.abstr.Reference
 import com.rotor.database.utils.ReferenceUtils
 import java.lang.reflect.Type
@@ -63,8 +64,10 @@ class KReference<T>(context: Context, database: String, path: String, reference:
     }
 
     override fun blowerResult(value: String) {
+        val obj: T = gson.fromJson(value, getType())
+        Database.backgroundHandler()!!.addPath(path, this)
         for (entry in blowerMap.entries) {
-            entry.value.onChanged(gson.fromJson(value, getType()))
+            entry.value.onChanged(obj)
         }
     }
 

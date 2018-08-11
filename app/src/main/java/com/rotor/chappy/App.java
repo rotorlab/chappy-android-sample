@@ -2,18 +2,20 @@ package com.rotor.chappy;
 
 import android.app.Application;
 import android.content.Context;
-import android.graphics.drawable.Drawable;
-import android.net.Uri;
-import android.widget.ImageView;
+import android.location.Location;
 
 import com.crashlytics.android.Crashlytics;
+import com.efraespada.motiondetector.MotionDetector;
 import com.google.firebase.auth.FirebaseAuth;
-import com.mikepenz.materialdrawer.util.AbstractDrawerImageLoader;
-import com.mikepenz.materialdrawer.util.DrawerImageLoader;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+import com.rotor.chappy.model.User;
 import com.rotor.core.RViewPager;
+import com.rotor.database.Database;
+
+import java.util.Date;
+import java.util.HashMap;
 
 import io.fabric.sdk.android.Fabric;
 
@@ -53,30 +55,6 @@ public class App extends Application {
         ImageLoader.getInstance().init(config);
 
         auth = FirebaseAuth.getInstance();
-
-        DrawerImageLoader.init(new AbstractDrawerImageLoader() {
-            @Override
-            public void set(ImageView imageView, Uri uri, Drawable placeholder) {
-                ImageLoader.getInstance().displayImage(uri.toString(), imageView);
-            }
-
-            @Override
-            public void cancel(ImageView imageView) {
-                // nothing to do here
-            }
-
-    /*
-    @Override
-    public Drawable placeholder(Context ctx) {
-        return super.placeholder(ctx);
-    }
-
-    @Override
-    public Drawable placeholder(Context ctx, String tag) {
-        return super.placeholder(ctx, tag);
-    }
-    */
-        });
     }
 
     public static Context context() {
@@ -113,6 +91,83 @@ public class App extends Application {
 
     public static <T> void setFragment(Class<T> tClass, boolean transition) {
         pager.setFragment(tClass, transition);
+    }
+
+    public static void listenUserPosition() {
+        MotionDetector.initialize(context());
+        MotionDetector.debug(true);
+        MotionDetector.minAccuracy(30);
+        MotionDetector.start(new com.efraespada.motiondetector.Listener() {
+            @Override
+            public void locationChanged(Location location) {
+                if (FirebaseAuth.getInstance().getUid() != null) {
+                    User user = Database.backgroundHandler().getReference("/users/"
+                            + FirebaseAuth.getInstance().getUid(), User.class);
+                    if (user == null) return;
+                    if (user.getLocations() == null) {
+                        user.setLocations(new HashMap<String, com.rotor.chappy.model.Location>());
+                    }
+                    String id = new Date().getTime() + "";
+                    com.rotor.chappy.model.Location loc = new com.rotor.chappy.model.Location();
+                    loc.setAccuracy(location.getAccuracy());
+                    loc.setLatitude(location.getLatitude());
+                    loc.setLongitude(location.getLongitude());
+                    loc.setAltitude(location.getAltitude());
+                    loc.setSpeed(location.getSpeed());
+                    loc.setSteps(user.getSteps());
+                    loc.setType(user.getType());
+                    loc.setId(id);
+
+                    user.getLocations().put(loc.getId(), loc);
+                    Database.backgroundHandler().sync("/users/"
+                            + FirebaseAuth.getInstance().getUid(), user);
+                }
+            }
+
+            @Override
+            public void accelerationChanged(float acceleration) {
+                // nothing to do here
+            }
+
+            @Override
+            public void locatedStep() {
+                if (FirebaseAuth.getInstance().getUid() != null) {
+                    User user = Database.backgroundHandler().getReference("/users/"
+                            + FirebaseAuth.getInstance().getUid(), User.class);
+                    if (user != null) {
+                        user.setSteps(user.getSteps() + 1);
+                        Database.backgroundHandler().sync("/users/"
+                                + FirebaseAuth.getInstance().getUid(), user);
+                    }
+                }
+            }
+
+            @Override
+            public void notLocatedStep() {
+                if (FirebaseAuth.getInstance().getUid() != null) {
+                    User user = Database.backgroundHandler().getReference("/users/"
+                            + FirebaseAuth.getInstance().getUid(), User.class);
+                    if (user != null) {
+                        user.setSteps(user.getSteps() + 1);
+                        Database.backgroundHandler().sync("/users/"
+                                + FirebaseAuth.getInstance().getUid(), user);
+                    }
+                }
+            }
+
+            @Override
+            public void type(String type) {
+                if (FirebaseAuth.getInstance().getUid() != null) {
+                    User user = Database.backgroundHandler().getReference("/users/"
+                            + FirebaseAuth.getInstance().getUid(), User.class);
+                    if (user != null) {
+                        user.setType(type);
+                        Database.backgroundHandler().sync("/users/"
+                                + FirebaseAuth.getInstance().getUid(), user);
+                    }
+                }
+            }
+        });
     }
 
 }

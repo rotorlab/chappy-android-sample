@@ -1,12 +1,8 @@
 package com.rotor.chappy.activities.splash;
 
-import com.rotor.chappy.model.mpv.BasePresenter;
-import com.rotor.chappy.model.mpv.ProfileView;
-import com.rotor.chappy.model.mpv.ReferenceView;
-
 public interface SplashInterface {
 
-    interface Presenter extends BasePresenter {
+    interface Presenter {
 
         void start();
 
@@ -16,7 +12,7 @@ public interface SplashInterface {
 
     }
 
-    interface View extends ProfileView {
+    interface View {
 
         void goLogin();
 

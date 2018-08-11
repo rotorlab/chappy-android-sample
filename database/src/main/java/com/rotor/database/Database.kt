@@ -20,6 +20,7 @@ import com.rotor.database.models.PrimaryReferece.Companion.NULL
 import com.rotor.database.models.PrimaryReferece.Companion.OS
 import com.rotor.database.models.PrimaryReferece.Companion.PATH
 import com.rotor.database.request.*
+import com.rotor.database.utils.BackgroundHandler
 import com.rotor.database.utils.ReferenceUtils
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -36,6 +37,7 @@ class Database  {
 
     companion object {
 
+        private val BACKGROUND_HANDLER = "background_handler"
         private val TAG: String = Database::class.java.simpleName!!
         val api by lazy {
             ReferenceUtils.service(Rotor.urlServer!!)
@@ -101,24 +103,35 @@ class Database  {
 
                 }
             })
+
+            var backgroundFound = false
+            for (screen in Rotor.screens()) {
+                if (screen is BackgroundHandler) {
+                    backgroundFound = true
+                    break
+                }
+            }
+            if (!backgroundFound) {
+                Rotor.screens().add(BackgroundHandler())
+            }
         }
 
         @JvmStatic fun <T> listen(database: String, path: String, reference: Reference<T>) {
             var objectReference: KReference<T> ? = null
             var rScreen: RScreen ? = null
             for (screen in Rotor.screens()) {
-                if (screen.isActive()) {
+                if (screen.isActive) {
                     rScreen = screen
                 }
-                if (screen.hasPath(path) && screen.isActive()) {
+                if (rScreen != null && rScreen.hasPath(path)) {
 
                     /**
                      * Notifications Exception:
                      * Rotor Notifications is always active and only can control notifications objects "/notifications/.."
                      */
 
-                    if ((rScreen != null && rScreen::class.java.simpleName.equals("Notifications") && path.contains("/notifications/")) ||
-                            (rScreen == null || !rScreen::class.java.simpleName.equals("Notifications"))) {
+                    if ((rScreen::class.java.simpleName.equals("Notifications") && path.contains("/notifications/") && !(rScreen is BackgroundHandler)) ||
+                            (!rScreen::class.java.simpleName.equals("Notifications") && !(rScreen is BackgroundHandler))) {
                                 objectReference = screen.holders().get(path) as KReference<T>?
                                 break
                     }
@@ -130,7 +143,7 @@ class Database  {
 
                 objectReference = KReference<T>(Rotor.context!!, database, path, reference, Date().time)
 
-                rScreen!!.addPath(path, objectReference)
+                rScreen.addPath(path, objectReference)
                 objectReference.loadCachedReference()
 
                 syncWithServer(path)
@@ -142,6 +155,13 @@ class Database  {
 
         @JvmStatic fun sha1(value: String) : String {
             return JSONDiff.hash(StringEscapeUtils.unescapeJava(value))
+        }
+
+        @JvmStatic fun backgroundHandler() : BackgroundHandler ? {
+            for (screen in Rotor.screens()) {
+                if (screen is BackgroundHandler) return screen
+            }
+            return null
         }
 
         @JvmStatic private fun syncWithServer(path: String) {
@@ -195,7 +215,7 @@ class Database  {
                     )
         }
 
-        @JvmStatic private fun refreshToServer(path: String, differences: String, len: Int, clean: Boolean) {
+        @JvmStatic internal fun refreshToServer(path: String, differences: String, len: Int, clean: Boolean) {
             if (differences == PrimaryReferece.EMPTY_OBJECT) {
                 return
             }
@@ -282,7 +302,7 @@ class Database  {
             }
         }
 
-        @JvmStatic fun removePrim(path: String) {
+        @JvmStatic private fun removePrim(path: String) {
             val toRemove = ArrayList<KReference<*>>()
             for (entry in Rotor.screens()) {
                 if (entry.hasPath(path)) {

@@ -202,6 +202,8 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
 
     @Override
     public void updateUI(Chat chat) {
-        toolbar.setTitle(StringEscapeUtils.unescapeJava(presenter.chat().getName()));
+        if (presenter.chat() != null) {
+            toolbar.setTitle(StringEscapeUtils.unescapeJava(presenter.chat().getName()));
+        }
     }
 }

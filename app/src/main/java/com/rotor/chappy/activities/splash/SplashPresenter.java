@@ -1,40 +1,102 @@
 package com.rotor.chappy.activities.splash;
 
-import android.location.Location;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 
-import com.efraespada.motiondetector.MotionDetector;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.rotor.chappy.App;
 import com.rotor.chappy.model.User;
-import com.rotor.chappy.model.mpv.ProfilePresenter;
-import com.rotor.chappy.services.ChatRepository;
-import com.rotor.chappy.services.ProfileRepository;
+import com.rotor.core.Rotor;
 import com.rotor.database.Database;
+import com.rotor.database.abstr.Reference;
 
-import java.util.Date;
-import java.util.HashMap;
+import static com.rotor.chappy.activities.login.LoginGoogleActivity.LOCATION_REQUEST_CODE;
 
-public class SplashPresenter implements SplashInterface.Presenter, ProfilePresenter {
+public class SplashPresenter implements SplashInterface.Presenter {
 
     private SplashActivity view;
-    private ProfileRepository profileRepository;
     private FirebaseAuth mAuth;
-    private boolean visible;
-    private String type;
+    private User user;
+    private boolean omitMoreChanges;
 
     public SplashPresenter(SplashActivity view) {
         this.view = view;
-        this.profileRepository = new ProfileRepository();
         this.mAuth = FirebaseAuth.getInstance();
     }
 
     @Override
     public void start() {
-        FirebaseUser user = mAuth.getCurrentUser();
-        if (user == null) {
+        if (mAuth.getUid() == null) {
             view.goLogin();
         } else {
-            prepareProfileFor("/users/" + user.getUid());
+            if (mAuth.getUid() != null){
+                Database.listen(App.databaseName, "/users/" + mAuth.getUid(), new Reference<User>(User.class) {
+                    @Override
+                    public void onCreate() {
+                        if (FirebaseAuth.getInstance().getUid() != null) {
+                            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                            String uid = user.getUid();
+                            String name = user.getDisplayName();
+                            String email = user.getEmail();
+                            String photo = user.getPhotoUrl() != null ? user.getPhotoUrl().toString() : null;
+                            SplashPresenter.this.user = new User(uid, name, email, photo, "android", Rotor.getId(), "", 0L, null);
+                            Database.sync("/users/" + mAuth.getUid());
+                        } else {
+                            view.finish();
+                        }
+                    }
+
+                    @Override
+                    public void onChanged(@NonNull User ref) {
+                        user = ref;
+                        if (!Rotor.getId().equals(user.getToken())) {
+                            user.setToken(Rotor.getId());
+                        } else if (!omitMoreChanges) {
+                            omitMoreChanges = true;
+                            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                if (ContextCompat.checkSelfPermission(view, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                                        ContextCompat.checkSelfPermission(view, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                                        ContextCompat.checkSelfPermission(view, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                                    goMain();
+                                } else {
+                                    String[] perm = new String[]{
+                                            Manifest.permission.ACCESS_FINE_LOCATION,
+                                            Manifest.permission.ACCESS_COARSE_LOCATION,
+                                            Manifest.permission.CAMERA
+                                    };
+                                    ActivityCompat.requestPermissions(view, perm, LOCATION_REQUEST_CODE);
+                                }
+                            } else {
+                                goMain();
+                            }
+                        }
+                    }
+
+                    @Nullable
+                    @Override
+                    public User onUpdate() {
+                        return user;
+                    }
+
+                    @Override
+                    public void onDestroy() {
+                        // shouldn't be called
+                    }
+
+                    @Override
+                    public void progress(int value) {
+                        // shouldn't be called
+                    }
+
+                });
+
+            }
         }
     }
 
@@ -46,113 +108,7 @@ public class SplashPresenter implements SplashInterface.Presenter, ProfilePresen
     @Override
     public void goMain() {
         view.goMain();
-        MotionDetector.initialize(view);
-        MotionDetector.debug(true);
-        MotionDetector.minAccuracy(30);
-        MotionDetector.start(new com.efraespada.motiondetector.Listener() {
-            @Override
-            public void locationChanged(Location location) {
-                if (mAuth.getCurrentUser() != null) {
-                    User user = ProfileRepository.getUser("/users/" + mAuth.getCurrentUser().getUid());
-                    if (user != null) {
-                        if (user.getLocations() == null) {
-                            user.setLocations(new HashMap<String, com.rotor.chappy.model.Location>());
-                        }
-                        String id = new Date().getTime() + "";
-                        com.rotor.chappy.model.Location loc = new com.rotor.chappy.model.Location();
-                        loc.setAccuracy(location.getAccuracy());
-                        loc.setLatitude(location.getLatitude());
-                        loc.setLongitude(location.getLongitude());
-                        loc.setAltitude(location.getAltitude());
-                        loc.setSpeed(location.getSpeed());
-                        loc.setSteps(user.getSteps());
-                        loc.setType(ChatRepository.getUser().getType());
-                        loc.setId(id);
-
-                        user.getLocations().put(loc.getId(), loc);
-                        ProfileRepository.setUser("/users/" + user.getUid(), user);
-                    }
-                }
-            }
-
-            @Override
-            public void accelerationChanged(float acceleration) {
-                // nothing to do here
-            }
-
-            @Override
-            public void locatedStep() {
-                if (mAuth.getCurrentUser() != null) {
-                    User user = ProfileRepository.getUser("/users/" + mAuth.getCurrentUser().getUid());
-                    if (user != null) {
-                        user.setSteps(user.getSteps() + 1);
-                        ProfileRepository.setUser("/users/" + user.getUid(), user);
-                        Database.sync("/users/" + user.getUid());
-                    }
-                }
-            }
-
-            @Override
-            public void notLocatedStep() {
-                if (mAuth.getCurrentUser() != null) {
-                    User user = ProfileRepository.getUser("/users/" + mAuth.getCurrentUser().getUid());
-                    if (user != null) {
-                        user.setSteps(user.getSteps() + 1);
-                        ProfileRepository.setUser("/users/" + user.getUid(), user);
-                        Database.sync("/users/" + user.getUid());
-                    }
-                }
-            }
-
-            @Override
-            public void type(String type) {
-                if (!type.equals(SplashPresenter.this.type)) {
-                    SplashPresenter.this.type = type;
-                    if (mAuth.getCurrentUser() != null) {
-                        User user = ProfileRepository.getUser("/users/" + mAuth.getCurrentUser().getUid());
-                        if (user != null) {
-                            user.setType(type);
-                            ProfileRepository.setUser("/users/" + user.getUid(), user);
-                            Database.sync("/users/" + user.getUid());
-                        }
-                    }
-                }
-            }
-        });
+        App.listenUserPosition();
     }
 
-    @Override
-    public void onResumeView() {
-        visible = true;
-    }
-
-    @Override
-    public void onPauseView() {
-        visible = false;
-    }
-
-    @Override
-    public boolean isVisible() {
-        return visible;
-    }
-
-    @Override
-    public void prepareProfileFor(String id) {
-        profileRepository.listen(id, this, view);
-    }
-
-    @Override
-    public void syncProfile(String id) {
-        profileRepository.sync(id);
-    }
-
-    @Override
-    public void removeProfile(String id) {
-        profileRepository.remove(id);
-    }
-
-    @Override
-    public String getLoggedUid() {
-        return mAuth != null && mAuth.getCurrentUser() != null ? mAuth.getCurrentUser().getUid() : null;
-    }
 }

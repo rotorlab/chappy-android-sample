@@ -10,14 +10,10 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterManager;
-import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.google.maps.android.ui.IconGenerator;
 import com.makeramen.roundedimageview.RoundedImageView;
 import com.rotor.chappy.App;
 import com.rotor.chappy.R;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class PersonRender extends RClusterRender<PersonItem> {
 

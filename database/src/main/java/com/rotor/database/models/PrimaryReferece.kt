@@ -113,6 +113,39 @@ abstract class PrimaryReferece<T>(context: Context, db: String, path: String) {
                 .excludeFieldsWithoutExposeAnnotation().create()
     }
 
+    fun getDifferencesFromBackground(reference: Any): Array<Any?> {
+        val len: Int
+        val objects = arrayOfNulls<Any>(2)
+
+        if (stringReference == null) {
+            this.stringReference = "{}"
+        }
+
+        try {
+            val actual = getReferenceAsString()
+            JSONDiff.setDebug(Rotor.debug!!)
+            val diff = JSONDiff.diff(JSONObject(stringReference), JSONObject(Gson().toJson(reference)))
+
+            val jsonObject = JSONObject()
+
+            // max 3
+            for ((key, value) in diff) {
+                jsonObject.put(key, value)
+            }
+
+            len = actual.length
+
+            objects[0] = len
+            objects[1] = jsonObject.toString()
+
+            return objects
+        } catch (e: JSONException) {
+            e.printStackTrace()
+        }
+
+        return objects
+    }
+
     fun getDifferences(clean: Boolean): Array<Any?> {
         val len: Int
         val objects = arrayOfNulls<Any>(2)
