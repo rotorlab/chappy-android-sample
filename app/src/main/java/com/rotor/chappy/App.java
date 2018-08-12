@@ -31,12 +31,14 @@ public class App extends Application {
     private static String currentChat;
     private static String currentProfile;
     private static RViewPager pager;
+    private static int steps;
 
     public String type = "";
     @Override
     public void onCreate() {
         super.onCreate();
         context = getApplicationContext();
+        steps = -1;
 
         final Fabric fabric = new Fabric.Builder(this)
                 .kits(new Crashlytics())
@@ -95,8 +97,9 @@ public class App extends Application {
 
     public static void listenUserPosition() {
         MotionDetector.initialize(context());
-        MotionDetector.debug(true);
-        MotionDetector.minAccuracy(30);
+        MotionDetector.setDebug(true);
+        MotionDetector.setMinAccuracy(30);
+        MotionDetector.setDeviceMustBeMoving(false);
         MotionDetector.start(new com.efraespada.motiondetector.Listener() {
             @Override
             public void locationChanged(Location location) {
@@ -114,13 +117,20 @@ public class App extends Application {
                     loc.setLongitude(location.getLongitude());
                     loc.setAltitude(location.getAltitude());
                     loc.setSpeed(location.getSpeed());
-                    loc.setSteps(user.getSteps());
+                    loc.setSteps((long) user.getSteps());
                     loc.setType(user.getType());
                     loc.setId(id);
 
-                    user.getLocations().put(loc.getId(), loc);
-                    Database.backgroundHandler().sync("/users/"
-                            + FirebaseAuth.getInstance().getUid(), user);
+                    com.rotor.chappy.model.Location lastLocation = user.getLastLocation();
+                    if (lastLocation == null) {
+                        user.getLocations().put(loc.getId(), loc);
+                        Database.backgroundHandler().sync("/users/"
+                                + FirebaseAuth.getInstance().getUid(), user);
+                    } else if (lastLocation.getLatitude() != loc.getLatitude() || lastLocation.getLongitude() != loc.getLongitude()) {
+                        user.getLocations().put(loc.getId(), loc);
+                        Database.backgroundHandler().sync("/users/"
+                                + FirebaseAuth.getInstance().getUid(), user);
+                    }
                 }
             }
 
@@ -135,7 +145,11 @@ public class App extends Application {
                     User user = Database.backgroundHandler().getReference("/users/"
                             + FirebaseAuth.getInstance().getUid(), User.class);
                     if (user != null) {
-                        user.setSteps(user.getSteps() + 1);
+                        if (steps == -1) {
+                            steps = user.getSteps();
+                        }
+                        steps++;
+                        user.setSteps(steps);
                         Database.backgroundHandler().sync("/users/"
                                 + FirebaseAuth.getInstance().getUid(), user);
                     }
@@ -148,7 +162,11 @@ public class App extends Application {
                     User user = Database.backgroundHandler().getReference("/users/"
                             + FirebaseAuth.getInstance().getUid(), User.class);
                     if (user != null) {
-                        user.setSteps(user.getSteps() + 1);
+                        if (steps == -1) {
+                            steps = user.getSteps();
+                        }
+                        steps++;
+                        user.setSteps(steps);
                         Database.backgroundHandler().sync("/users/"
                                 + FirebaseAuth.getInstance().getUid(), user);
                     }

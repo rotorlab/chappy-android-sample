@@ -37,7 +37,7 @@ public class User {
 
     @SerializedName("steps")
     @Expose
-    Long steps;
+    long steps;
 
     @SerializedName("locations")
     @Expose
@@ -107,11 +107,11 @@ public class User {
         this.token = token;
     }
 
-    public Long getSteps() {
-        return steps;
+    public int getSteps() {
+        return (int) steps;
     }
 
-    public void setSteps(Long steps) {
+    public void setSteps(int steps) {
         this.steps = steps;
     }
 

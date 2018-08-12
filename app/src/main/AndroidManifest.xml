@@ -60,12 +60,6 @@
         </activity>
 
         <activity
-            android:name=".activities.profile.ProfileActivity"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:windowSoftInputMode="adjustResize">
-        </activity>
-
-        <activity
             android:name=".activities.notifications.NotificationActivity"
             android:screenOrientation="portrait"
             android:theme="@style/SplashTheme"/>

@@ -5,7 +5,7 @@ import android.graphics.Bitmap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.maps.android.clustering.ClusterItem;
 
-public class PersonItem implements ClusterItem {
+public class PersonItem implements RClusterItem {
 
     private String id;
     private String name;
@@ -73,4 +73,9 @@ public class PersonItem implements ClusterItem {
         this.id = id;
     }
 
+
+    @Override
+    public boolean shouldBeOutOfCluster() {
+        return true;
+    }
 }

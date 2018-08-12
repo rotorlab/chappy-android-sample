@@ -33,6 +33,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.MessageQueue;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
@@ -57,8 +58,10 @@ import com.google.maps.android.ui.IconGenerator;
 import com.google.maps.android.ui.SquareTextView;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -72,7 +75,7 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * The default view for a ClusterManager. Markers are animated in and out of clusters.
  */
-public class RClusterRender<T extends ClusterItem> implements ClusterRenderer<T> {
+public class RClusterRender<T extends RClusterItem> implements ClusterRenderer<T> {
     private static final boolean SHOULD_ANIMATE = Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB;
     private final GoogleMap mMap;
     private final IconGenerator mIconGenerator;
@@ -276,6 +279,10 @@ public class RClusterRender<T extends ClusterItem> implements ClusterRenderer<T>
                 return;
             }
             Projection projection = mMap.getProjection();
+            if (projection == null) {
+                // Without a map projection we can't render clusters.
+                return;
+            }
 
             RenderTask renderTask;
             synchronized (this) {
@@ -360,12 +367,6 @@ public class RClusterRender<T extends ClusterItem> implements ClusterRenderer<T>
 
         @SuppressLint("NewApi")
         public void run() {
-            /*
-            if (clusters.equals(RClusterRender.this.mClusters)) {
-                mCallback.run();
-                return;
-            }*/
-
             final MarkerModifier markerModifier = new MarkerModifier();
 
             final float zoom = mMapZoom;
@@ -379,7 +380,7 @@ public class RClusterRender<T extends ClusterItem> implements ClusterRenderer<T>
             // Find all of the existing clusters that are on-screen. These are candidates for
             // markers to animate from.
             List<Point> existingClustersOnScreen = null;
-            if (RClusterRender.this.mClusters != null && SHOULD_ANIMATE && mAnimate) {
+            if (RClusterRender.this.mClusters != null && SHOULD_ANIMATE) {
                 existingClustersOnScreen = new ArrayList<Point>();
                 for (Cluster<T> c : RClusterRender.this.mClusters) {
                     if (shouldRenderAsCluster(c) && visibleBounds.contains(c.getPosition())) {
@@ -394,7 +395,7 @@ public class RClusterRender<T extends ClusterItem> implements ClusterRenderer<T>
                     new ConcurrentHashMap<MarkerWithPosition, Boolean>());
             for (Cluster<T> c : clusters) {
                 boolean onScreen = visibleBounds.contains(c.getPosition());
-                if (zoomingIn && onScreen && SHOULD_ANIMATE && mAnimate) {
+                if (zoomingIn && onScreen && SHOULD_ANIMATE) {
                     Point point = mSphericalMercatorProjection.toPoint(c.getPosition());
                     Point closest = findClosestCluster(existingClustersOnScreen, point);
                     if (closest != null) {
@@ -413,12 +414,12 @@ public class RClusterRender<T extends ClusterItem> implements ClusterRenderer<T>
 
             // Don't remove any markers that were just added. This is basically anything that had
             // a hit in the MarkerCache.
-            markersToRemove.removeAll(newMarkers);
+            if (newMarkers.size() > 0) markersToRemove.removeAll(newMarkers);
 
             // Find all of the new clusters that were added on-screen. These are candidates for
             // markers to animate from.
             List<Point> newClustersOnScreen = null;
-            if (SHOULD_ANIMATE && mAnimate) {
+            if (SHOULD_ANIMATE) {
                 newClustersOnScreen = new ArrayList<Point>();
                 for (Cluster<T> c : clusters) {
                     if (shouldRenderAsCluster(c) && visibleBounds.contains(c.getPosition())) {
@@ -433,7 +434,7 @@ public class RClusterRender<T extends ClusterItem> implements ClusterRenderer<T>
                 boolean onScreen = visibleBounds.contains(marker.position);
                 // Don't animate when zooming out more than 3 zoom levels.
                 // TODO: drop animation based on speed of device & number of markers to animate.
-                if (!zoomingIn && zoomDelta > -3 && onScreen && SHOULD_ANIMATE && mAnimate) {
+                if (!zoomingIn && zoomDelta > -3 && onScreen && SHOULD_ANIMATE) {
                     final Point point = mSphericalMercatorProjection.toPoint(marker.position);
                     final Point closest = findClosestCluster(newClustersOnScreen, point);
                     if (closest != null) {
@@ -804,9 +805,10 @@ public class RClusterRender<T extends ClusterItem> implements ClusterRenderer<T>
      * Creates markerWithPosition(s) for a particular cluster, animating it if necessary.
      */
     private class CreateMarkerTask {
-        private final Cluster<T> cluster;
+        private Cluster<T> cluster;
         private final Set<MarkerWithPosition> newMarkers;
         private final LatLng animateFrom;
+        private LatLngBounds visibleBounds;
 
         /**
          * @param c            the cluster to render.
@@ -822,58 +824,104 @@ public class RClusterRender<T extends ClusterItem> implements ClusterRenderer<T>
 
         private void perform(MarkerModifier markerModifier) {
             // Don't show small clusters. Render the markers inside, instead.
+            if (mMap == null) return;
+
+            visibleBounds = mMap.getProjection().getVisibleRegion().latLngBounds;
             if (!shouldRenderAsCluster(cluster)) {
                 for (T item : cluster.getItems()) {
-                    Marker marker = mMarkerCache.get(item);
-                    MarkerWithPosition markerWithPosition;
-                    if (marker == null) {
-                        MarkerOptions markerOptions = new MarkerOptions();
-                        if (animateFrom != null) {
-                            markerOptions.position(animateFrom);
-                        } else {
-                            markerOptions.position(item.getPosition());
-                        }
-                        if (!(item.getTitle()== null) && !(item.getSnippet() == null)) {
-                            markerOptions.title(item.getTitle());
-                            markerOptions.snippet(item.getSnippet());
-                        } else if (!(item.getSnippet() == null)) {
-                            markerOptions.title(item.getSnippet());
-                        } else if (!(item.getTitle() == null)) {
-                            markerOptions.title(item.getTitle());
-                        }
-                        onBeforeClusterItemRendered(item, markerOptions);
-                        marker = mClusterManager.getMarkerCollection().addMarker(markerOptions);
-                        markerWithPosition = new MarkerWithPosition(marker);
-                        mMarkerCache.put(item, marker);
-                        if (animateFrom != null) {
-                            markerModifier.animate(markerWithPosition, animateFrom, item.getPosition());
-                        }
-                    } else {
-                        markerWithPosition = new MarkerWithPosition(marker);
-                    }
-                    onClusterItemRendered(item, marker);
-                    newMarkers.add(markerWithPosition);
+                    renderMarker(markerModifier, item);
                 }
-                return;
-            }
+            } else {
+                final LatLng p = cluster.getPosition();
+                Collection<T> items = cluster.getItems();
 
-            Marker marker = mClusterToMarker.get(cluster);
-            MarkerWithPosition markerWithPosition;
-            if (marker == null) {
-                MarkerOptions markerOptions = new MarkerOptions().
-                        position(animateFrom == null ? cluster.getPosition() : animateFrom);
+                boolean modified = false;
+
+                ArrayList<T> to_delete = new ArrayList<>();
+                for (Iterator<T> it = items.iterator(); it.hasNext(); ) {
+                    T item = it.next();
+                    if (item.shouldBeOutOfCluster()) {
+                        modified = true;
+                        to_delete.add(item);
+                        renderMarker(markerModifier, item);
+                    }
+                }
+
+                if (modified) {
+                    items.removeAll(to_delete);
+                    final Collection<T> ite = items;
+                    cluster = new Cluster<T>() {
+                        @Override
+                        public LatLng getPosition() {
+                            return p;
+                        }
+
+                        @Override
+                        public Collection<T> getItems() {
+                            return ite;
+                        }
+
+                        @Override
+                        public int getSize() {
+                            return ite.size();
+                        }
+                    };
+                }
+
+
+                MarkerOptions markerOptions = new MarkerOptions().position(animateFrom == null ? cluster.getPosition() : animateFrom);
+
                 onBeforeClusterRendered(cluster, markerOptions);
-                marker = mClusterManager.getClusterMarkerCollection().addMarker(markerOptions);
+
+                Marker marker = mClusterManager.getClusterMarkerCollection().addMarker(markerOptions);
                 mMarkerToCluster.put(marker, cluster);
                 mClusterToMarker.put(cluster, marker);
-                markerWithPosition = new MarkerWithPosition(marker);
+                MarkerWithPosition markerWithPosition = new MarkerWithPosition(marker);
                 if (animateFrom != null) {
                     markerModifier.animate(markerWithPosition, animateFrom, cluster.getPosition());
                 }
+                onClusterRendered(cluster, marker);
+                newMarkers.add(markerWithPosition);
+            }
+        }
+
+        // only renders if visible
+        private void renderMarker(MarkerModifier markerModifier, T item) {
+            if (item.getPosition() == null) {
+                return;
+            }
+            boolean onScreen = visibleBounds.contains(item.getPosition());
+            Marker marker = mMarkerCache.get(item);
+            MarkerWithPosition markerWithPosition;
+            if (marker == null) {
+                MarkerOptions markerOptions = new MarkerOptions();
+                if (animateFrom != null) {
+                    markerOptions.position(animateFrom);
+                } else {
+                    markerOptions.position(item.getPosition());
+                }
+                onBeforeClusterItemRendered(item, markerOptions);
+                marker = mClusterManager.getMarkerCollection().addMarker(markerOptions);
+                markerWithPosition = new MarkerWithPosition(marker);
+                mMarkerCache.put(item, marker);
+                if (animateFrom != null) {
+                    markerModifier.animate(markerWithPosition, animateFrom, item.getPosition());
+                } else {
+                    if (marker.getPosition().latitude != item.getPosition().latitude || marker.getPosition().longitude != item.getPosition().longitude)
+                        markerModifier.animate(markerWithPosition, marker.getPosition(), item.getPosition());
+                }
             } else {
                 markerWithPosition = new MarkerWithPosition(marker);
+
+                /* added */
+                if (animateFrom != null) {
+                    markerModifier.animate(markerWithPosition, animateFrom, marker.getPosition());
+                } else {
+                    if (marker.getPosition().latitude != item.getPosition().latitude || marker.getPosition().longitude != item.getPosition().longitude)
+                        markerModifier.animate(markerWithPosition, marker.getPosition(), item.getPosition());
+                }
             }
-            onClusterRendered(cluster, marker);
+            if (onScreen) onClusterItemRendered(item, marker); // only it's rendered if is visible
             newMarkers.add(markerWithPosition);
         }
     }

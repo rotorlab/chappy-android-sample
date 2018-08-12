@@ -187,7 +187,7 @@ public class MapFragment extends RFragment implements Frag, OnMapReadyCallback, 
                 }
             } else {
                 if (!entry.getValue().getLocations().isEmpty()) {
-                    Location location = entry.getValue().getLocations().entrySet().iterator().next().getValue();
+                    Location location = entry.getValue().getLastLocation();
                     markers.get(entry.getKey()).setPosition(new LatLng(location.getLatitude(), location.getLongitude()));
                     if (entry.getValue().getUid().equals(FirebaseAuth.getInstance().getUid()) && resumed) {
                         resumed = false;
