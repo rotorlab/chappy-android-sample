@@ -31,6 +31,7 @@ import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.Member;
 import com.rotor.chappy.model.Message;
 import com.rotor.core.RFragment;
+import com.tapadoo.alerter.Alerter;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 
@@ -92,12 +93,18 @@ public class ChatsFragment extends RFragment implements Frag, ChatsInterface.Vie
 
     @Override
     public void connected() {
-        // nothing to do here
+        Alerter.clearCurrent(getActivity());
     }
 
     @Override
     public void disconnected() {
-        // nothing to do here
+        Alerter.create(getActivity()).setTitle("Device not connected")
+                .setText("Trying to reconnect")
+                .enableProgress(true)
+                .disableOutsideTouch()
+                .enableInfiniteDuration(true)
+                .setProgressColorRes(R.color.primary)
+                .show();
     }
 
     @Override

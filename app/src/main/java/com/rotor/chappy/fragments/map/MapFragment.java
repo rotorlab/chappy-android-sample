@@ -33,6 +33,7 @@ import com.rotor.chappy.model.User;
 import com.rotor.chappy.model.map.PersonItem;
 import com.rotor.chappy.model.map.PersonRender;
 import com.rotor.core.RFragment;
+import com.tapadoo.alerter.Alerter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -69,12 +70,18 @@ public class MapFragment extends RFragment implements Frag, OnMapReadyCallback, 
 
     @Override
     public void connected() {
-
+        Alerter.clearCurrent(getActivity());
     }
 
     @Override
     public void disconnected() {
-
+        Alerter.create(getActivity()).setTitle("Device not connected")
+                .setText("Trying to reconnect")
+                .enableProgress(true)
+                .disableOutsideTouch()
+                .enableInfiniteDuration(true)
+                .setProgressColorRes(R.color.primary)
+                .show();
     }
 
     @Override
