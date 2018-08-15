@@ -57,6 +57,7 @@ public class SplashPresenter implements SplashInterface.Presenter {
                         user = ref;
                         if (!Rotor.getId().equals(user.getToken())) {
                             user.setToken(Rotor.getId());
+                            Database.sync("/users/" + mAuth.getUid());
                         } else if (!omitMoreChanges) {
                             omitMoreChanges = true;
                             if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

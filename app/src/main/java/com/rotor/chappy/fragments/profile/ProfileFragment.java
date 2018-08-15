@@ -127,13 +127,14 @@ public class ProfileFragment extends RFragment implements Frag, ProfileInterface
 
     @Override
     public void userUpdated() {
-        ImageLoader.getInstance().displayImage(presenter.user().getPhoto(), profile);
-        name.setText(presenter.user().getName());
-        steps.setText(String.valueOf(presenter.user().getSteps()));
-        Bitmap myBitmap = QRCode.from(SC.encryptString(presenter.user().getUid())).withColor(0xFF000000, 0x00FFFFFF).withSize(350, 350).bitmap();
-        qr.setImageBitmap(myBitmap);
-
-        moveToLocation();
+        if (presenter.user() != null) {
+            ImageLoader.getInstance().displayImage(presenter.user().getPhoto(), profile);
+            name.setText(presenter.user().getName());
+            steps.setText(String.valueOf(presenter.user().getSteps()));
+            Bitmap myBitmap = QRCode.from(SC.encryptString(presenter.user().getUid())).withColor(0xFF000000, 0x00FFFFFF).withSize(350, 350).bitmap();
+            qr.setImageBitmap(myBitmap);
+            moveToLocation();
+        }
     }
 
     @Override
