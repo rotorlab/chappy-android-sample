@@ -25,4 +25,5 @@
     <string name="search_hint">Di algo</string>
     <string name="name_hint">Obi-Wan Kenobi</string>
     <string name="name_me">Yo</string>
+    <string name="synchronizing_message">Sincronizando</string>
 </resources>

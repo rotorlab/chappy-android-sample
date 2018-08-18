@@ -37,17 +37,23 @@ import com.tapadoo.alerter.Alerter;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 
 public class ChatFragment extends RFragment implements Frag, ChatInterface.View {
 
     private Toolbar toolbar;
     public ChatPresenter presenter;
     public MessageAdapter adapter;
+    public PendingAdapter pendingAdapter;
     private RecyclerView messageList;
+    private RecyclerView pendingMessageList;
     private Button sendButton;
     private EditText messageText;
-
+    private HashMap<String, Message> pendingMessages;
 
 
     @Nullable
@@ -67,6 +73,14 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
         messageList.setLayoutManager(linearLayoutManager);
         adapter = new MessageAdapter(this);
         messageList.setAdapter(adapter);
+
+        pendingMessages = new HashMap<>();
+
+        final LinearLayoutManager linearLayoutManagerP = new LinearLayoutManager(getActivity().getApplicationContext());
+        pendingAdapter = new PendingAdapter(this);
+        pendingMessageList = view.findViewById(R.id.pending_messages_list);
+        pendingMessageList.setLayoutManager(linearLayoutManagerP);
+        pendingMessageList.setAdapter(pendingAdapter);
 
         messageText = view.findViewById(com.rotor.chappy.R.id.message_text);
         messageText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -89,9 +103,12 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
             public void onClick(View v) {
                 if (presenter.getUser().getCurrentUser() != null && presenter.getUser().getCurrentUser().getUid() != null) {
                     Message message = new Message(presenter.getUser().getCurrentUser().getUid(), StringEscapeUtils.escapeJava(messageText.getText().toString()));
-                    presenter.chat().getMessages().put(String.valueOf(new Date().getTime()), message);
-
+                    String id = String.valueOf(new Date().getTime());
+                    presenter.chat().getMessages().put(id, message);
                     presenter.updateChat();
+
+                    pendingMessages.put(id, message);
+                    pendingAdapter.notifyDataSetChanged();
 
                     Handler handler = new Handler();
                     handler.postDelayed(new Runnable() {
@@ -132,6 +149,7 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
         if (getActivity() != null) {
             ((HomeActivity)getActivity()).setSupportActionBar(toolbar);
         }
+        pendingMessages.clear();
     }
 
     @Override
@@ -211,5 +229,21 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
         if (presenter.chat() != null) {
             toolbar.setTitle(StringEscapeUtils.unescapeJava(presenter.chat().getName()));
         }
+        List<String> remove = new ArrayList<>();
+        String[] messagesId = pendingMessages.keySet().toArray(new String[0]);
+        List<String> messagesIdChat = Arrays.asList(presenter.chat().getMessages().keySet().toArray(new String[0]));
+        for (String toCheck : messagesId) {
+            if (messagesIdChat.contains(toCheck)) {
+                remove.add(toCheck);
+            }
+        }
+        for (String toRemove : remove) {
+            pendingMessages.remove(toRemove);
+        }
+        pendingAdapter.notifyDataSetChanged();
+    }
+
+    public List<Message> getPendingMessages() {
+        return Arrays.asList(pendingMessages.values().toArray(new Message[0]));
     }
 }

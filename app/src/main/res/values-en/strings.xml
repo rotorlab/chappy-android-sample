@@ -25,4 +25,5 @@
     <string name="search_hint">Say something</string>
     <string name="name_hint">Obi-Wan Kenobi</string>
     <string name="name_me">Me</string>
+    <string name="synchronizing_message">Synchronizing</string>
 </resources>

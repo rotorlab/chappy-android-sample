@@ -1,5 +1,6 @@
 package com.rotor.chappy.fragments.chats;
 
+import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,9 +16,9 @@ import org.apache.commons.lang3.StringEscapeUtils;
  * Created by efraespada on 17/06/2017.
  */
 
-public abstract class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
+public abstract class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageHolder> {
 
-    public ChatsFragment fragment;
+    private ChatsFragment fragment;
 
     public ChatAdapter(ChatsFragment fragment) {
         this.fragment = fragment;
@@ -26,13 +27,14 @@ public abstract class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewH
     public abstract void onChatClicked(Chat chat);
 
     @Override
-    public ChatAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    @NonNull
+    public ChatAdapter.MessageHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext()).inflate(com.rotor.chappy.R.layout.item_chat, parent, false);
-        return new ViewHolder(itemView);
+        return new MessageHolder(itemView);
     }
 
     @Override
-    public void onBindViewHolder(ChatAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ChatAdapter.MessageHolder holder, int position) {
         final Chat chat = (Chat) fragment.presenter().chats().values().toArray()[position];
 
         holder.content.setOnClickListener(new View.OnClickListener() {
@@ -50,12 +52,12 @@ public abstract class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewH
     }
 
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
+    static class MessageHolder extends RecyclerView.ViewHolder {
 
         RelativeLayout content;
         TextView name;
 
-        public ViewHolder(View itemView) {
+        private MessageHolder(View itemView) {
             super(itemView);
             content = itemView.findViewById(com.rotor.chappy.R.id.chat_content);
             name = itemView.findViewById(com.rotor.chappy.R.id.group_name);
