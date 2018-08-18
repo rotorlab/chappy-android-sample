@@ -6,6 +6,7 @@ import com.rotor.core.interfaces.RScreen
 import com.rotor.database.Database
 import com.rotor.database.models.KReference
 import com.rotor.database.models.PrimaryReferece
+import org.jetbrains.anko.doAsync
 
 class BackgroundHandler: RScreen {
 
@@ -53,17 +54,19 @@ class BackgroundHandler: RScreen {
     }
 
     fun <T> sync(path: String, reference: T) {
-        val refe = map[path] as KReference<*>
-        val result = refe.getDifferencesFromBackground(reference!!)
-        val diff = result[1] as String
-        val len = result[0] as Int
-        if (!PrimaryReferece.EMPTY_OBJECT.equals(diff)) {
-            Database.refreshToServer(path, diff, len, false)
-        } else {
-            val blower = refe.getLastest()
-            val value = refe.getReferenceAsString()
-            if (value.equals(PrimaryReferece.EMPTY_OBJECT) || value.equals(PrimaryReferece.NULL)) {
-                blower.onCreate()
+        doAsync {
+            val refe = map[path] as KReference<*>
+            val result = refe.getDifferencesFromBackground(reference!!)
+            val diff = result[1] as String
+            val len = result[0] as Int
+            if (!PrimaryReferece.EMPTY_OBJECT.equals(diff)) {
+                Database.refreshToServer(path, diff, len, false)
+            } else {
+                val blower = refe.getLastest()
+                val value = refe.getReferenceAsString()
+                if (value.equals(PrimaryReferece.EMPTY_OBJECT) || value.equals(PrimaryReferece.NULL)) {
+                    blower.onCreate()
+                }
             }
         }
     }

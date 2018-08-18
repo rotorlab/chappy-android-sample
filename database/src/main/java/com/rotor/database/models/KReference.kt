@@ -38,10 +38,6 @@ class KReference<T>(context: Context, database: String, path: String, reference:
         }
     }
 
-    fun addBlower(creation: Long, blower: Reference<*>) {
-        blowerMap[creation] = blower as Reference<T>
-    }
-
     override fun getReferenceAsString(): String {
         var value: String ?
         if (getLastest().onUpdate() == null) {

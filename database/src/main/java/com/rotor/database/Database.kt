@@ -25,6 +25,7 @@ import com.rotor.database.utils.ReferenceUtils
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import org.apache.commons.lang3.StringEscapeUtils
+import org.jetbrains.anko.doAsync
 import org.json.JSONObject
 import java.util.*
 import kotlin.collections.ArrayList
@@ -258,29 +259,11 @@ class Database  {
         }
 
         @JvmStatic fun sync(path: String, clean: Boolean) {
-            var found = false
-            for (entry in Rotor.screens()) {
-                if (entry.isActive && entry.hasPath(path)) {
-                    found = true
-                    val refe = entry.holders().get(path) as KReference<*>
-                    val result = refe.getDifferences(clean)
-                    val diff = result[1] as String
-                    val len = result[0] as Int
-                    if (!EMPTY_OBJECT.equals(diff)) {
-                        refreshToServer(path, diff, len, clean)
-                    } else {
-                        val blower = refe.getLastest()
-                        val value = refe.getReferenceAsString()
-                        if (value.equals(EMPTY_OBJECT) || value.equals(NULL)) {
-                            blower.onCreate()
-                        }
-                    }
-                }
-            }
-
-            if (!found) {
+            doAsync {
+                var found = false
                 for (entry in Rotor.screens()) {
-                    if (entry.hasPath(path)) {
+                    if (entry.isActive && entry.hasPath(path)) {
+                        found = true
                         val refe = entry.holders().get(path) as KReference<*>
                         val result = refe.getDifferences(clean)
                         val diff = result[1] as String
@@ -292,6 +275,26 @@ class Database  {
                             val value = refe.getReferenceAsString()
                             if (value.equals(EMPTY_OBJECT) || value.equals(NULL)) {
                                 blower.onCreate()
+                            }
+                        }
+                    }
+                }
+
+                if (!found) {
+                    for (entry in Rotor.screens()) {
+                        if (entry.hasPath(path)) {
+                            val refe = entry.holders().get(path) as KReference<*>
+                            val result = refe.getDifferences(clean)
+                            val diff = result[1] as String
+                            val len = result[0] as Int
+                            if (!EMPTY_OBJECT.equals(diff)) {
+                                refreshToServer(path, diff, len, clean)
+                            } else {
+                                val blower = refe.getLastest()
+                                val value = refe.getReferenceAsString()
+                                if (value.equals(EMPTY_OBJECT) || value.equals(NULL)) {
+                                    blower.onCreate()
+                                }
                             }
                         }
                     }

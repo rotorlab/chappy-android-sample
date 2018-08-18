@@ -40,6 +40,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
+            android:background="@color/white"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -50,6 +51,7 @@
                 android:layout_weight=".8"
                 android:layout_width="0dp"
                 android:layout_height="40dp"
+                android:layout_marginStart="15dp"
                 android:hint="@string/search_hint"
                 android:inputType="text"
                 android:imeOptions="actionSend"/>
@@ -60,8 +62,9 @@
                 android:layout_width="0dp"
                 android:layout_height="50dp"
                 android:layout_margin="5dp"
+                android:textSize="18sp"
                 style="@style/Base.Widget.AppCompat.Button.Borderless.Colored"
-                android:text="Send"/>
+                android:text="send"/>
 
         </LinearLayout>
 

@@ -108,7 +108,7 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
         messageText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
+                // nothing to do here
             }
 
             @Override
@@ -118,7 +118,7 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
 
             @Override
             public void afterTextChanged(Editable s) {
-
+                // nothing to do here
             }
         });
 
@@ -129,7 +129,9 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
     @Override
     public void onResumeView() {
         presenter.start();
-        ((HomeActivity)getActivity()).setSupportActionBar(toolbar);
+        if (getActivity() != null) {
+            ((HomeActivity)getActivity()).setSupportActionBar(toolbar);
+        }
     }
 
     @Override
@@ -145,20 +147,24 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
 
     @Override
     public void connected() {
-        Alerter.clearCurrent(getActivity());
+        if (getActivity() != null) {
+            Alerter.clearCurrent(getActivity());
+        }
         sendButton.setEnabled(messageText.getText().length() > 0);
     }
 
     @Override
     public void disconnected() {
         sendButton.setEnabled(false);
-        Alerter.create(getActivity()).setTitle("Device not connected")
-                .setText("Trying to reconnect")
-                .enableProgress(true)
-                .disableOutsideTouch()
-                .enableInfiniteDuration(true)
-                .setProgressColorRes(R.color.primary)
-                .show();
+        if (getActivity() != null) {
+            Alerter.create(getActivity()).setTitle("Device not connected")
+                    .setText("Trying to reconnect")
+                    .enableProgress(true)
+                    .disableOutsideTouch()
+                    .enableInfiniteDuration(true)
+                    .setProgressColorRes(R.color.primary)
+                    .show();
+        }
     }
 
     @Override

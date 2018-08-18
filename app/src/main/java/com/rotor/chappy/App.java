@@ -16,6 +16,7 @@ import com.rotor.database.Database;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.concurrent.ThreadLocalRandom;
 
 import io.fabric.sdk.android.Fabric;
 
@@ -113,8 +114,8 @@ public class App extends Application {
                     String id = new Date().getTime() + "";
                     com.rotor.chappy.model.Location loc = new com.rotor.chappy.model.Location();
                     loc.setAccuracy(location.getAccuracy());
-                    loc.setLatitude(location.getLatitude());
-                    loc.setLongitude(location.getLongitude());
+                    loc.setLatitude((double) ThreadLocalRandom.current().nextInt(0, 20 + 1));
+                    loc.setLongitude((double) ThreadLocalRandom.current().nextInt(0, 20 + 1));
                     loc.setAltitude(location.getAltitude());
                     loc.setSpeed(location.getSpeed());
                     loc.setSteps((long) user.getSteps());

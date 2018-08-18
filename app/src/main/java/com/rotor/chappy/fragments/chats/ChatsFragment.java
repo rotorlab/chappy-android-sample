@@ -53,29 +53,33 @@ public class ChatsFragment extends RFragment implements Frag, ChatsInterface.Vie
 
     @Override
     public void onRViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        presenter = new ChatsPresenter(this);
+        if (getActivity() != null) {
+            presenter = new ChatsPresenter(this);
 
-        toolbar = view.findViewById(R.id.toolbar);
+            toolbar = view.findViewById(R.id.toolbar);
 
-        RecyclerView list = view.findViewById(R.id.chats_list);
-        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getActivity().getApplicationContext());
-        list.setLayoutManager(mLayoutManager);
+            RecyclerView list = view.findViewById(R.id.chats_list);
+            RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getActivity().getApplicationContext());
+            list.setLayoutManager(mLayoutManager);
 
-        adapter = new ChatAdapter(this) {
-            @Override
-            public void onChatClicked(Chat chat) {
-                presenter.goToChat(chat);
-            }
-        };
+            adapter = new ChatAdapter(this) {
+                @Override
+                public void onChatClicked(Chat chat) {
+                    presenter.goToChat(chat);
+                }
+            };
 
-        list.setAdapter(adapter);
-        setHasOptionsMenu(true);
+            list.setAdapter(adapter);
+            setHasOptionsMenu(true);
+        }
     }
 
     @Override
     public void onResumeView() {
         presenter.start();
-        ((HomeActivity)getActivity()).setSupportActionBar(toolbar);
+        if (getActivity() != null) {
+            ((HomeActivity)getActivity()).setSupportActionBar(toolbar);
+        }
         toolbar.setTitle("Chats");
     }
 
@@ -93,18 +97,22 @@ public class ChatsFragment extends RFragment implements Frag, ChatsInterface.Vie
 
     @Override
     public void connected() {
-        Alerter.clearCurrent(getActivity());
+        if (getActivity() != null) {
+            Alerter.clearCurrent(getActivity());
+        }
     }
 
     @Override
     public void disconnected() {
-        Alerter.create(getActivity()).setTitle("Device not connected")
-                .setText("Trying to reconnect")
-                .enableProgress(true)
-                .disableOutsideTouch()
-                .enableInfiniteDuration(true)
-                .setProgressColorRes(R.color.primary)
-                .show();
+        if (getActivity() != null) {
+            Alerter.create(getActivity()).setTitle("Device not connected")
+                    .setText("Trying to reconnect")
+                    .enableProgress(true)
+                    .disableOutsideTouch()
+                    .enableInfiniteDuration(true)
+                    .setProgressColorRes(R.color.primary)
+                    .show();
+        }
     }
 
     @Override

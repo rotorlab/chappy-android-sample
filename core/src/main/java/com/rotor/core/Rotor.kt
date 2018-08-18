@@ -12,6 +12,7 @@ import com.rotor.core.interfaces.RStatus
 import com.google.gson.Gson
 import com.rotor.core.interfaces.BuilderFace
 import com.rotor.core.interfaces.RScreen
+import org.jetbrains.anko.doAsync
 import org.json.JSONObject
 import java.util.ArrayList
 
@@ -101,8 +102,10 @@ class Rotor {
 
         @JvmStatic fun onMessageReceived(jsonObject: JSONObject) {
             if (builders != null) {
-                for (face in builders!!.values) {
-                    face.onMessageReceived(jsonObject)
+                doAsync {
+                    for (face in builders!!.values) {
+                        face.onMessageReceived(jsonObject)
+                    }
                 }
             }
         }
@@ -134,14 +137,11 @@ class Rotor {
                     entry.disconnected()
                 }
             }
+            stop()
+            start()
         }
 
         @JvmStatic fun isConnected() : Boolean {
-            if (NetworkUtil.getConnectivityStatus(Rotor.context!!).equals(NetworkUtil.NETWORK_STATUS_NOT_CONNECTED) && initialize) {
-                stop()
-            } else if (!NetworkUtil.getConnectivityStatus(Rotor.context!!).equals(NetworkUtil.NETWORK_STATUS_NOT_CONNECTED) && !initialize) {
-                start()
-            }
             return !NetworkUtil.getConnectivityStatus(Rotor.context!!).equals(NetworkUtil.NETWORK_STATUS_NOT_CONNECTED) && initialize
         }
 
