@@ -4,7 +4,7 @@ import android.content.Context
 import com.google.common.reflect.TypeToken
 import com.rotor.database.Database
 import com.rotor.database.abstr.Reference
-import com.rotor.database.utils.ReferenceUtils
+import com.rotor.database.utils.StoreUtils
 import java.lang.reflect.Type
 
 /**
@@ -53,7 +53,7 @@ class KReference<T>(context: Context, database: String, path: String, reference:
     }
 
     override fun loadCachedReference() {
-        stringReference = ReferenceUtils.getElement(path)
+        stringReference = StoreUtils.getElement(path)
         if (stringReference != null && stringReference!!.length > EMPTY_OBJECT.length) {
             blowerResult(stringReference!!)
         }
@@ -68,7 +68,7 @@ class KReference<T>(context: Context, database: String, path: String, reference:
     }
 
     override fun remove() {
-        ReferenceUtils.removeElement(path)
+        StoreUtils.removeElement(path)
         for (entry in blowerMap.entries) {
             entry.value.onDestroy()
         }

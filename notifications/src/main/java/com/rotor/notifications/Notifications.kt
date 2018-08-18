@@ -24,7 +24,7 @@ import android.os.Build
 import android.util.Log
 import com.google.gson.Gson
 import com.rotor.core.interfaces.RScreen
-import com.rotor.database.utils.ReferenceUtils
+import com.rotor.database.utils.StoreUtils
 import com.rotor.notifications.data.NotificationDocker
 import com.rotor.notifications.interfaces.ClazzLoader
 import com.rotor.notifications.interfaces.Listener
@@ -201,7 +201,7 @@ class Notifications: RScreen {
 
                     docker!!.notifications!![identifier] = ref
                     val gson = Gson()
-                    ReferenceUtils.addElement(NOTIFICATION, gson.toJson(docker!!))
+                    StoreUtils.addElement(NOTIFICATION, gson.toJson(docker!!))
 
                     if (created) {
                         created = false
@@ -275,7 +275,7 @@ class Notifications: RScreen {
                     toCheck.remove(i)
                     Database.unlisten(identifier)
                     val gson = Gson()
-                    ReferenceUtils.addElement(NOTIFICATION, gson.toJson(docker!!))
+                    StoreUtils.addElement(NOTIFICATION, gson.toJson(docker!!))
                     listener?.removed(docker!!.notifications!![identifier]!!)
                     docker!!.notifications!!.remove(identifier)
                     if (i.remove) {
@@ -419,7 +419,7 @@ class Notifications: RScreen {
         }
 
         @JvmStatic private fun loadCachedNotifications() {
-            val notificationsAsString: String ? = ReferenceUtils.getElement(NOTIFICATION)
+            val notificationsAsString: String ? = StoreUtils.getElement(NOTIFICATION)
             if (notificationsAsString == null) {
                 docker = NotificationDocker()
             } else {

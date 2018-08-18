@@ -6,8 +6,7 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.rotor.core.Rotor
 import com.rotor.database.Database
-import com.rotor.database.Docker
-import com.rotor.database.utils.ReferenceUtils
+import com.rotor.database.utils.StoreUtils
 import com.stringcare.library.SC
 import org.json.JSONException
 import org.json.JSONObject
@@ -41,7 +40,6 @@ abstract class PrimaryReferece<T>(context: Context, db: String, path: String) {
     }
 
     private val mapParts: HashMap<String, Array<String?>>
-    var database: Docker? = null
     private val context: Context
     protected var gson: Gson
     var serverLen: Int = 0
@@ -61,7 +59,7 @@ abstract class PrimaryReferece<T>(context: Context, db: String, path: String) {
         this.serverLen = 0
         SC.init(this.context)
         this.mapParts = HashMap()
-        this.stringReference = ReferenceUtils.getElement(path)
+        this.stringReference = StoreUtils.getElement(path)
     }
 
     /**
@@ -185,7 +183,7 @@ abstract class PrimaryReferece<T>(context: Context, db: String, path: String) {
             val action = json.getString(ACTION)
             val data = if (json.has(REFERENCE)) json.getString(REFERENCE) else null
             val path = json.getString(PATH)
-            val rData = if (data == null) "{}" else ReferenceUtils.hex2String(data)
+            val rData = if (data == null) "{}" else StoreUtils.hex2String(data)
 
 
             if (!tag.equals(getTag(), ignoreCase = true)) {
@@ -378,7 +376,7 @@ abstract class PrimaryReferece<T>(context: Context, db: String, path: String) {
             }
 
             stringReference = jsonObject.toString()
-            ReferenceUtils.addElement(path, stringReference!!)
+            StoreUtils.addElement(path, stringReference!!)
 
             if (sha1.equals(Database.sha1(stringReference!!))) {
                 blowerResult(stringReference!!)
@@ -398,7 +396,7 @@ abstract class PrimaryReferece<T>(context: Context, db: String, path: String) {
      * @param data
      */
     private fun parseContentResult(path: String, data: String) {
-        ReferenceUtils.addElement(path, data)
+        StoreUtils.addElement(path, data)
         stringReference = data
         blowerResult(stringReference!!)
     }

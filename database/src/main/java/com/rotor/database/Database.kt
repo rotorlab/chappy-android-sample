@@ -21,7 +21,7 @@ import com.rotor.database.models.PrimaryReferece.Companion.OS
 import com.rotor.database.models.PrimaryReferece.Companion.PATH
 import com.rotor.database.request.*
 import com.rotor.database.utils.BackgroundHandler
-import com.rotor.database.utils.ReferenceUtils
+import com.rotor.database.utils.StoreUtils
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import org.apache.commons.lang3.StringEscapeUtils
@@ -163,12 +163,12 @@ class Database  {
         }
 
         @JvmStatic private fun syncWithServer(path: String) {
-            var content = ReferenceUtils.getElement(path)
+            var content = StoreUtils.getElement(path)
             if (content == null) {
                 content = PrimaryReferece.EMPTY_OBJECT
             }
             val ref = getCurrentReference(path)
-            ReferenceUtils.service(Rotor.urlServer!!).createReference(CreateListener("listen_reference", ref!!.databaseName, path, Rotor.id!!, OS, sha1(content), content.length))
+            StoreUtils.service(Rotor.urlServer!!).createReference(CreateListener("listen_reference", ref!!.databaseName, path, Rotor.id!!, OS, sha1(content), content.length))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
@@ -184,7 +184,7 @@ class Database  {
         @JvmStatic fun unlisten(path: String) {
             val ref = getCurrentReference(path)
             ref?.let {
-                ReferenceUtils.service(Rotor.urlServer!!).removeListener(RemoveListener("unlisten_reference", it.databaseName, path, Rotor.id!!))
+                StoreUtils.service(Rotor.urlServer!!).removeListener(RemoveListener("unlisten_reference", it.databaseName, path, Rotor.id!!))
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(
@@ -200,7 +200,7 @@ class Database  {
 
         @JvmStatic fun remove(path: String) {
             val ref = getCurrentReference(path)
-            ReferenceUtils.service(Rotor.urlServer!!).removeReference(RemoveReference("remove_reference", ref!!.databaseName, path, Rotor.id!!))
+            StoreUtils.service(Rotor.urlServer!!).removeReference(RemoveReference("remove_reference", ref!!.databaseName, path, Rotor.id!!))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
@@ -220,7 +220,7 @@ class Database  {
 
             val ref = getCurrentReference(path)
 
-            ReferenceUtils.service(Rotor.urlServer!!).refreshToServer(UpdateToServer("update_reference", ref!!.databaseName, path, Rotor.id!!, "android", differences, len, clean))
+            StoreUtils.service(Rotor.urlServer!!).refreshToServer(UpdateToServer("update_reference", ref!!.databaseName, path, Rotor.id!!, "android", differences, len, clean))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
@@ -241,7 +241,7 @@ class Database  {
 
             val ref = getCurrentReference(path)
 
-            ReferenceUtils.service(Rotor.urlServer!!).refreshFromServer(UpdateFromServer("update_reference_from", ref!!.databaseName, path, Rotor.id!!, "android", content))
+            StoreUtils.service(Rotor.urlServer!!).refreshFromServer(UpdateFromServer("update_reference_from", ref!!.databaseName, path, Rotor.id!!, "android", content))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
@@ -314,7 +314,7 @@ class Database  {
             for (reference in toRemove) {
                 reference.remove()
             }
-            ReferenceUtils.removeElement(path)
+            StoreUtils.removeElement(path)
             Database.unlisten(path)
         }
 
@@ -324,7 +324,7 @@ class Database  {
         }
 
         @JvmStatic fun <T> query(database: String, path: String, query: String, mask: String, callback: QueryCallback<T>, klass: Class<T>) {
-            ReferenceUtils.service(Rotor.urlServer!!).query(Rotor.id!!, database, path, query, mask)
+            StoreUtils.service(Rotor.urlServer!!).query(Rotor.id!!, database, path, query, mask)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(

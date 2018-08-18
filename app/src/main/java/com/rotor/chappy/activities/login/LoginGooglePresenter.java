@@ -52,27 +52,42 @@ public class LoginGooglePresenter implements LoginGoogleInterface.Presenter {
 
                 @Override
                 public void onChanged(@NonNull User ref) {
-                    user = ref;
-                    if (!Rotor.getId().equals(user.getToken())) {
-                        user.setToken(Rotor.getId());
-                        Database.sync("/users/" + mAuth.getUid());
-                    } else if (!omitMoreChanges) {
-                        omitMoreChanges = true;
-                        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                            if (ContextCompat.checkSelfPermission(view, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
-                                    ContextCompat.checkSelfPermission(view, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
-                                    ContextCompat.checkSelfPermission(view, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                                goMain();
+                    if (FirebaseAuth.getInstance().getUid() != null) {
+                        FirebaseUser u = FirebaseAuth.getInstance().getCurrentUser();
+                        String uid = u.getUid();
+                        String name = u.getDisplayName();
+                        String email = u.getEmail();
+                        String photo = u.getPhotoUrl() != null ? u.getPhotoUrl().toString() : null;
+
+                        user = ref;
+                        user.setUid(uid);
+                        user.setName(name);
+                        user.setEmail(email);
+                        user.setPhoto(photo);
+                        user.setOs("android");
+
+                        if (!Rotor.getId().equals(user.getToken())) {
+                            user.setToken(Rotor.getId());
+                            Database.sync("/users/" + mAuth.getUid());
+                        } else if (!omitMoreChanges) {
+                            Database.sync("/users/" + mAuth.getUid());
+                            omitMoreChanges = true;
+                            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                if (ContextCompat.checkSelfPermission(view, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                                        ContextCompat.checkSelfPermission(view, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                                        ContextCompat.checkSelfPermission(view, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                                    goMain();
+                                } else {
+                                    String[] perm = new String[]{
+                                            Manifest.permission.ACCESS_FINE_LOCATION,
+                                            Manifest.permission.ACCESS_COARSE_LOCATION,
+                                            Manifest.permission.CAMERA
+                                    };
+                                    ActivityCompat.requestPermissions(view, perm, LOCATION_REQUEST_CODE);
+                                }
                             } else {
-                                String[] perm = new String[]{
-                                        Manifest.permission.ACCESS_FINE_LOCATION,
-                                        Manifest.permission.ACCESS_COARSE_LOCATION,
-                                        Manifest.permission.CAMERA
-                                };
-                                ActivityCompat.requestPermissions(view, perm, LOCATION_REQUEST_CODE);
+                                goMain();
                             }
-                        } else {
-                            goMain();
                         }
                     }
                 }
