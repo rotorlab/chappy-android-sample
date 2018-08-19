@@ -12,6 +12,8 @@ public interface ChatInterface {
 
         void start();
 
+        void stop();
+
         void listenChat();
 
         void listenUser(String id);

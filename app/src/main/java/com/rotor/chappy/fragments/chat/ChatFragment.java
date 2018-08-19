@@ -31,6 +31,8 @@ import com.rotor.chappy.fragments.chats.ChatsFragment;
 import com.rotor.chappy.interfaces.Frag;
 import com.rotor.chappy.model.Chat;
 import com.rotor.chappy.model.Message;
+import com.rotor.chappy.model.PendingMessages;
+import com.rotor.chappy.utils.Docker;
 import com.rotor.core.RFragment;
 import com.rotor.core.Rotor;
 import com.tapadoo.alerter.Alerter;
@@ -40,8 +42,8 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ChatFragment extends RFragment implements Frag, ChatInterface.View {
 
@@ -53,7 +55,11 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
     private RecyclerView pendingMessageList;
     private Button sendButton;
     private EditText messageText;
-    private HashMap<String, Message> pendingMessages;
+    private PendingMessages pendingMessages;
+    private boolean viewReady;
+    private Runnable sender;
+    private Handler handler;
+    private long interval;
 
 
     @Nullable
@@ -74,13 +80,29 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
         adapter = new MessageAdapter(this);
         messageList.setAdapter(adapter);
 
-        pendingMessages = new HashMap<>();
-
         final LinearLayoutManager linearLayoutManagerP = new LinearLayoutManager(getActivity().getApplicationContext());
         pendingAdapter = new PendingAdapter(this);
         pendingMessageList = view.findViewById(R.id.pending_messages_list);
         pendingMessageList.setLayoutManager(linearLayoutManagerP);
         pendingMessageList.setAdapter(pendingAdapter);
+
+        handler = new Handler();
+        interval = 3000;
+        sender = new Runnable() {
+            @Override
+            public void run() {
+                if (presenter.chat() != null) {
+                    pendingMessages = Docker.getPendingMessage(presenter.chat());
+                    for (Map.Entry<String, Message> entry : pendingMessages.getMessages().entrySet()) {
+                        presenter.chat().getMessages().put(entry.getKey(), entry.getValue());
+                    }
+                    if (!pendingMessages.getMessages().isEmpty()) {
+                        presenter.updateChat();
+                    }
+                    handler.postDelayed(sender, interval);
+                }
+            }
+        };
 
         messageText = view.findViewById(com.rotor.chappy.R.id.message_text);
         messageText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -104,11 +126,12 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
                 if (presenter.getUser().getCurrentUser() != null && presenter.getUser().getCurrentUser().getUid() != null) {
                     Message message = new Message(presenter.getUser().getCurrentUser().getUid(), StringEscapeUtils.escapeJava(messageText.getText().toString()));
                     String id = String.valueOf(new Date().getTime());
-                    presenter.chat().getMessages().put(id, message);
-                    presenter.updateChat();
 
-                    pendingMessages.put(id, message);
+                    Docker.addPendingMessage(presenter.chat(), id, message);
+                    pendingMessages = Docker.getPendingMessage(presenter.chat());
                     pendingAdapter.notifyDataSetChanged();
+                    handler.removeCallbacks(sender);
+                    handler.postDelayed(sender, interval);
 
                     Handler handler = new Handler();
                     handler.postDelayed(new Runnable() {
@@ -149,12 +172,16 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
         if (getActivity() != null) {
             ((HomeActivity)getActivity()).setSupportActionBar(toolbar);
         }
-        pendingMessages.clear();
+        viewReady = false;
+        pendingMessages = null;
+        handler.postDelayed(sender, interval);
     }
 
     @Override
     public void onPauseView() {
-        // nothing to do here
+        presenter.stop();
+        viewReady = false;
+        handler.removeCallbacks(sender);
     }
 
     @Override
@@ -226,11 +253,16 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
 
     @Override
     public void updateUI(Chat chat) {
+        if (presenter.chat() == null) {
+            onBackPressed();
+        }
         if (presenter.chat() != null) {
             toolbar.setTitle(StringEscapeUtils.unescapeJava(presenter.chat().getName()));
         }
+        pendingMessages = Docker.getPendingMessage(presenter.chat());
+
         List<String> remove = new ArrayList<>();
-        String[] messagesId = pendingMessages.keySet().toArray(new String[0]);
+        String[] messagesId = pendingMessages.getMessages().keySet().toArray(new String[0]);
         List<String> messagesIdChat = Arrays.asList(presenter.chat().getMessages().keySet().toArray(new String[0]));
         for (String toCheck : messagesId) {
             if (messagesIdChat.contains(toCheck)) {
@@ -238,12 +270,19 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
             }
         }
         for (String toRemove : remove) {
-            pendingMessages.remove(toRemove);
+            Docker.removePendingMessage(presenter.chat(), toRemove);
         }
+
+        pendingMessages = Docker.getPendingMessage(presenter.chat());
         pendingAdapter.notifyDataSetChanged();
     }
 
     public List<Message> getPendingMessages() {
-        return Arrays.asList(pendingMessages.values().toArray(new Message[0]));
+        if (pendingMessages == null && presenter.chat() != null) {
+            pendingMessages = Docker.getPendingMessage(presenter.chat());
+        } else if (pendingMessages == null && presenter.chat() == null) {
+            pendingMessages = new PendingMessages();
+        }
+        return Arrays.asList(pendingMessages.getMessages().values().toArray(new Message[0]));
     }
 }

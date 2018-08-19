@@ -21,6 +21,7 @@ public class ChatPresenter implements ChatInterface.Presenter {
     private HashMap<String, User> users;
     private ArrayList<String> askedUsers;
     private Chat chat;
+    private static final int MESSAGE_LIMIT = 50;
 
     public ChatPresenter(ChatFragment view) {
         this.view = view;
@@ -37,6 +38,11 @@ public class ChatPresenter implements ChatInterface.Presenter {
     }
 
     @Override
+    public void stop() {
+        Database.unlisten("/chats/" + chat.getId());
+    }
+
+    @Override
     public void listenChat() {
         Database.listen("database", "/chats/" + App.getCurrentChat(), new Reference<Chat>(Chat.class) {
 
@@ -47,7 +53,11 @@ public class ChatPresenter implements ChatInterface.Presenter {
 
             @Override
             public void onChanged(@NonNull Chat ref) {
+                if (!ref.getId().equals(App.getCurrentChat())) {
+                    return;
+                }
                 chat = ref;
+                limitMessages();
                 for (Member member : chat.getMembers().values()) {
                     if (!askedUsers.contains(member.getId())) {
                         askedUsers.add(member.getId());
@@ -136,6 +146,20 @@ public class ChatPresenter implements ChatInterface.Presenter {
     @Override
     public void remove() {
         Database.remove("/chats/" + chat.getId());
+    }
+
+    private void limitMessages() {
+        if (chat != null && chat.getMessages() != null  && chat.getMessages().size() > MESSAGE_LIMIT) {
+            String[] keys = chat.getMessages().keySet().toArray(new String[0]);
+            int i = 0;
+            while (chat.getMessages().size() > MESSAGE_LIMIT) {
+                if (chat.getMessages().containsKey(keys[i])) {
+                    chat.getMessages().remove(keys[i]);
+                }
+                i++;
+            }
+            updateChat();
+        }
     }
 
 }

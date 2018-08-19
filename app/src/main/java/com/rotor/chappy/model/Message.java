@@ -9,13 +9,17 @@ import com.google.gson.annotations.SerializedName;
 
 public class Message {
 
+    @SerializedName("id")
+    @Expose
+    private String id;
+
     @SerializedName("author")
     @Expose
-    String author;
+    private String author;
 
     @SerializedName("text")
     @Expose
-    String text;
+    private String text;
 
     public Message(String author, String text) {
         this.author = author;
@@ -36,5 +40,13 @@ public class Message {
 
     public void setText(String text) {
         this.text = text;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }

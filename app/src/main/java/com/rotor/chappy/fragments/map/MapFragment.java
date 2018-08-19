@@ -155,7 +155,7 @@ public class MapFragment extends RFragment implements Frag, OnMapReadyCallback, 
         HashMap<String, User> users = presenter.users();
         for (final Map.Entry<String, User> entry : users.entrySet()) {
             if (!markers.containsKey(entry.getKey())) {
-                if (!entry.getValue().getLocations().isEmpty()) {
+                if (entry.getValue().getLocations() != null && !entry.getValue().getLocations().isEmpty()) {
                     final Location location = entry.getValue().getLastLocation();
                     if (location == null) return;
                     final PersonItem item = new PersonItem();
