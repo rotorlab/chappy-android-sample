@@ -34,17 +34,17 @@ import kotlin.collections.ArrayList
 /**
  * Created by efrainespada on 12/03/2018.
  */
-class Database  {
+class Database {
 
     companion object {
 
         private val BACKGROUND_HANDLER = "background_handler"
         private val TAG: String = Database::class.java.simpleName!!
+        private var lastActive: RScreen? = null
 
-        private var lastActive: RScreen ? = null
-
-        @JvmStatic fun initialize() {
-            Rotor.prepare(Builder.DATABASE, object: BuilderFace {
+        @JvmStatic
+        fun initialize() {
+            Rotor.prepare(Builder.DATABASE, object : BuilderFace {
                 override fun onResume() {
                     val status = !NetworkUtil.getConnectivityStatus(Rotor.context!!).equals(NetworkUtil.NETWORK_STATUS_NOT_CONNECTED)
                     for (screen in Rotor.screens()) {
@@ -114,9 +114,10 @@ class Database  {
             }
         }
 
-        @JvmStatic fun <T> listen(database: String, path: String, reference: Reference<T>) {
-            var objectReference: KReference<T> ? = null
-            var rScreen: RScreen ? = null
+        @JvmStatic
+        fun <T> listen(database: String, path: String, reference: Reference<T>) {
+            var objectReference: KReference<T>? = null
+            var rScreen: RScreen? = null
             for (screen in Rotor.screens()) {
                 if (screen.isActive) {
                     rScreen = screen
@@ -130,8 +131,8 @@ class Database  {
 
                     if ((rScreen::class.java.simpleName.equals("Notifications") && path.contains("/notifications/") && !(rScreen is BackgroundHandler)) ||
                             (!rScreen::class.java.simpleName.equals("Notifications") && !(rScreen is BackgroundHandler))) {
-                                objectReference = screen.holders().get(path) as KReference<T>?
-                                break
+                        objectReference = screen.holders().get(path) as KReference<T>?
+                        break
                     }
                 }
             }
@@ -151,18 +152,21 @@ class Database  {
 
         }
 
-        @JvmStatic fun sha1(value: String) : String {
+        @JvmStatic
+        fun sha1(value: String): String {
             return JSONDiff.hash(StringEscapeUtils.unescapeJava(value))
         }
 
-        @JvmStatic fun backgroundHandler() : BackgroundHandler ? {
+        @JvmStatic
+        fun backgroundHandler(): BackgroundHandler? {
             for (screen in Rotor.screens()) {
                 if (screen is BackgroundHandler) return screen
             }
             return null
         }
 
-        @JvmStatic private fun syncWithServer(path: String) {
+        @JvmStatic
+        private fun syncWithServer(path: String) {
             var content = StoreUtils.getElement(path)
             if (content == null) {
                 content = PrimaryReferece.EMPTY_OBJECT
@@ -181,7 +185,8 @@ class Database  {
                     )
         }
 
-        @JvmStatic fun unlisten(path: String) {
+        @JvmStatic
+        fun unlisten(path: String) {
             val ref = getCurrentReference(path)
             ref?.let {
                 StoreUtils.service(Rotor.urlServer!!).removeListener(RemoveListener("unlisten_reference", it.databaseName, path, Rotor.id!!))
@@ -198,7 +203,8 @@ class Database  {
             }
         }
 
-        @JvmStatic fun remove(path: String) {
+        @JvmStatic
+        fun remove(path: String) {
             val ref = getCurrentReference(path)
             StoreUtils.service(Rotor.urlServer!!).removeReference(RemoveReference("remove_reference", ref!!.databaseName, path, Rotor.id!!))
                     .subscribeOn(Schedulers.io())
@@ -213,7 +219,8 @@ class Database  {
                     )
         }
 
-        @JvmStatic internal fun refreshToServer(path: String, differences: String, len: Int, clean: Boolean) {
+        @JvmStatic
+        internal fun refreshToServer(path: String, differences: String, len: Int, clean: Boolean) {
             if (differences == PrimaryReferece.EMPTY_OBJECT) {
                 return
             }
@@ -233,7 +240,8 @@ class Database  {
                     )
         }
 
-        @JvmStatic fun refreshFromServer(path: String, content: String) {
+        @JvmStatic
+        fun refreshFromServer(path: String, content: String) {
             if (PrimaryReferece.EMPTY_OBJECT.equals(content)) {
                 Log.e(TAG, "no content: $EMPTY_OBJECT")
                 return
@@ -254,13 +262,16 @@ class Database  {
                     )
         }
 
-        @JvmStatic fun sync(path: String) {
+        @JvmStatic
+        fun sync(path: String) {
             sync(path, false)
         }
 
-        @JvmStatic fun sync(path: String, clean: Boolean) {
-            doAsync {
+        @JvmStatic
+        fun sync(path: String, clean: Boolean) {
+            // doAsync {
                 var found = false
+                var differences = ArrayList<String>()
                 for (entry in Rotor.screens()) {
                     if (entry.isActive && entry.hasPath(path)) {
                         found = true
@@ -268,7 +279,8 @@ class Database  {
                         val result = refe.getDifferences(clean)
                         val diff = result[1] as String
                         val len = result[0] as Int
-                        if (!EMPTY_OBJECT.equals(diff)) {
+                        if (!EMPTY_OBJECT.equals(diff) && !differences.contains(diff)) {
+                            differences.add(diff)
                             refreshToServer(path, diff, len, clean)
                         } else {
                             val blower = refe.getLastest()
@@ -299,10 +311,11 @@ class Database  {
                         }
                     }
                 }
-            }
+            // }
         }
 
-        @JvmStatic private fun removePrim(path: String) {
+        @JvmStatic
+        private fun removePrim(path: String) {
             val toRemove = ArrayList<KReference<*>>()
             for (entry in Rotor.screens()) {
                 if (entry.hasPath(path)) {
@@ -318,12 +331,14 @@ class Database  {
             Database.unlisten(path)
         }
 
-        @JvmStatic fun <T> query(database: String, path: String, query: Any, mask: Any, callback: QueryCallback<T>, klass: Class<T>) {
+        @JvmStatic
+        fun <T> query(database: String, path: String, query: Any, mask: Any, callback: QueryCallback<T>, klass: Class<T>) {
             val gson = Gson();
             query(database, path, gson.toJson(query), gson.toJson(mask), callback, klass)
         }
 
-        @JvmStatic fun <T> query(database: String, path: String, query: String, mask: String, callback: QueryCallback<T>, klass: Class<T>) {
+        @JvmStatic
+        fun <T> query(database: String, path: String, query: String, mask: String, callback: QueryCallback<T>, klass: Class<T>) {
             StoreUtils.service(Rotor.urlServer!!).query(Rotor.id!!, database, path, query, mask)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
@@ -341,7 +356,8 @@ class Database  {
 
         }
 
-        @JvmStatic fun getCurrentReference(path: String) : KReference<*> ? {
+        @JvmStatic
+        fun getCurrentReference(path: String): KReference<*>? {
             // returns current active reference
             for (entry in Rotor.screens()) {
                 if (entry.hasPath(path) && entry.isActive) {
@@ -362,7 +378,8 @@ class Database  {
             return null
         }
 
-        @JvmStatic fun contains(path: String) : Boolean {
+        @JvmStatic
+        fun contains(path: String): Boolean {
             for (entry in Rotor.screens()) {
                 if (entry.hasPath(path) && entry.isActive) {
                     return true

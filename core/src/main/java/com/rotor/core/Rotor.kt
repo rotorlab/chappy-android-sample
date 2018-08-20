@@ -5,6 +5,7 @@ import android.app.job.JobScheduler
 import android.content.ComponentName
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
+import android.os.AsyncTask
 import android.os.Build
 import android.provider.Settings
 import android.util.Log
@@ -185,6 +186,5 @@ class Rotor {
         }
 
     }
-
 
 }

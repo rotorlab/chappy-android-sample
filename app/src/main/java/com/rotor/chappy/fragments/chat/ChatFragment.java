@@ -57,9 +57,6 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
     private EditText messageText;
     private PendingMessages pendingMessages;
     private boolean viewReady;
-    private Runnable sender;
-    private Handler handler;
-    private long interval;
 
 
     @Nullable
@@ -86,24 +83,6 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
         pendingMessageList.setLayoutManager(linearLayoutManagerP);
         pendingMessageList.setAdapter(pendingAdapter);
 
-        handler = new Handler();
-        interval = 3000;
-        sender = new Runnable() {
-            @Override
-            public void run() {
-                if (presenter.chat() != null) {
-                    pendingMessages = Docker.getPendingMessage(presenter.chat());
-                    for (Map.Entry<String, Message> entry : pendingMessages.getMessages().entrySet()) {
-                        presenter.chat().getMessages().put(entry.getKey(), entry.getValue());
-                    }
-                    if (!pendingMessages.getMessages().isEmpty()) {
-                        presenter.updateChat();
-                    }
-                    handler.postDelayed(sender, interval);
-                }
-            }
-        };
-
         messageText = view.findViewById(com.rotor.chappy.R.id.message_text);
         messageText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -127,11 +106,13 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
                     Message message = new Message(presenter.getUser().getCurrentUser().getUid(), StringEscapeUtils.escapeJava(messageText.getText().toString()));
                     String id = String.valueOf(new Date().getTime());
 
-                    Docker.addPendingMessage(presenter.chat(), id, message);
-                    pendingMessages = Docker.getPendingMessage(presenter.chat());
+                    if (presenter.chat() != null && pendingMessages.getMessages().isEmpty()) {
+                        Docker.addPendingMessage(presenter.chat(), id, message);
+                        presenter.chat().getMessages().put(id, message);
+                        presenter.updateChat();
+                    }
+                    pendingMessages.getMessages().put(id, message);
                     pendingAdapter.notifyDataSetChanged();
-                    handler.removeCallbacks(sender);
-                    handler.postDelayed(sender, interval);
 
                     Handler handler = new Handler();
                     handler.postDelayed(new Runnable() {
@@ -174,14 +155,12 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
         }
         viewReady = false;
         pendingMessages = null;
-        handler.postDelayed(sender, interval);
     }
 
     @Override
     public void onPauseView() {
         presenter.stop();
         viewReady = false;
-        handler.removeCallbacks(sender);
     }
 
     @Override
@@ -269,11 +248,13 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
                 remove.add(toCheck);
             }
         }
-        for (String toRemove : remove) {
-            Docker.removePendingMessage(presenter.chat(), toRemove);
+        pendingMessages = Docker.removePendingMessages(presenter.chat(), remove);
+        for (Map.Entry<String, Message> entry : pendingMessages.getMessages().entrySet()) {
+            presenter.chat().getMessages().put(entry.getKey(), entry.getValue());
         }
-
-        pendingMessages = Docker.getPendingMessage(presenter.chat());
+        if (!pendingMessages.getMessages().isEmpty()) {
+            presenter.updateChat();
+        }
         pendingAdapter.notifyDataSetChanged();
     }
 

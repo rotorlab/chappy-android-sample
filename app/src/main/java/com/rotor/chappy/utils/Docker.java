@@ -10,7 +10,9 @@ import com.rotor.chappy.model.Message;
 import com.rotor.chappy.model.PendingMessages;
 import com.rotor.core.Rotor;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class Docker {
 
@@ -42,18 +44,22 @@ public class Docker {
         }
     }
 
-    public static void removePendingMessage(Chat chat, String messageId) {
+    public static PendingMessages removePendingMessages(Chat chat, List<String> messageId) {
+        PendingMessages pendingMessages = null;
         if (FirebaseAuth.getInstance().getUid() != null) {
             String key = FirebaseAuth.getInstance().getUid() + chat.getId();
             String stored = pref().getString(key, null);
             if (stored != null) {
                 Gson gson = new Gson();
-                PendingMessages pendingMessages = gson.fromJson(stored, PendingMessages.class);
-                ((HashMap<String,Message>)pendingMessages.getMessages()).remove(messageId);
+                pendingMessages = gson.fromJson(stored, PendingMessages.class);
+                for (String m : messageId) {
+                    ((HashMap<String,Message>)pendingMessages.getMessages()).remove(m);
+                }
                 String toStore = gson.toJson(pendingMessages, PendingMessages.class);
                 editor().putString(key, toStore).apply();
             }
         }
+        return pendingMessages == null ? new PendingMessages() : pendingMessages;
     }
 
     public static PendingMessages getPendingMessage(Chat chat) {

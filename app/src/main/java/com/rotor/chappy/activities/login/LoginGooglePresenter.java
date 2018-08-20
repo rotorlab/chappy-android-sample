@@ -69,7 +69,7 @@ public class LoginGooglePresenter implements LoginGoogleInterface.Presenter {
                         if (!Rotor.getId().equals(user.getToken())) {
                             user.setToken(Rotor.getId());
                             Database.sync("/users/" + mAuth.getUid());
-                        } else if (!omitMoreChanges) {
+                        } else if (!omitMoreChanges && Rotor.getId().equals(user.getToken())) {
                             Database.sync("/users/" + mAuth.getUid());
                             omitMoreChanges = true;
                             if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

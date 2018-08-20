@@ -12,7 +12,11 @@ import com.rotor.database.Database;
 import com.rotor.database.abstr.Reference;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 
 public class ChatPresenter implements ChatInterface.Presenter {
 
@@ -39,7 +43,9 @@ public class ChatPresenter implements ChatInterface.Presenter {
 
     @Override
     public void stop() {
-        Database.unlisten("/chats/" + chat.getId());
+        if (chat != null) {
+            Database.unlisten("/chats/" + chat.getId());
+        }
     }
 
     @Override
@@ -150,16 +156,26 @@ public class ChatPresenter implements ChatInterface.Presenter {
 
     private void limitMessages() {
         if (chat != null && chat.getMessages() != null  && chat.getMessages().size() > MESSAGE_LIMIT) {
-            String[] keys = chat.getMessages().keySet().toArray(new String[0]);
+            List<String> keys = order(chat.getMessages().keySet().toArray(new String[0]));
             int i = 0;
             while (chat.getMessages().size() > MESSAGE_LIMIT) {
-                if (chat.getMessages().containsKey(keys[i])) {
-                    chat.getMessages().remove(keys[i]);
+                if (chat.getMessages().containsKey(keys.get(i))) {
+                    chat.getMessages().remove(keys.get(i));
                 }
                 i++;
             }
             updateChat();
         }
+    }
+
+    private List<String> order(String[] aIds) {
+        List<String> ids = Arrays.asList(aIds);
+        Collections.sort(ids, new Comparator<String>() {
+            public int compare(String o1, String o2) {
+                return Long.compare(Long.parseLong(o1), Long.parseLong(o2));
+            }
+        });
+        return ids;
     }
 
 }
