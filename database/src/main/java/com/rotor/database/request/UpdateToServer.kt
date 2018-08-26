@@ -10,5 +10,4 @@ data class UpdateToServer( val method: String,
                            val token: String,
                            val os: String,
                            val differences: String,
-                           val len: Int,
                            val clean: Boolean)

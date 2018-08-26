@@ -12,6 +12,7 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.text.Normalizer
 import java.util.*
+import kotlin.collections.ArrayList
 
 /**
  * Created by efraespada on 14/03/2018.
@@ -37,6 +38,9 @@ abstract class PrimaryReferece<T>(context: Context, db: String, path: String) {
         internal var INDEX = "index"
         internal var ACTION = "action"
         internal var NULL = "null"
+        internal val TAG_SET = "\$set"
+        internal val TAG_UNSET = "\$unset"
+        internal val TAG_RENAME = "\$rename"
     }
 
     private val mapParts: HashMap<String, Array<String?>>
@@ -111,70 +115,66 @@ abstract class PrimaryReferece<T>(context: Context, db: String, path: String) {
                 .excludeFieldsWithoutExposeAnnotation().create()
     }
 
-    fun getDifferencesFromBackground(reference: Any): Array<Any?> {
-        val len: Int
-        val objects = arrayOfNulls<Any>(2)
-
-        if (stringReference == null) {
-            this.stringReference = "{}"
-        }
-
+    fun getDifferencesFromBackground(reference: Any): ArrayList<String> {
         try {
-            val actual = getReferenceAsString()
+            if (stringReference == null) stringReference = "{}"
             JSONDiff.setDebug(Rotor.debug!!)
             val diff = JSONDiff.diff(JSONObject(stringReference), JSONObject(Gson().toJson(reference)))
-
-            val jsonObject = JSONObject()
-
-            // max 3
+            val changes = ArrayList<String>()
             for ((key, value) in diff) {
+                val jsonObject = JSONObject()
                 jsonObject.put(key, value)
+                changes.add(jsonObject.toString())
             }
-
-            len = actual.length
-
-            objects[0] = len
-            objects[1] = jsonObject.toString()
-
-            return objects
+            return changes
         } catch (e: JSONException) {
             e.printStackTrace()
         }
-
-        return objects
+        return ArrayList()
     }
 
-    fun getDifferences(clean: Boolean): Array<Any?> {
-        val len: Int
-        val objects = arrayOfNulls<Any>(2)
-
-        if (clean || stringReference == null) {
-            this.stringReference = "{}"
-        }
-
+    fun getDifferences(clean: Boolean): ArrayList<String> {
+        if (clean || stringReference == null) this.stringReference = "{}"
         try {
             val actual = getReferenceAsString()
             JSONDiff.setDebug(Rotor.debug!!)
             val diff = JSONDiff.diff(JSONObject(stringReference), JSONObject(actual))
-
-            val jsonObject = JSONObject()
-
-            // max 3
-            for ((key, value) in diff) {
-                jsonObject.put(key, value)
+            val changes = ArrayList<String>()
+            if (diff.containsKey(TAG_SET)) {
+                val set = diff.get(TAG_SET) as JSONObject
+                for (key in set.keys()) {
+                    val o = JSONObject()
+                    val c = JSONObject()
+                    c.put(key, set.get(key))
+                    o.put(TAG_SET, c)
+                    changes.add(o.toString())
+                }
             }
-
-            len = actual.length
-
-            objects[0] = len
-            objects[1] = jsonObject.toString()
-
-            return objects
+            if (diff.containsKey(TAG_UNSET)) {
+                val unset = diff.get(TAG_UNSET) as JSONObject
+                for (key in unset.keys()) {
+                    val o = JSONObject()
+                    val c = JSONObject()
+                    c.put(key, unset.get(key))
+                    o.put(TAG_UNSET, c)
+                    changes.add(o.toString())
+                }
+            }
+            if (diff.containsKey(TAG_RENAME)) {
+                val rename = diff.get(TAG_RENAME) as JSONObject
+                for (key in rename.keys()) {
+                    val o = JSONObject()
+                    val c = JSONObject()
+                    c.put(key, rename.get(key))
+                    o.put(TAG_RENAME, c)
+                    changes.add(o.toString())
+                }
+            }
+            return changes
         } catch (e: JSONException) {
             e.printStackTrace()
         }
-
-        return objects
+        return ArrayList()
     }
 
     fun onMessageReceived(json: JSONObject) {

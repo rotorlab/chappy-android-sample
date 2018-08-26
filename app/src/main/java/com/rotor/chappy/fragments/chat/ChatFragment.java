@@ -102,15 +102,13 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (presenter.getUser().getCurrentUser() != null && presenter.getUser().getCurrentUser().getUid() != null) {
+                if (presenter.getUser().getCurrentUser() != null &&
+                        presenter.getUser().getCurrentUser().getUid() != null &&
+                        pendingMessages != null) {
                     Message message = new Message(presenter.getUser().getCurrentUser().getUid(), StringEscapeUtils.escapeJava(messageText.getText().toString()));
                     String id = String.valueOf(new Date().getTime());
-
-                    if (presenter.chat() != null && pendingMessages.getMessages().isEmpty()) {
-                        Docker.addPendingMessage(presenter.chat(), id, message);
-                        presenter.chat().getMessages().put(id, message);
-                        presenter.updateChat();
-                    }
+                    presenter.chat().getMessages().put(id, message);
+                    presenter.updateChat();
                     pendingMessages.getMessages().put(id, message);
                     pendingAdapter.notifyDataSetChanged();
 
@@ -154,7 +152,6 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
             ((HomeActivity)getActivity()).setSupportActionBar(toolbar);
         }
         viewReady = false;
-        pendingMessages = null;
     }
 
     @Override
@@ -238,8 +235,15 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
         if (presenter.chat() != null) {
             toolbar.setTitle(StringEscapeUtils.unescapeJava(presenter.chat().getName()));
         }
-        pendingMessages = Docker.getPendingMessage(presenter.chat());
-
+        if (pendingMessages == null) {
+            pendingMessages = Docker.getPendingMessage(presenter.chat());
+            for (Map.Entry<String, Message> entry : pendingMessages.getMessages().entrySet()) {
+                presenter.chat().getMessages().put(entry.getKey(), entry.getValue());
+            }
+            if (!pendingMessages.getMessages().isEmpty()) {
+                presenter.updateChat();
+            }
+        }
         List<String> remove = new ArrayList<>();
         String[] messagesId = pendingMessages.getMessages().keySet().toArray(new String[0]);
         List<String> messagesIdChat = Arrays.asList(presenter.chat().getMessages().keySet().toArray(new String[0]));
@@ -248,7 +252,7 @@ public class ChatFragment extends RFragment implements Frag, ChatInterface.View 
                 remove.add(toCheck);
             }
         }
-        pendingMessages = Docker.removePendingMessages(presenter.chat(), remove);
+        pendingMessages = Docker.removePendingMessages(presenter.chat(), pendingMessages, remove);
         for (Map.Entry<String, Message> entry : pendingMessages.getMessages().entrySet()) {
             presenter.chat().getMessages().put(entry.getKey(), entry.getValue());
         }

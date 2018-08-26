@@ -24,34 +24,12 @@ public class Docker {
         return pref().edit();
     }
 
-    public static void addPendingMessage(Chat chat, String messageId, Message message) {
+    public static PendingMessages removePendingMessages(Chat chat, PendingMessages pendingMessages, List<String> messageId) {
         if (FirebaseAuth.getInstance().getUid() != null) {
             String key = FirebaseAuth.getInstance().getUid() + chat.getId();
             String stored = pref().getString(key, null);
             if (stored != null) {
                 Gson gson = new Gson();
-                PendingMessages pendingMessages = gson.fromJson(stored, PendingMessages.class);
-                pendingMessages.getMessages().put(messageId, message);
-                String toStore = gson.toJson(pendingMessages, PendingMessages.class);
-                editor().putString(key, toStore).apply();
-            } else {
-                Gson gson = new Gson();
-                PendingMessages pendingMessages = new PendingMessages();
-                pendingMessages.getMessages().put(messageId, message);
-                String toStore = gson.toJson(pendingMessages, PendingMessages.class);
-                editor().putString(key, toStore).apply();
-            }
-        }
-    }
-
-    public static PendingMessages removePendingMessages(Chat chat, List<String> messageId) {
-        PendingMessages pendingMessages = null;
-        if (FirebaseAuth.getInstance().getUid() != null) {
-            String key = FirebaseAuth.getInstance().getUid() + chat.getId();
-            String stored = pref().getString(key, null);
-            if (stored != null) {
-                Gson gson = new Gson();
-                pendingMessages = gson.fromJson(stored, PendingMessages.class);
                 for (String m : messageId) {
                     ((HashMap<String,Message>)pendingMessages.getMessages()).remove(m);
                 }
@@ -59,7 +37,7 @@ public class Docker {
                 editor().putString(key, toStore).apply();
             }
         }
-        return pendingMessages == null ? new PendingMessages() : pendingMessages;
+        return pendingMessages;
     }
 
     public static PendingMessages getPendingMessage(Chat chat) {

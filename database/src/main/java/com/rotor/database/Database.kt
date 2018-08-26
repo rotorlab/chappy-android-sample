@@ -1,6 +1,8 @@
 package com.rotor.database
 
 import android.os.Handler
+import android.util.Base64
+import android.util.Base64.NO_WRAP
 import android.util.Log
 import com.efraespada.jsondiff.JSONDiff
 import com.google.gson.Gson
@@ -27,7 +29,10 @@ import io.reactivex.schedulers.Schedulers
 import org.apache.commons.lang3.StringEscapeUtils
 import org.jetbrains.anko.doAsync
 import org.json.JSONObject
+import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.util.*
+import java.util.zip.GZIPOutputStream
 import kotlin.collections.ArrayList
 
 
@@ -37,10 +42,9 @@ import kotlin.collections.ArrayList
 class Database {
 
     companion object {
-
-        private val BACKGROUND_HANDLER = "background_handler"
         private val TAG: String = Database::class.java.simpleName!!
         private var lastActive: RScreen? = null
+        internal val differences = ArrayList<String>()
 
         @JvmStatic
         fun initialize() {
@@ -220,14 +224,14 @@ class Database {
         }
 
         @JvmStatic
-        internal fun refreshToServer(path: String, differences: String, len: Int, clean: Boolean) {
+        internal fun refreshToServer(path: String, differences: String, clean: Boolean) {
             if (differences == PrimaryReferece.EMPTY_OBJECT) {
                 return
             }
 
             val ref = getCurrentReference(path)
 
-            StoreUtils.service(Rotor.urlServer!!).refreshToServer(UpdateToServer("update_reference", ref!!.databaseName, path, Rotor.id!!, "android", differences, len, clean))
+            StoreUtils.service(Rotor.urlServer!!).refreshToServer(UpdateToServer("update_reference", ref!!.databaseName, path, Rotor.id!!, "android", differences, clean))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
@@ -249,7 +253,7 @@ class Database {
 
             val ref = getCurrentReference(path)
 
-            StoreUtils.service(Rotor.urlServer!!).refreshFromServer(UpdateFromServer("update_reference_from", ref!!.databaseName, path, Rotor.id!!, "android", content))
+            StoreUtils.service(Rotor.urlServer!!).refreshFromServer(UpdateFromServer("update_reference_from", ref!!.databaseName, path, Rotor.id!!, "android", compress(content)))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
@@ -269,24 +273,24 @@ class Database {
 
         @JvmStatic
         fun sync(path: String, clean: Boolean) {
-            // doAsync {
+            doAsync {
                 var found = false
-                var differences = ArrayList<String>()
                 for (entry in Rotor.screens()) {
                     if (entry.isActive && entry.hasPath(path)) {
                         found = true
-                        val refe = entry.holders().get(path) as KReference<*>
-                        val result = refe.getDifferences(clean)
-                        val diff = result[1] as String
-                        val len = result[0] as Int
-                        if (!EMPTY_OBJECT.equals(diff) && !differences.contains(diff)) {
-                            differences.add(diff)
-                            refreshToServer(path, diff, len, clean)
-                        } else {
-                            val blower = refe.getLastest()
-                            val value = refe.getReferenceAsString()
-                            if (value.equals(EMPTY_OBJECT) || value.equals(NULL)) {
-                                blower.onCreate()
+                        val reference = entry.holders().get(path) as KReference<*>
+                        val changes = reference.getDifferences(clean)
+                        for (difference in changes) {
+                            if (!EMPTY_OBJECT.equals(difference) && !differences.contains(difference)) {
+                                differences.add(difference)
+                                refreshToServer(path, difference, clean)
+                            } else {
+                                val blower = reference.getLastest()
+                                val value = reference.getReferenceAsString()
+                                if (value.equals(EMPTY_OBJECT) || value.equals(NULL)) {
+                                    blower.onCreate()
+                                    break
+                                }
                             }
                         }
                     }
@@ -295,23 +299,25 @@ class Database {
                 if (!found) {
                     for (entry in Rotor.screens()) {
                         if (entry.hasPath(path)) {
-                            val refe = entry.holders().get(path) as KReference<*>
-                            val result = refe.getDifferences(clean)
-                            val diff = result[1] as String
-                            val len = result[0] as Int
-                            if (!EMPTY_OBJECT.equals(diff)) {
-                                refreshToServer(path, diff, len, clean)
-                            } else {
-                                val blower = refe.getLastest()
-                                val value = refe.getReferenceAsString()
-                                if (value.equals(EMPTY_OBJECT) || value.equals(NULL)) {
-                                    blower.onCreate()
+                            val reference = entry.holders().get(path) as KReference<*>
+                            val changes = reference.getDifferences(clean)
+                            for (difference in changes) {
+                                if (!EMPTY_OBJECT.equals(difference) && !differences.contains(difference)) {
+                                    differences.add(difference)
+                                    refreshToServer(path, difference, clean)
+                                } else {
+                                    val blower = reference.getLastest()
+                                    val value = reference.getReferenceAsString()
+                                    if (value.equals(EMPTY_OBJECT) || value.equals(NULL)) {
+                                        blower.onCreate()
+                                        break
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            // }
+            }
         }
 
         @JvmStatic
@@ -389,6 +395,18 @@ class Database {
                 return lastActive!!.hasPath(path)
             }
             return false
+        }
+
+        @Throws(IOException::class)
+        private fun compress(data: String): String {
+            // if (true) return data
+            val bos = ByteArrayOutputStream(data.length)
+            val gzip = GZIPOutputStream(bos)
+            gzip.write(data.toByteArray())
+            gzip.close()
+            val compressed = bos.toByteArray()
+            bos.close()
+            return Base64.encodeToString(compressed, NO_WRAP)
         }
     }
 
